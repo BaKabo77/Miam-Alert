@@ -97,6 +97,13 @@ Les commandes Prisma se lancent **dans le conteneur** pour que l'hôte `db` soit
 
 Le volume `./backend:/app` assure le rechargement automatique ; le volume anonyme `/app/node_modules` évite d'écraser les dépendances du conteneur.
 
+Points d'environnement à connaître :
+- Ports publiés sur `127.0.0.1` uniquement ; PostgreSQL n'est pas publié du tout (accès via Adminer ou `docker compose exec db psql`).
+- Le conteneur backend tourne en utilisateur `node` (non-root), même en dev.
+- **npm 11 requis** sur l'hôte (npm 10 plante sur l'arbre de dépendances de Vitest) : `npx npm@11 install <pkg>` ou Node 24. L'image Docker est en `node:24-alpine`.
+- npm 11 bloque les scripts d'installation par défaut ; seuls ceux listés dans `allowScripts` (`package.json`) s'exécutent. Pour en autoriser un : `npm install-scripts approve <pkg>`, après vérification.
+- Prisma 7 : config dans `backend/prisma.config.ts`, client généré dans `backend/src/generated/prisma` (non commité, régénéré au démarrage du conteneur), connexion via `@prisma/adapter-pg`. Versions Prisma épinglées en exact (le tag npm `latest` pointait sur une RC).
+
 ## Conventions de code
 
 - Un module NestJS par domaine (`auth`, `pantry`, `products`, `recipes`…), avec controller, service et DTO.
@@ -205,6 +212,6 @@ Tester chaque module via l'API (Postman ou Bruno) avant de passer au suivant ; l
 
 ## État actuel
 
-Étape 1 (environnement) en cours : dépôt initialisé, `CLAUDE.md` en place. Prochaine étape : socle de sécurité (étape 2), puis schéma Prisma de départ et `PrismaService` (étape 3).
+Étape 1 (environnement) terminée : Docker Compose (db, adminer, backend), NestJS 12 + TypeScript 6 + Vitest, Prisma 7 initialisé (aucun modèle ni migration). Prochaine étape : socle de sécurité (étape 2), puis schéma Prisma de départ et `PrismaService` (étape 3).
 
 Mettre à jour cette section au fil de l'avancement.
