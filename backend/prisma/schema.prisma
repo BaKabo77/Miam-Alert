@@ -1,0 +1,12 @@
+// Schéma Prisma de Miam'Alert.
+// Les modèles arrivent à l'étape 3 (User, Household, HouseholdMember, Product, PantryItem).
+
+generator client {
+  provider = "prisma-client"
+  // Client généré dans src/ pour être compilé avec le reste de l'application.
+  output   = "../src/generated/prisma"
+}
+
+datasource db {
+  provider = "postgresql"
+}

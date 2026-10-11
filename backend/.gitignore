@@ -1,0 +1,7 @@
+node_modules
+dist
+coverage
+*.tsbuildinfo
+
+# Client Prisma : régénéré par `prisma generate`, jamais commité
+/src/generated/prisma

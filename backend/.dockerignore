@@ -1,0 +1,8 @@
+node_modules
+dist
+coverage
+src/generated
+*.tsbuildinfo
+# Ne jamais copier de secret dans une image.
+.env
+.env.*
