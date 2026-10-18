@@ -212,6 +212,8 @@ Tester chaque module via l'API (Postman ou Bruno) avant de passer au suivant ; l
 
 ## État actuel
 
-Étape 1 (environnement) terminée : Docker Compose (db, adminer, backend), NestJS 12 + TypeScript 6 + Vitest, Prisma 7 initialisé (aucun modèle ni migration). Prochaine étape : socle de sécurité (étape 2), puis schéma Prisma de départ et `PrismaService` (étape 3).
+Étapes 1 et 2 terminées. Socle de sécurité en place : variables d'environnement validées, helmet, CORS en liste blanche, corps JSON limité à 16 ko, ValidationPipe strict, rate limiting global (100 req/min), filtre d'exception global, guard JWT global avec @Public(), route GET /health. 15 tests e2e.
+Prochaine étape : schéma Prisma de départ, PrismaService et première migration (étape 3).
+
 
 Mettre à jour cette section au fil de l'avancement.
