@@ -1,0 +1,65 @@
+import { plainToInstance, Transform } from 'class-transformer';
+import {
+  IsEnum,
+  IsInt,
+  IsString,
+  IsUrl,
+  Matches,
+  Max,
+  Min,
+  MinLength,
+  validateSync,
+} from 'class-validator';
+
+export enum NodeEnv {
+  Development = 'development',
+  Test = 'test',
+  Production = 'production',
+}
+
+export class EnvironmentVariables {
+  @IsEnum(NodeEnv)
+  NODE_ENV: NodeEnv;
+
+  @IsInt()
+  @Min(1)
+  @Max(65535)
+  PORT: number;
+
+  @Matches(/^postgres(ql)?:\/\//)
+  DATABASE_URL: string;
+
+  // 32 caractères minimum : un secret court se casse par force brute hors ligne
+  // (il suffit d'un seul token intercepté pour tester des secrets).
+  @IsString()
+  @MinLength(32)
+  JWT_SECRET: string;
+
+  // Liste blanche d'origines CORS. @IsUrl rejette "*", qui ouvrirait l'API à tous les sites.
+  @Transform(({ value }: { value: string }) =>
+    value.split(',').map((origin) => origin.trim()),
+  )
+  @IsUrl(
+    { require_tld: false, require_protocol: true, protocols: ['http', 'https'] },
+    { each: true },
+  )
+  CORS_ORIGINS: string[];
+}
+
+export function validateEnv(config: Record<string, unknown>): EnvironmentVariables {
+  const env = plainToInstance(EnvironmentVariables, config, {
+    enableImplicitConversion: true,
+  });
+  const errors = validateSync(env, { skipMissingProperties: false });
+
+  if (errors.length > 0) {
+    // On affiche le nom de la variable et la règle non respectée, jamais la valeur :
+    // ce pourrait être un secret, qui finirait alors dans les logs.
+    const details = errors
+      .map((e) => `${e.property}: ${Object.values(e.constraints ?? {}).join(', ')}`)
+      .join('; ');
+    throw new Error(`Invalid environment variables: ${details}`);
+  }
+
+  return env;
+}
