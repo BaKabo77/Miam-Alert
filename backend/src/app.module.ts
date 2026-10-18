@@ -2,12 +2,13 @@ import { Module } from '@nestjs/common';
 import { ConfigModule } from '@nestjs/config';
 import { APP_FILTER, APP_GUARD, APP_PIPE } from '@nestjs/core';
 import { ThrottlerGuard, ThrottlerModule } from '@nestjs/throttler';
-import { AppController } from './app.controller.js';
-import { AppService } from './app.service.js';
+import { AuthModule } from './auth/auth.module.js';
+import { JwtAuthGuard } from './auth/jwt-auth.guard.js';
+import { AllExceptionsFilter } from './common/all-exceptions.filter.js';
 import { throttlerOptions } from './common/throttling.js';
 import { createValidationPipe } from './common/validation.js';
 import { validateEnv } from './config/env.validation.js';
-import { AllExceptionsFilter } from './common/all-exceptions.filter.js';
+import { HealthController } from './health/health.controller.js';
 
 @Module({
   imports: [
@@ -18,13 +19,14 @@ import { AllExceptionsFilter } from './common/all-exceptions.filter.js';
       cache: true,
     }),
     ThrottlerModule.forRoot(throttlerOptions),
+    AuthModule
   ],
-  controllers: [AppController],
+  controllers: [HealthController],
   providers: [
-    AppService,
     { provide: APP_PIPE, useFactory: createValidationPipe },
     { provide: APP_FILTER, useClass: AllExceptionsFilter },
-    { provide: APP_GUARD, useClass: ThrottlerGuard }
+    { provide: APP_GUARD, useClass: ThrottlerGuard },
+    { provide: APP_GUARD, useClass: JwtAuthGuard },
   ],
 })
 export class AppModule {}
