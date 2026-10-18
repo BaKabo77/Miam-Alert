@@ -17,7 +17,6 @@ Règles pour Claude Code :
 
 - Échanges et explications : en français.
 - Code (variables, fonctions, classes, routes) : en anglais.
-- Messages de commit : Conventional Commits, description en français (`feat: ajout du module pantry`).
 
 ## Stack
 
@@ -120,6 +119,7 @@ Points d'environnement à connaître :
 - Le dépôt est privé pour l'instant mais passera en public : tout l'historique doit rester propre. Si un secret fuit, le changer (rotation) plutôt que de réécrire l'historique.
 - Toutes les variables d'environnement sont validées au démarrage (schéma de validation dans `ConfigModule`) : l'appli refuse de démarrer si une variable manque ou si `JWT_SECRET` est trop court.
 - Secrets de dev et de prod distincts ; aucun secret en dur, ni dans le code, ni dans les Dockerfile, ni dans les logs.
+- les commits doivent toujours commencer par [ADD,EDIT,DELETE,UPDATE] en fonction de ce qui est commit
 
 ### Authentification
 - Mots de passe hachés avec **argon2** (argon2id). Politique de mot de passe raisonnable (longueur minimale de 12 caractères plutôt que des règles de complexité).
