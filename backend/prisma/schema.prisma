@@ -1,5 +1,4 @@
 // Schéma Prisma de Miam'Alert.
-// Les modèles arrivent à l'étape 3 (User, Household, HouseholdMember, Product, PantryItem).
 
 generator client {
   provider = "prisma-client"
@@ -9,4 +8,114 @@ generator client {
 
 datasource db {
   provider = "postgresql"
+}
+
+// Des enums plutôt que du texte libre : la base elle-même refuse toute valeur inconnue.
+
+enum HouseholdRole {
+  OWNER
+  MEMBER
+}
+
+// DLC : à respecter strictement. DDM : le produit reste consommable après la date.
+enum ExpiryType {
+  DLC
+  DDM
+}
+
+enum PantryItemStatus {
+  ACTIVE
+  CONSUMED
+  WASTED
+  FROZEN
+}
+
+// Quantités en entiers dans l'unité la plus petite (1,5 L = 1500 ML) :
+// pas d'erreur d'arrondi et pas de type décimal à manipuler côté code.
+enum QuantityUnit {
+  PIECE
+  GRAM
+  MILLILITER
+}
+
+// Identifiants en UUID (@db.Uuid = type natif PostgreSQL) : impossibles à deviner,
+// contrairement à un id auto-incrémenté (1, 2, 3...) qu'un attaquant pourrait parcourir.
+
+model User {
+  id           String   @id @default(uuid()) @db.Uuid
+  // 254 = longueur maximale d'une adresse email valide. Stockée en minuscules (fait par le service).
+  email        String   @unique @db.VarChar(254)
+  // Le hash argon2, jamais le mot de passe. Ce champ ne doit jamais sortir de l'API.
+  passwordHash String
+  createdAt    DateTime @default(now())
+  updatedAt    DateTime @updatedAt
+
+  memberships HouseholdMember[]
+}
+
+model Household {
+  id        String   @id @default(uuid()) @db.Uuid
+  name      String   @db.VarChar(100)
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  members     HouseholdMember[]
+  pantryItems PantryItem[]
+}
+
+// Table de liaison User <-> Household : un utilisateur peut appartenir à plusieurs foyers
+// (V2), et c'est ici qu'on vérifiera l'appartenance avant tout accès (protection IDOR).
+model HouseholdMember {
+  userId      String        @db.Uuid
+  householdId String        @db.Uuid
+  role        HouseholdRole @default(MEMBER)
+  joinedAt    DateTime      @default(now())
+
+  // onDelete: Cascade : supprimer un compte supprime ses appartenances (RGPD : suppression réelle).
+  user      User      @relation(fields: [userId], references: [id], onDelete: Cascade)
+  household Household @relation(fields: [householdId], references: [id], onDelete: Cascade)
+
+  // Clé primaire composée : un utilisateur ne peut pas être deux fois membre du même foyer.
+  @@id([userId, householdId])
+  @@index([householdId])
+}
+
+// Cache des fiches Open Food Facts, partagé entre tous les foyers (données publiques).
+model Product {
+  id         String   @id @default(uuid()) @db.Uuid
+  barcode    String   @unique @db.VarChar(14)
+  name       String   @db.VarChar(200)
+  brand      String?  @db.VarChar(200)
+  imageUrl   String?  @db.VarChar(500)
+  category   String?  @db.VarChar(100)
+  nutriscore String?  @db.Char(1)
+  createdAt  DateTime @default(now())
+  updatedAt  DateTime @updatedAt
+
+  pantryItems PantryItem[]
+}
+
+model PantryItem {
+  id          String           @id @default(uuid()) @db.Uuid
+  // Chaque article appartient à un foyer : toutes les requêtes seront filtrées par ce champ.
+  householdId String           @db.Uuid
+  // Optionnel : un article saisi à la main n'a pas de fiche produit.
+  productId   String?          @db.Uuid
+  // Le nom est toujours stocké ici (copié de la fiche produit ou saisi à la main).
+  name        String           @db.VarChar(200)
+  quantity    Int              @default(1)
+  unit        QuantityUnit     @default(PIECE)
+  // @db.Date : une date sans heure. "Périme le 20" ne doit pas dépendre d'un fuseau horaire.
+  expiryDate  DateTime         @db.Date
+  expiryType  ExpiryType
+  status      PantryItemStatus @default(ACTIVE)
+  createdAt   DateTime         @default(now())
+  updatedAt   DateTime         @updatedAt
+
+  household Household @relation(fields: [householdId], references: [id], onDelete: Cascade)
+  // SetNull : si une fiche produit est supprimée du cache, l'article reste dans l'inventaire.
+  product   Product?  @relation(fields: [productId], references: [id], onDelete: SetNull)
+
+  // Index taillé pour la requête principale : "les articles actifs de mon foyer, par date".
+  @@index([householdId, status, expiryDate])
 }
