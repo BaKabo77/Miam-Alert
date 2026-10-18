@@ -9,6 +9,7 @@ import { throttlerOptions } from './common/throttling.js';
 import { createValidationPipe } from './common/validation.js';
 import { validateEnv } from './config/env.validation.js';
 import { HealthController } from './health/health.controller.js';
+import { PrismaModule } from './prisma/prisma.module.js';
 
 @Module({
   imports: [
@@ -19,6 +20,7 @@ import { HealthController } from './health/health.controller.js';
       cache: true,
     }),
     ThrottlerModule.forRoot(throttlerOptions),
+    PrismaModule,
     AuthModule
   ],
   controllers: [HealthController],
