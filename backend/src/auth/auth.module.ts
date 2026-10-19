@@ -3,8 +3,12 @@ import { ConfigService } from '@nestjs/config';
 import { JwtModule } from '@nestjs/jwt';
 import { EnvironmentVariables } from '../config/env.validation.js';
 import { buildJwtOptions } from './jwt.config.js';
+import { AuthController } from './auth.controller.js';
+import { AuthService } from './auth.service.js';
 
 @Module({
+  controllers: [AuthController],
+  providers: [AuthService],
   imports: [
     JwtModule.registerAsync({
       inject: [ConfigService],

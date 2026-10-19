@@ -13,3 +13,8 @@ export interface AuthenticatedUser {
 }
 
 export type AuthenticatedRequest = Request & { user?: AuthenticatedUser };
+
+export interface UserResponse {
+  id: string;
+  email: string;
+}
