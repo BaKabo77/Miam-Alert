@@ -50,7 +50,8 @@ model User {
   createdAt    DateTime @default(now())
   updatedAt    DateTime @updatedAt
 
-  memberships HouseholdMember[]
+  memberships   HouseholdMember[]
+  refreshTokens RefreshToken[]
 }
 
 model Household {
@@ -118,4 +119,24 @@ model PantryItem {
 
   // Index taillé pour la requête principale : "les articles actifs de mon foyer, par date".
   @@index([householdId, status, expiryDate])
+}
+
+model RefreshToken {
+  id        String    @id @default(uuid()) @db.Uuid
+  userId    String    @db.Uuid
+  // Une "famille" = une session (une connexion). Toutes les rotations d'une même connexion
+  // partagent cet id : si un ancien token est réutilisé, on révoque toute la famille (4d).
+  familyId  String    @db.Uuid
+  // Empreinte SHA-256 du token, jamais le token : une fuite de la base ne donne aucune session.
+  tokenHash String    @unique @db.Char(64)
+  expiresAt DateTime
+  // Rempli à la rotation ou à la déconnexion : un token révoqué n'est plus accepté.
+  revokedAt DateTime?
+  createdAt DateTime  @default(now())
+
+  // Cascade : supprimer un compte supprime toutes ses sessions.
+  user User @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@index([userId])
+  @@index([familyId])
 }
