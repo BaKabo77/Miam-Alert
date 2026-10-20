@@ -1,6 +1,7 @@
 import { ConflictException, Injectable, Logger, UnauthorizedException } from '@nestjs/common';
 import { JwtService } from '@nestjs/jwt';
 import { randomUUID } from 'node:crypto';
+import { SecurityLogger } from '../common/security-logger.js';
 import { Prisma } from '../generated/prisma/client.js';
 import { PrismaService } from '../prisma/prisma.service.js';
 import type { AccessTokenPayload, AuthTokens, UserResponse } from './auth.types.js';
@@ -19,7 +20,8 @@ const DEFAULT_HOUSEHOLD_NAME = 'Mon foyer';
 @Injectable()
 export class AuthService {
 
-  private readonly logger = new Logger(AuthService.name);
+  private readonly security = new SecurityLogger();
+
   // Hash factice, calculé une seule fois, utilisé quand l'email n'existe pas (voir login).
   private dummyPasswordHash?: Promise<string>;
 
@@ -36,7 +38,7 @@ export class AuthService {
     try {
       // Compte, foyer et appartenance (OWNER) créés en une seule requête :
       // tout réussit ou rien n'est créé.
-      return await this.prisma.user.create({
+      const user = await this.prisma.user.create({
         data: {
           email: dto.email,
           passwordHash,
@@ -47,6 +49,8 @@ export class AuthService {
         // Réponse construite explicitement : seuls l'id et l'email sortent de l'API.
         select: { id: true, email: true },
       });
+      this.security.log('auth.register', { userId: user.id });
+      return user;
     } catch (error) {
       // P2002 = violation de la contrainte d'unicité sur l'email. On s'appuie sur la base
       // plutôt que sur un "SELECT puis INSERT", qui laisserait passer deux inscriptions simultanées.
@@ -57,7 +61,7 @@ export class AuthService {
     }
   }
 
-  async login(dto: LoginDto): Promise<AuthTokens> {
+  async login(dto: LoginDto, ip: string | undefined): Promise<AuthTokens> {
     // Seul endroit de l'application où le hash du mot de passe est lu.
     const user = await this.prisma.user.findUnique({
       where: { email: dto.email },
@@ -70,12 +74,17 @@ export class AuthService {
     const passwordIsValid = await verifyPassword(passwordHash, dto.password);
 
     if (!user || !passwordIsValid) {
+      // L'email tenté n'est pas journalisé (donnée personnelle, et souvent une faute de frappe
+      // de l'utilisateur lui-même) : l'IP suffit pour repérer une attaque par force brute.
+      this.security.warn('auth.login.failure', { ip });
       // Message identique pour un email inconnu et un mauvais mot de passe.
       throw new UnauthorizedException('Invalid credentials');
     }
 
+    this.security.log('auth.login.success', { userId: user.id, ip });
     // Nouvelle connexion = nouvelle famille de refresh tokens (une "session").
     return this.issueTokens(user.id, randomUUID());
+
   }
 
   async refresh(refreshToken: string | undefined): Promise<AuthTokens> {
@@ -89,7 +98,7 @@ export class AuthService {
     // l'attaquant comme l'utilisateur devront se reconnecter avec le mot de passe.
     if (stored.revokedAt) {
       await this.revokeFamily(stored.familyId);
-      this.logger.warn(`Refresh token reuse detected, session revoked for user ${stored.userId}`);
+      this.security.warn('auth.refresh.reuse_detected', { userId: stored.userId });
       throw new UnauthorizedException();
     }
 
@@ -109,8 +118,10 @@ export class AuthService {
       throw new UnauthorizedException();
     }
 
+    this.security.log('auth.refresh', { userId: stored.userId });
     // Même famille : le nouveau token appartient toujours à la même session.
     return this.issueTokens(stored.userId, stored.familyId);
+
   }
 
   // Révoque toute la session côté serveur. Sans token valide, il n'y a rien à révoquer :
@@ -119,6 +130,7 @@ export class AuthService {
     const stored = await this.findRefreshToken(refreshToken);
     if (stored) {
       await this.revokeFamily(stored.familyId);
+      this.security.log('auth.logout', { userId: stored.userId });
     }
   }
 

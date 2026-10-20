@@ -1,4 +1,4 @@
-import { Body, Controller, HttpCode, HttpStatus, Post, Res } from '@nestjs/common';
+import { Body, Controller, HttpCode, HttpStatus, Ip, Post, Res } from '@nestjs/common';
 import { Throttle } from '@nestjs/throttler';
 import type { CookieOptions, Response } from 'express';
 import { AUTH_THROTTLE } from '../common/throttling.js';
@@ -42,10 +42,11 @@ export class AuthController {
     @HttpCode(HttpStatus.OK)
     async login(
         @Body() dto: LoginDto,
+        @Ip() ip: string,
         // passthrough : on pose le cookie, et Nest envoie la réponse normalement.
         @Res({ passthrough: true }) res: Response,
     ): Promise<AccessTokenResponse> {
-        const { accessToken, refreshToken } = await this.auth.login(dto);
+        const { accessToken, refreshToken } = await this.auth.login(dto,ip);
         res.cookie(REFRESH_TOKEN_COOKIE, refreshToken, REFRESH_TOKEN_COOKIE_OPTIONS);
         // L'access token est renvoyé dans le corps : le front le garde en mémoire uniquement.
         return { accessToken };
