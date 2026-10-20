@@ -14,7 +14,19 @@ export interface AuthenticatedUser {
 
 export type AuthenticatedRequest = Request & { user?: AuthenticatedUser };
 
+// Seuls champs d'un utilisateur autorisés à sortir de l'API.
 export interface UserResponse {
   id: string;
   email: string;
+}
+
+// Usage interne : le service renvoie les deux tokens au controller.
+export interface AuthTokens {
+  accessToken: string;
+  refreshToken: string;
+}
+
+// Ce qui sort réellement de l'API : le refresh token, lui, part dans le cookie.
+export interface AccessTokenResponse {
+  accessToken: string;
 }
