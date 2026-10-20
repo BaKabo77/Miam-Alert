@@ -17,3 +17,7 @@ export function generateRefreshToken(): string {
 export function hashRefreshToken(token: string): string {
   return createHash('sha256').update(token).digest('hex');
 }
+
+// Format exact d'un refresh token émis par generateRefreshToken (32 octets en base64url).
+// Tout autre contenu de cookie est rejeté sans même interroger la base.
+export const REFRESH_TOKEN_PATTERN = /^[A-Za-z0-9_-]{43}$/;

@@ -1,4 +1,4 @@
-import { ConflictException, Injectable, UnauthorizedException } from '@nestjs/common';
+import { ConflictException, Injectable, Logger, UnauthorizedException } from '@nestjs/common';
 import { JwtService } from '@nestjs/jwt';
 import { randomUUID } from 'node:crypto';
 import { Prisma } from '../generated/prisma/client.js';
@@ -11,19 +11,22 @@ import {
   generateRefreshToken,
   hashRefreshToken,
   REFRESH_TOKEN_TTL_MS,
+  REFRESH_TOKEN_PATTERN
 } from './refresh-token.js';
 
 const DEFAULT_HOUSEHOLD_NAME = 'Mon foyer';
 
 @Injectable()
 export class AuthService {
+
+  private readonly logger = new Logger(AuthService.name);
   // Hash factice, calculé une seule fois, utilisé quand l'email n'existe pas (voir login).
   private dummyPasswordHash?: Promise<string>;
 
   constructor(
     private readonly prisma: PrismaService,
     private readonly jwt: JwtService,
-  ) {}
+  ) { }
 
   async register(dto: RegisterDto): Promise<UserResponse> {
     // Hachage AVANT de savoir si l'email existe : la réponse prend le même temps dans
@@ -73,6 +76,67 @@ export class AuthService {
 
     // Nouvelle connexion = nouvelle famille de refresh tokens (une "session").
     return this.issueTokens(user.id, randomUUID());
+  }
+
+  async refresh(refreshToken: string | undefined): Promise<AuthTokens> {
+    const stored = await this.findRefreshToken(refreshToken);
+    if (!stored) {
+      throw new UnauthorizedException();
+    }
+
+    // Token déjà utilisé (ou révoqué) qui revient : quelqu'un en a gardé une copie.
+    // On ne peut pas savoir qui est le vrai utilisateur, donc on coupe toute la session :
+    // l'attaquant comme l'utilisateur devront se reconnecter avec le mot de passe.
+    if (stored.revokedAt) {
+      await this.revokeFamily(stored.familyId);
+      this.logger.warn(`Refresh token reuse detected, session revoked for user ${stored.userId}`);
+      throw new UnauthorizedException();
+    }
+
+    if (stored.expiresAt <= new Date()) {
+      throw new UnauthorizedException();
+    }
+
+    // Rotation : l'ancien token est révoqué avant d'en émettre un nouveau.
+    // La condition "revokedAt: null" rend l'opération atomique : si deux requêtes
+    // présentent le même token en même temps, une seule peut gagner.
+    const { count } = await this.prisma.refreshToken.updateMany({
+      where: { id: stored.id, revokedAt: null },
+      data: { revokedAt: new Date() },
+    });
+    if (count === 0) {
+      await this.revokeFamily(stored.familyId);
+      throw new UnauthorizedException();
+    }
+
+    // Même famille : le nouveau token appartient toujours à la même session.
+    return this.issueTokens(stored.userId, stored.familyId);
+  }
+
+  // Révoque toute la session côté serveur. Sans token valide, il n'y a rien à révoquer :
+  // la déconnexion réussit quand même (le cookie sera effacé), sans rien révéler.
+  async logout(refreshToken: string | undefined): Promise<void> {
+    const stored = await this.findRefreshToken(refreshToken);
+    if (stored) {
+      await this.revokeFamily(stored.familyId);
+    }
+  }
+
+  private findRefreshToken(refreshToken: string | undefined) {
+    if (!refreshToken || !REFRESH_TOKEN_PATTERN.test(refreshToken)) {
+      return Promise.resolve(null);
+    }
+    return this.prisma.refreshToken.findUnique({
+      where: { tokenHash: hashRefreshToken(refreshToken) },
+      select: { id: true, userId: true, familyId: true, expiresAt: true, revokedAt: true },
+    });
+  }
+
+  private revokeFamily(familyId: string) {
+    return this.prisma.refreshToken.updateMany({
+      where: { familyId, revokedAt: null },
+      data: { revokedAt: new Date() },
+    });
   }
 
   private async issueTokens(userId: string, familyId: string): Promise<AuthTokens> {
