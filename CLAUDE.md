@@ -212,8 +212,14 @@ Tester chaque module via l'API (Postman ou Bruno) avant de passer au suivant ; l
 
 ## État actuel
 
-Étapes 1 et 2 terminées. Socle de sécurité en place : variables d'environnement validées, helmet, CORS en liste blanche, corps JSON limité à 16 ko, ValidationPipe strict, rate limiting global (100 req/min), filtre d'exception global, guard JWT global avec @Public(), route GET /health. 15 tests e2e.
-Prochaine étape : schéma Prisma de départ, PrismaService et première migration (étape 3).
+Étapes 1 à 4 terminées.
+- Socle de sécurité : variables d'environnement validées, helmet, CORS en liste blanche, corps JSON limité à 16 ko, ValidationPipe strict, rate limiting global (100 req/min) journalisé, filtre d'exception global, guard JWT global avec @Public().
+- Base : schéma Prisma (User, Household, HouseholdMember, Product, PantryItem, RefreshToken), PrismaService global avec passwordHash exclu par défaut, base de test dédiée (miam_alert_test).
+- Authentification : register (argon2id), login (access token 15 min + refresh token en cookie httpOnly), refresh avec rotation et détection de réutilisation, logout, GET /me, logs de sécurité en JSON. Routes /auth/* limitées à 10 req/min.
+- 43 tests e2e.
+
+Prochaine étape : module pantry (étape 5) — CRUD de l'inventaire filtré par foyer, tri par urgence, tests IDOR.
+
 
 
 Mettre à jour cette section au fil de l'avancement.
