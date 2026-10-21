@@ -8,7 +8,6 @@ export type SecurityEvent =
   | 'auth.refresh.reuse_detected'
   | 'auth.logout'
   | 'rate_limit.exceeded'
-  | 'rate_limit.exceeded'
   | 'household.access_denied';
 
 // Seuls champs autorisés dans un événement de sécurité. Le type rend impossible d'y glisser
