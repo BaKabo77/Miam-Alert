@@ -1,0 +1,89 @@
+# Pipeline d'intégration continue de Miam'Alert.
+# Il tourne sur chaque merge request et sur develop / main : une MR ne peut être fusionnée
+# que si tout est vert (réglage « Pipelines must succeed »).
+
+stages:
+  - check
+  - test
+  - secret-detection
+  - security
+
+# Une seule exécution par push : pipeline de MR s'il y en a une ouverte, sinon pipeline de branche.
+workflow:
+  rules:
+    - if: $CI_PIPELINE_SOURCE == "merge_request_event"
+    - if: $CI_COMMIT_BRANCH && $CI_OPEN_MERGE_REQUESTS
+      when: never
+    - if: $CI_COMMIT_BRANCH
+    - if: $CI_COMMIT_TAG
+
+default:
+  # Un nouveau push sur la même branche annule le pipeline devenu obsolète.
+  interruptible: true
+
+variables:
+  # Valeurs propres à la CI, sans aucune valeur réelle : la base n'existe que le temps du job.
+  POSTGRES_USER: miam_alert
+  POSTGRES_PASSWORD: ci-only-password
+  POSTGRES_DB: miam_alert_test
+  DATABASE_URL: postgresql://miam_alert:ci-only-password@db:5432/miam_alert_test?schema=public
+  DATABASE_URL_TEST: $DATABASE_URL
+  npm_config_cache: $CI_PROJECT_DIR/.npm
+
+# Base commune des jobs du backend : même image Node que l'environnement de dev,
+# dépendances installées depuis le lockfile uniquement (versions exactes, reproductibles).
+.backend:
+  image: node:24-alpine
+  before_script:
+    - cd backend
+    - npm ci --prefer-offline --no-audit --no-fund
+    - npx prisma generate
+  cache:
+    key:
+      files:
+        - backend/package-lock.json
+    paths:
+      - .npm/
+    policy: pull-push
+
+quality:
+  extends: .backend
+  stage: check
+  script:
+    - npm run lint
+    - npx tsc --noEmit
+    - npm run build
+    - npm test
+
+e2e:
+  extends: .backend
+  stage: test
+  # Vraie base PostgreSQL, détruite à la fin du job : les tests IDOR et d'authentification
+  # tournent dans les mêmes conditions qu'en local.
+  services:
+    - name: postgres:16-alpine
+      alias: db
+  variables:
+    NODE_ENV: test
+    PORT: '3000'
+    CORS_ORIGINS: http://localhost:5173
+  script:
+    # Secret JWT généré à chaque exécution : aucune valeur, même factice, n'est écrite dans le dépôt.
+    - export JWT_SECRET="$(head -c 48 /dev/urandom | base64 | tr -d '\n')"
+    - npm run test:e2e
+
+audit:
+  image: node:24-alpine
+  stage: security
+  # npm audit n'a besoin que du lockfile : rien n'est installé, aucun script tiers n'est exécuté.
+  script:
+    - cd backend
+    - npm audit --audit-level=high
+  # Une vulnérabilité publiée hier peut faire échouer un code qui n'a pas changé :
+  # le job reste bloquant, c'est voulu (on corrige avant de fusionner).
+
+# Analyses de sécurité fournies par GitLab (disponibles dans l'offre gratuite) :
+# détection de secrets dans le code et analyse statique du code (SAST).
+include:
+  - template: Jobs/Secret-Detection.gitlab-ci.yml
+  - template: Jobs/SAST.gitlab-ci.yml
