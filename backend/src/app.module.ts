@@ -12,6 +12,7 @@ import { HealthController } from './health/health.controller.js';
 import { PrismaModule } from './prisma/prisma.module.js';
 import { LoggingThrottlerGuard } from './common/logging-throttler.guard.js';
 import { UsersModule } from './users/users.module.js';
+import { PantryModule } from './pantry/pantry.module.js';
 
 @Module({
   imports: [
@@ -24,7 +25,8 @@ import { UsersModule } from './users/users.module.js';
     ThrottlerModule.forRoot(throttlerOptions),
     PrismaModule,
     UsersModule,
-    AuthModule
+    AuthModule,
+    PantryModule
   ],
   controllers: [HealthController],
   providers: [
