@@ -30,7 +30,7 @@ Règles pour Claude Code :
 | Données produit | API Open Food Facts (gratuite) |
 | Tâches planifiées | `@nestjs/schedule`, puis BullMQ + Redis si besoin |
 | Environnement | Docker Compose (db, adminer, backend) |
-| CI/CD (plus tard) | GitHub Actions, déploiement Docker + Nginx |
+| Dépôt et CI/CD | GitLab (GitLab CI), miroir en lecture seule vers GitHub ; déploiement Docker + Nginx (plus tard) |
 
 ## Contraintes et décisions déjà prises
 
@@ -112,6 +112,13 @@ Points d'environnement à connaître :
 - Tests unitaires sur la logique métier (services), au minimum pour le tri par urgence et le score des recettes.
 - Petits commits fréquents, un sujet par commit.
 
+## Workflow Git (GitLab)
+
+- `origin` = GitLab (source de vérité), `github` = miroir en lecture seule, mis à jour automatiquement par GitLab. Ne jamais pousser directement sur GitHub.
+- Branches permanentes protégées : `develop` (branche par défaut, intégration) et `main` (prêt pour la prod). Personne ne pousse dessus directement.
+- Chaque travail part de `develop` sur une branche `feat/…`, `fix/…`, `chore/…` ou `docs/…`, poussée sur GitLab puis fusionnée par merge request (fast-forward, pipeline obligatoirement vert).
+- Mise en production : MR `develop` → `main`, puis tag de version `vX.Y.Z` sur `main` (tags `v*` protégés).
+
 ## Sécurité
 
 ### Secrets et dépôt
@@ -171,8 +178,8 @@ Points d'environnement à connaître :
 - HTTPS obligatoire derrière Nginx, avec HSTS.
 
 ### Dépendances et CI
-- `npm audit` et Dependabot (ou Renovate) pour les vulnérabilités des dépendances.
-- CI GitHub Actions : lint, tests, `npm audit --audit-level=high`, scan de secrets (gitleaks) et analyse statique (CodeQL).
+- `npm audit` et Renovate pour les vulnérabilités et mises à jour des dépendances.
+- CI GitLab : lint, compilation, tests unitaires et e2e (PostgreSQL en service), `npm audit --audit-level=high`, détection de secrets (GitLab Secret Detection) et analyse statique (GitLab SAST).
 - Versions des dépendances verrouillées (`package-lock.json` commité).
 
 ### Tests de sécurité
@@ -203,7 +210,7 @@ Avant de considérer une fonctionnalité terminée :
 6. **Module `products`** : récupération Open Food Facts par code-barres (validation EAN, timeout, nettoyage des données) + cache.
 7. **Alertes** : job quotidien, une notification groupée par foyer (pas une par produit).
 8. **Recettes V1** : base locale + algorithme de score.
-9. **CI de sécurité** : lint, tests, `npm audit`, gitleaks, CodeQL, Dependabot. Rédaction de `SECURITY.md`.
+9. **CI de sécurité** (avancée juste après l'étape 5) : pipeline GitLab CI (lint, tests, `npm audit`, détection de secrets, SAST), Renovate. Rédaction de `SECURITY.md`.
 10. **Front PWA** minimal : connexion, inventaire, ajout manuel, puis scan caméra (cookies `httpOnly`, pas de token dans le `localStorage`).
 11. **Déploiement** : Dockerfile de production multi-stage non-root, HTTPS + HSTS derrière Nginx, BDD non exposée.
 12. **V2** : foyer partagé avec rôles, statistiques de gaspillage, liste de courses, OCR de la date, recettes par IA, mode don, export et suppression des données (RGPD), vérification d'email.
@@ -212,14 +219,14 @@ Tester chaque module via l'API (Postman ou Bruno) avant de passer au suivant ; l
 
 ## État actuel
 
-Étapes 1 à 4 terminées.
+Étapes 1 à 5 terminées.
 - Socle de sécurité : variables d'environnement validées, helmet, CORS en liste blanche, corps JSON limité à 16 ko, ValidationPipe strict, rate limiting global (100 req/min) journalisé, filtre d'exception global, guard JWT global avec @Public().
 - Base : schéma Prisma (User, Household, HouseholdMember, Product, PantryItem, RefreshToken), PrismaService global avec passwordHash exclu par défaut, base de test dédiée (miam_alert_test).
 - Authentification : register (argon2id), login (access token 15 min + refresh token en cookie httpOnly), refresh avec rotation et détection de réutilisation, logout, GET /me, logs de sécurité en JSON. Routes /auth/* limitées à 10 req/min.
-- 43 tests e2e.
+- Inventaire : POST/GET /households/:householdId/pantry-items (tri par urgence, DLC avant DDM, pagination bornée à 100, filtre par statut), GET/PATCH/DELETE /pantry-items/:itemId. Appartenance au foyer vérifiée par HouseholdAccessService (404, refus journalisés) ou intégrée à la requête Prisma. Urgence calculée (EXPIRED, PAST_BEST_BEFORE, URGENT, SOON, OK).
+- 6 tests unitaires, 80 tests e2e (dont tests IDOR).
+- Dépôt migré sur GitLab : branches develop/main protégées, merge requests en fast-forward, miroir vers GitHub.
 
-Prochaine étape : module pantry (étape 5) — CRUD de l'inventaire filtré par foyer, tri par urgence, tests IDOR.
-
-
+Prochaine étape : premier pipeline GitLab CI (`.gitlab-ci.yml`). Puis module products (Open Food Facts).
 
 Mettre à jour cette section au fil de l'avancement.
