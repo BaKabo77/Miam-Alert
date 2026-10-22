@@ -60,6 +60,7 @@ describe('Pantry items (e2e)', () => {
         status: 'ACTIVE',
         daysLeft: 1,
         urgency: 'URGENT',
+        product: null,
       });
     });
 

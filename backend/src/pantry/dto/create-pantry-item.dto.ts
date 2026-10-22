@@ -1,5 +1,16 @@
 import { Transform } from 'class-transformer';
-import { IsEnum, IsInt, IsISO8601, IsNotEmpty, IsString, Matches, Max, MaxLength, Min } from 'class-validator';
+import {
+  IsEnum,
+  IsInt,
+  IsISO8601,
+  IsNotEmpty,
+  IsString,
+  IsUUID,
+  Matches,
+  Max,
+  MaxLength,
+  Min,
+} from 'class-validator';
 import { IsOptionalNotNull } from '../../common/validators.js';
 import { ExpiryType, QuantityUnit } from '../../generated/prisma/client.js';
 import { DATE_ONLY_PATTERN } from '../dates.js';
@@ -33,4 +44,8 @@ export class CreatePantryItemDto {
 
   @IsEnum(ExpiryType)
   expiryType: ExpiryType;
+
+  @IsOptionalNotNull()
+  @IsUUID()
+  productId?: string;
 }

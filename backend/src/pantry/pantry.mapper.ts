@@ -12,6 +12,9 @@ export const PANTRY_ITEM_SELECT = {
   expiryDate: true,
   expiryType: true,
   status: true,
+  product: {
+    select: { id: true, barcode: true, brand: true, imageUrl: true, nutriscore: true },
+  },
 } satisfies Prisma.PantryItemSelect;
 
 type PantryItemRow = Prisma.PantryItemGetPayload<{ select: typeof PANTRY_ITEM_SELECT }>;

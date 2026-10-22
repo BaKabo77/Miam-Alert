@@ -1,4 +1,4 @@
-import { Injectable, NotFoundException } from '@nestjs/common';
+import { BadRequestException, Injectable, NotFoundException } from '@nestjs/common';
 import type { Paginated } from '../common/pagination.js';
 import { Prisma } from '../generated/prisma/client.js';
 import { HouseholdAccessService } from '../households/household-access.service.js';
@@ -24,9 +24,14 @@ export class PantryService {
   ): Promise<PantryItemResponse> {
     await this.householdAccess.assertMember(userId, householdId);
 
+    if (dto.productId !== undefined) {
+      await this.assertProductExists(dto.productId);
+    }
+
     const item = await this.prisma.pantryItem.create({
       data: {
         householdId,
+        productId: dto.productId,
         name: dto.name,
         quantity: dto.quantity,
         unit: dto.unit,
@@ -114,6 +119,18 @@ export class PantryService {
     }
   }
 
+  // Les fiches produits sont publiques et partagées : pas de contrôle de foyer ici, seulement
+  // d'existence. Sans cette vérification, un id inconnu ferait échouer la clé étrangère en base
+  // (erreur 500) au lieu d'un 400 explicite.
+  private async assertProductExists(productId: string): Promise<void> {
+    const product = await this.prisma.product.findUnique({
+      where: { id: productId },
+      select: { id: true },
+    });
+    if (!product) {
+      throw new BadRequestException('Unknown product');
+    }
+  }
 }
 
 // Filtre de toutes les requêtes sur UN article : il n'est trouvé que s'il appartient à un

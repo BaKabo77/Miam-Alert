@@ -12,4 +12,14 @@ export interface PantryItemResponse {
   status: PantryItemStatus;
   daysLeft: number;
   urgency: Urgency;
+  product: PantryItemProduct | null;
+}
+
+// Ce que l'inventaire affiche de la fiche produit : de quoi montrer la photo et le Nutri-Score.
+export interface PantryItemProduct {
+  id: string;
+  barcode: string;
+  brand: string | null;
+  imageUrl: string | null;
+  nutriscore: string | null;
 }
