@@ -25,8 +25,8 @@ Règles pour Claude Code :
 | Backend | NestJS (TypeScript) |
 | ORM | Prisma |
 | Base de données | PostgreSQL 16 |
-| Front (plus tard) | React ou Vue en PWA (scan caméra, notifications push, hors ligne) |
-| Scan code-barres | `@zxing/browser` ou `html5-qrcode` (EAN-13) |
+| Front (plus tard) | React + Vite + TypeScript en PWA (scan caméra, notifications push, hors ligne) |
+| Scan code-barres | `@zxing/browser` (EAN-13 / EAN-8) |
 | Données produit | API Open Food Facts (gratuite) |
 | Tâches planifiées | `@nestjs/schedule`, puis BullMQ + Redis si besoin |
 | Environnement | Docker Compose (db, adminer, backend) |
@@ -69,7 +69,8 @@ miam-alert/             # nom technique (npm, Docker) ; nom affiché : Miam'Aler
 │   ├── Dockerfile.dev
 │   ├── prisma/
 │   └── src/
-├── frontend/           # plus tard
+├── frontend/           # plus tard (React)
+├── .gitlab-ci.yml      # pipeline de CI (qualité, tests, sécurité)
 ├── docker-compose.yml
 ├── .env                # jamais commité
 ├── .env.example        # commité, valeurs factices
@@ -219,14 +220,16 @@ Tester chaque module via l'API (Postman ou Bruno) avant de passer au suivant ; l
 
 ## État actuel
 
-Étapes 1 à 5 terminées.
+Étapes 1 à 6 terminées, CI de sécurité en place (étape 9 avancée). Prochaine version : `v0.1.0` (API seule).
 - Socle de sécurité : variables d'environnement validées, helmet, CORS en liste blanche, corps JSON limité à 16 ko, ValidationPipe strict, rate limiting global (100 req/min) journalisé, filtre d'exception global, guard JWT global avec @Public().
 - Base : schéma Prisma (User, Household, HouseholdMember, Product, PantryItem, RefreshToken), PrismaService global avec passwordHash exclu par défaut, base de test dédiée (miam_alert_test).
 - Authentification : register (argon2id), login (access token 15 min + refresh token en cookie httpOnly), refresh avec rotation et détection de réutilisation, logout, GET /me, logs de sécurité en JSON. Routes /auth/* limitées à 10 req/min.
-- Inventaire : POST/GET /households/:householdId/pantry-items (tri par urgence, DLC avant DDM, pagination bornée à 100, filtre par statut), GET/PATCH/DELETE /pantry-items/:itemId. Appartenance au foyer vérifiée par HouseholdAccessService (404, refus journalisés) ou intégrée à la requête Prisma. Urgence calculée (EXPIRED, PAST_BEST_BEFORE, URGENT, SOON, OK).
-- 6 tests unitaires, 80 tests e2e (dont tests IDOR).
-- Dépôt migré sur GitLab : branches develop/main protégées, merge requests en fast-forward, miroir vers GitHub.
+- Inventaire : POST/GET /households/:householdId/pantry-items (tri par urgence, DLC avant DDM, pagination bornée à 100, filtre par statut), GET/PATCH/DELETE /pantry-items/:itemId. Appartenance au foyer vérifiée par HouseholdAccessService (404, refus journalisés) ou intégrée à la requête Prisma. Urgence calculée (EXPIRED, PAST_BEST_BEFORE, URGENT, SOON, OK). Lien facultatif vers une fiche produit (productId).
+- Produits : GET /products/:barcode (access token, 30 req/min), EAN-8/13 avec clé de contrôle, client Open Food Facts (URL fixe, timeout 5 s, redirections refusées), données nettoyées avant stockage, cache en table Product, 404 si inconnu, 503 sans détail si indisponible.
+- Tests : 36 unitaires, 91 e2e (dont IDOR), aucun appel réseau réel (client Open Food Facts remplacé par un faux en e2e).
+- GitLab : branches develop/main protégées, MR en fast-forward avec pipeline obligatoire, miroir vers GitHub. Pipeline : lint, compilation, build, tests unitaires, e2e sur PostgreSQL, npm audit, Secret Detection, SAST.
 
-Prochaine étape : premier pipeline GitLab CI (`.gitlab-ci.yml`). Puis module products (Open Food Facts).
+À faire avant `v0.1.0` : mise à jour de Vitest (3 vulnérabilités modérées), scan de l'historique Git complet (Secret Detection), MR develop → main puis tag `v0.1.0`.
+Prochaine étape fonctionnelle : alertes (étape 7), puis front React (étape 10).
 
 Mettre à jour cette section au fil de l'avancement.
