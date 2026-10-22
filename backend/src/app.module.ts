@@ -13,6 +13,8 @@ import { PrismaModule } from './prisma/prisma.module.js';
 import { LoggingThrottlerGuard } from './common/logging-throttler.guard.js';
 import { UsersModule } from './users/users.module.js';
 import { PantryModule } from './pantry/pantry.module.js';
+import { ProductsModule } from './products/products.module.js';
+
 
 @Module({
   imports: [
@@ -26,6 +28,7 @@ import { PantryModule } from './pantry/pantry.module.js';
     PrismaModule,
     UsersModule,
     AuthModule,
+    ProductsModule,
     PantryModule
   ],
   controllers: [HealthController],
