@@ -30,8 +30,6 @@ variables:
   DATABASE_URL_TEST: $DATABASE_URL
   npm_config_cache: $CI_PROJECT_DIR/.npm
 
-# Base commune des jobs du backend : même image Node que l'environnement de dev,
-# dépendances installées depuis le lockfile uniquement (versions exactes, reproductibles).
 .backend:
   image: node:24-alpine
   before_script:
@@ -75,9 +73,13 @@ e2e:
 audit:
   image: node:24-alpine
   stage: security
+  # Un job par application, exécutés en parallèle.
+  parallel:
+    matrix:
+      - APP: [backend, frontend]
   # npm audit n'a besoin que du lockfile : rien n'est installé, aucun script tiers n'est exécuté.
   script:
-    - cd backend
+    - cd $APP
     - npm audit --audit-level=high
   # Une vulnérabilité publiée hier peut faire échouer un code qui n'a pas changé :
   # le job reste bloquant, c'est voulu (on corrige avant de fusionner).
