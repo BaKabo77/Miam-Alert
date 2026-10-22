@@ -1,0 +1,5 @@
+node_modules
+dist
+# Ne jamais copier de fichier d'environnement dans une image.
+.env
+.env.*

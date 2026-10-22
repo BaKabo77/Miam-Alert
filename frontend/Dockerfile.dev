@@ -1,0 +1,20 @@
+# Image de DÉVELOPPEMENT du front (serveur Vite, rechargement à chaud).
+# La production servira les fichiers construits par Nginx, sans Node.
+FROM node:24-alpine
+
+WORKDIR /app
+
+# Comme pour le backend : pas d'exécution en root, même en dev.
+RUN chown node:node /app
+USER node
+
+COPY --chown=node:node package.json package-lock.json ./
+RUN npm ci
+
+COPY --chown=node:node . .
+
+EXPOSE 5173
+
+# --host 0.0.0.0 : nécessaire pour être joignable depuis l'extérieur du conteneur.
+# L'exposition réelle est limitée par docker-compose (127.0.0.1 uniquement).
+CMD ["npm", "run", "dev", "--", "--host", "0.0.0.0"]

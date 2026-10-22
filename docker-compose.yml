@@ -47,6 +47,22 @@ services:
       - ./backend:/app
       # Volume anonyme : garde les node_modules installés dans l'image (non écrasés par le montage).
       - /app/node_modules
+      
+  frontend:
+  build:
+    context: ./frontend
+    dockerfile: Dockerfile.dev
+  restart: unless-stopped
+  # Pas d'env_file : le front ne reçoit AUCUN secret du .env. Tout ce qui est donné au front
+  # finit dans le code envoyé au navigateur, donc public.
+  depends_on:
+    - backend
+  ports:
+    - '127.0.0.1:5173:5173'
+  volumes:
+    - ./frontend:/app
+    - /app/node_modules
+
 
 volumes:
   db-data:
