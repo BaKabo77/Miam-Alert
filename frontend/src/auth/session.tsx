@@ -1,0 +1,115 @@
+// Tout ce qui concerne la session de l'utilisateur, dans un seul fichier :
+// qui est connecté, comment se connecter / s'inscrire / se déconnecter,
+// et la protection des pages réservées aux utilisateurs connectés.
+
+import { createContext, useContext, useEffect, useState, type ReactNode } from 'react';
+import { Navigate, Outlet } from 'react-router';
+import { apiRequest, refreshSession, setAccessToken, setSessionExpiredHandler } from '../lib/api';
+
+export interface User {
+  id: string;
+  email: string;
+  households: { id: string; name: string; role: 'OWNER' | 'MEMBER' }[];
+}
+
+// Les 3 états possibles de la session.
+type Session =
+  | { status: 'loading' } // on ne sait pas encore (vérification en cours)
+  | { status: 'anonymous' } // personne n'est connecté
+  | { status: 'authenticated'; user: User }; // connecté, et voici qui
+
+interface AuthContextValue {
+  session: Session;
+  login: (email: string, password: string) => Promise<void>;
+  register: (email: string, password: string) => Promise<void>;
+  logout: () => Promise<void>;
+}
+
+const AuthContext = createContext<AuthContextValue | null>(null);
+
+// Composant placé tout en haut de l'application (dans main.tsx) : il garde la session
+// et la met à disposition de toutes les pages.
+export function AuthProvider({ children }: { children: ReactNode }) {
+  const [session, setSession] = useState<Session>({ status: 'loading' });
+
+  // Au chargement de la page : l'access token n'existe plus (il était en mémoire),
+  // on tente de restaurer la session grâce au cookie du refresh token.
+  useEffect(() => {
+    setSessionExpiredHandler(() => setSession({ status: 'anonymous' }));
+
+    void (async () => {
+      try {
+        if (!(await refreshSession())) {
+          setSession({ status: 'anonymous' });
+          return;
+        }
+        const user = await apiRequest<User>('/me');
+        setSession({ status: 'authenticated', user });
+      } catch {
+        setSession({ status: 'anonymous' });
+      }
+    })();
+  }, []);
+
+  async function login(email: string, password: string) {
+    const { accessToken } = await apiRequest<{ accessToken: string }>('/auth/login', {
+      method: 'POST',
+      body: { email, password },
+      retryOnUnauthorized: false,
+    });
+    setAccessToken(accessToken);
+    const user = await apiRequest<User>('/me');
+    setSession({ status: 'authenticated', user });
+  }
+
+  async function register(email: string, password: string) {
+    await apiRequest('/auth/register', {
+      method: 'POST',
+      body: { email, password },
+      retryOnUnauthorized: false,
+    });
+    // Compte créé : on connecte directement l'utilisateur.
+    await login(email, password);
+  }
+
+  async function logout() {
+    try {
+      // Révocation de la session côté serveur, pas seulement l'oubli du token côté navigateur.
+      await apiRequest('/auth/logout', { method: 'POST', retryOnUnauthorized: false });
+    } finally {
+      setAccessToken(null);
+      setSession({ status: 'anonymous' });
+    }
+  }
+
+  return (
+    <AuthContext.Provider value={{ session, login, register, logout }}>{children}</AuthContext.Provider>
+  );
+}
+
+// Accès à la session depuis n'importe quelle page : const { session, login } = useAuth();
+// (Rangé ici avec son Provider pour tout garder au même endroit ; le linter préfère un fichier
+// séparé pour le rechargement à chaud, ce qui n'a pas d'importance ici.)
+// oxlint-disable-next-line react/only-export-components
+export function useAuth(): AuthContextValue {
+  const context = useContext(AuthContext);
+  if (!context) {
+    throw new Error('useAuth must be used inside <AuthProvider>');
+  }
+  return context;
+}
+
+// Enveloppe les pages réservées aux utilisateurs connectés : renvoie vers /login sinon.
+// C'est du confort d'affichage, pas une protection : la vraie barrière reste l'API,
+// qui refuse toute requête sans access token valide.
+export function RequireAuth() {
+  const { session } = useAuth();
+
+  if (session.status === 'loading') {
+    return <p className="p-4 text-gray-500">Chargement…</p>;
+  }
+  if (session.status === 'anonymous') {
+    return <Navigate to="/login" replace />;
+  }
+  return <Outlet />;
+}
