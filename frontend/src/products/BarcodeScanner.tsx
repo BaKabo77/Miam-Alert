@@ -37,12 +37,28 @@ export function BarcodeScanner({ onDetected }: BarcodeScannerProps) {
     let controls: IScannerControls | undefined;
     let cancelled = false;
 
-    // On ne cherche que les formats des produits alimentaires : plus rapide, moins de fausses lectures.
-    const hints = new Map([[DecodeHintType.POSSIBLE_FORMATS, [BarcodeFormat.EAN_13, BarcodeFormat.EAN_8]]]);
-    const reader = new BrowserMultiFormatReader(hints);
+    const hints = new Map<DecodeHintType, unknown>([
+      // On ne cherche que les formats des produits alimentaires : moins de fausses lectures.
+      [DecodeHintType.POSSIBLE_FORMATS, [BarcodeFormat.EAN_13, BarcodeFormat.EAN_8]],
+      // Analyse plus poussée de chaque image : un peu plus lente, mais lit les codes flous
+      // ou petits que filment les webcams d'ordinateur (mise au point approximative de près).
+      [DecodeHintType.TRY_HARDER, true],
+    ]);
+    // Une analyse toutes les 100 ms au lieu de 500 : chaque image d'une webcam est un peu différente
+    // (bruit, léger mouvement), analyser plus souvent multiplie les chances de tomber sur une image nette.
+    const reader = new BrowserMultiFormatReader(hints, { delayBetweenScanAttempts: 100 });
 
     reader
-      .decodeFromConstraints({ video: { facingMode: 'environment' } }, video, (result, _error, scannerControls) => {
+      .decodeFromConstraints(
+        {
+          video: {
+            facingMode: 'environment',
+            // Sans précision, le navigateur filme souvent en 640x480 : les barres fines se confondent.
+            width: { ideal: 1920 },
+            height: { ideal: 1080 },
+          },
+        },
+        video, (result, _error, scannerControls) => {
         if (result) {
           scannerControls.stop();
           onDetectedRef.current(result.getText());
@@ -80,5 +96,20 @@ export function BarcodeScanner({ onDetected }: BarcodeScannerProps) {
     );
   }
 
-  return <div ref={containerRef} />;
+  return (
+    <div>
+      <div className="relative">
+        <div ref={containerRef} />
+        {/* Cadre de visée, purement visuel : aide à centrer le code-barres. */}
+        <div
+          aria-hidden="true"
+          className="pointer-events-none absolute inset-x-8 top-1/2 h-24 -translate-y-1/2 rounded border-2 border-white/80"
+        />
+      </div>
+      <p className="mt-2 text-sm text-gray-600">
+        Placez le code-barres dans le cadre, à l'horizontale et bien éclairé, à 15–20 cm : trop près, la caméra
+        n'arrive pas à faire la mise au point.
+      </p>
+    </div>
+  );
 }
