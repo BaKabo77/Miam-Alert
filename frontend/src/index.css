@@ -9,20 +9,25 @@
 @theme {
   --font-sans: 'Inter Variable', ui-sans-serif, system-ui, sans-serif;
 
-  --color-brand-50: #ecfdf3;
-  --color-brand-100: #d1fae1;
-  --color-brand-200: #a7f3c8;
-  --color-brand-500: #16a34a;
-  --color-brand-600: #15803d;
-  --color-brand-700: #166534;
-  --color-brand-900: #052e16;
+  /* Terre cuite : couleur principale, chaude, distincte du rouge et de l'ambre des alertes. */
+  --color-brand-50: #fdf4ee;
+  --color-brand-100: #fbe3d3;
+  --color-brand-200: #f5c3a4;
+  --color-brand-500: #dd6b3c;
+  --color-brand-600: #b9471f;
+  --color-brand-700: #9a3a19;
+  --color-brand-900: #4a1c0c;
 
-  --color-ink-400: #94a3b8;
-  --color-ink-500: #64748b;
-  --color-ink-700: #334155;
-  --color-ink-900: #0f172a;
+  /* Gris chauds (légèrement brunis) pour le texte. ink-500 et plus foncés : contraste
+     d'au moins 4,5:1 sur fond clair (accessibilité WCAG AA) ; ink-400 réservé aux
+     indications non essentielles (texte d'exemple des champs). */
+  --color-ink-400: #a8a29e;
+  --color-ink-500: #6f6863;
+  --color-ink-700: #44403c;
+  --color-ink-900: #1c1917;
 
-  --color-surface: #f6f7f4;
+  /* Fond crème. */
+  --color-surface: #fbf6ef;
 }
 
 @layer base {

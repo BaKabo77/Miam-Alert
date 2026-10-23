@@ -61,7 +61,7 @@ function TabLink({ to, label, icon }: { to: string; label: string; icon: React.R
       // NavLink sait si son lien correspond à la page affichée : on met cet onglet en avant.
       className={({ isActive }) =>
         `flex flex-col items-center gap-1 py-2.5 text-xs font-semibold transition ${
-          isActive ? 'text-brand-700' : 'text-ink-400 hover:text-ink-700'
+          isActive ? 'text-brand-700' : 'text-ink-500 hover:text-ink-900'
         }`
       }
     >
