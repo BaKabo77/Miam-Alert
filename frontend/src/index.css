@@ -9,37 +9,68 @@
 @theme {
   --font-sans: 'Inter Variable', ui-sans-serif, system-ui, sans-serif;
 
-  /* Terre cuite : couleur principale, chaude, distincte du rouge et de l'ambre des alertes. */
-  --color-brand-50: #fdf4ee;
-  --color-brand-100: #fbe3d3;
-  --color-brand-200: #f5c3a4;
-  --color-brand-500: #dd6b3c;
-  --color-brand-600: #b9471f;
-  --color-brand-700: #9a3a19;
-  --color-brand-900: #4a1c0c;
+  /* Orange : couleur principale. Associée au rouge dans le dégradé « flamme » de l'application. */
+  --color-brand-50: #fff5ed;
+  --color-brand-100: #ffe6d4;
+  --color-brand-200: #fec8a4;
+  --color-brand-500: #f97316;
+  --color-brand-600: #ea580c;
+  --color-brand-700: #c2410c;
+  --color-brand-900: #431407;
 
-  /* Gris chauds (légèrement brunis) pour le texte. ink-500 et plus foncés : contraste
-     d'au moins 4,5:1 sur fond clair (accessibilité WCAG AA) ; ink-400 réservé aux
-     indications non essentielles (texte d'exemple des champs). */
+  /* Rouge : fin du dégradé. */
+  --color-hot-500: #ef4444;
+  --color-hot-600: #dc2626;
+  --color-hot-700: #b91c1c;
+
+  /* Vert : couleur d'accent de la fraîcheur (produit OK, consommé, produit scanné). */
+  --color-fresh-50: #ecfdf3;
+  --color-fresh-100: #d1fae5;
+  --color-fresh-300: #86efac;
+  --color-fresh-600: #16a34a;
+  --color-fresh-700: #15803d;
+
+  /* Gris chauds pour le texte. ink-500 et plus foncés : contraste d'au moins 4,5:1 sur les
+     fonds clairs (accessibilité WCAG AA) ; ink-400 réservé au texte d'exemple des champs. */
   --color-ink-400: #a8a29e;
   --color-ink-500: #645c57;
   --color-ink-700: #44403c;
   --color-ink-900: #1c1917;
 
-  /* Fond sable, cartes ivoire et champs beige : des tons chauds plutôt que du blanc pur. */
-  --color-surface: #f3e5d3;
-  --color-card: #fff9f0;
-  --color-field: #fdf3e6;
+  /* Fond pêche, cartes ivoire, champs pêche clair : des tons chauds plutôt que du blanc pur. */
+  --color-surface: #fdeee3;
+  --color-card: #fffaf5;
+  --color-field: #fff3ea;
 }
 
 @layer base {
   body {
     @apply bg-surface font-sans text-ink-900 antialiased;
+    /* Léger dégradé pêche → rosé sur toute la hauteur de l'écran, fixe au défilement. */
+    background-image: linear-gradient(180deg, #fff3ea 0%, #fbe4dc 100%);
+    background-attachment: fixed;
   }
 }
 
 /* Styles réutilisés dans toute l'application : un bouton ou un champ a le même aspect partout.
    Avec Tailwind 4, @utility déclare une classe maison qu'on peut aussi réutiliser dans une autre (@apply). */
+/* Dégradé « flamme » orange → rouge. Version foncée pour tout ce qui porte du texte blanc
+   (contraste ≥ 4,8:1) ; version vive pour les pictogrammes (logo, bouton de scan : seuil 3:1). */
+@utility bg-flame {
+  background-image: linear-gradient(135deg, var(--color-brand-700), var(--color-hot-600));
+}
+
+@utility bg-flame-bright {
+  background-image: linear-gradient(135deg, var(--color-brand-600), var(--color-hot-600));
+}
+
+/* Texte en dégradé (titres, nom de l'application). */
+@utility text-flame {
+  background-image: linear-gradient(90deg, var(--color-brand-700), var(--color-hot-700));
+  background-clip: text;
+  color: transparent;
+}
+
 @utility card {
   @apply rounded-2xl bg-card shadow-sm ring-1 ring-brand-900/10;
 }
@@ -51,7 +82,7 @@
 }
 
 @utility btn-primary {
-  @apply btn bg-brand-600 text-white shadow-sm hover:bg-brand-700;
+  @apply btn bg-flame text-white shadow-md shadow-hot-600/25 hover:brightness-95;
 }
 
 @utility btn-secondary {

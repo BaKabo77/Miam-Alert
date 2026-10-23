@@ -15,13 +15,13 @@ export function Logo({ size = 'md', variant = 'default' }: LogoProps) {
       <span
         aria-hidden="true"
         className={`grid place-items-center rounded-xl font-extrabold shadow-sm ${mark} ${
-          inverse ? 'bg-card text-brand-600' : 'bg-linear-to-br from-brand-500 to-brand-700 text-white'
+          inverse ? 'bg-card text-brand-700' : 'bg-flame-bright text-white'
         }`}
       >
         M
       </span>
       <span className={`font-extrabold tracking-tight ${text} ${inverse ? 'text-white' : 'text-ink-900'}`}>
-        Miam<span className={inverse ? 'text-amber-200' : 'text-brand-600'}>'Alert</span>
+        Miam<span className={inverse ? 'text-amber-200' : 'text-flame'}>'Alert</span>
       </span>
     </span>
   );

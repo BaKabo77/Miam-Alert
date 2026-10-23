@@ -10,14 +10,14 @@ const URGENCY_STYLES: Record<PantryItem['urgency'], { label: string; badge: stri
   PAST_BEST_BEFORE: { label: 'Date dépassée', badge: 'bg-orange-100 text-orange-700', stripe: 'bg-orange-400' },
   URGENT: { label: 'À consommer vite', badge: 'bg-amber-100 text-amber-800', stripe: 'bg-amber-400' },
   SOON: { label: 'Cette semaine', badge: 'bg-yellow-100 text-yellow-800', stripe: 'bg-yellow-300' },
-  // Vert sauge pour « tout va bien » : la couleur principale (terre cuite) ne signale jamais un danger.
-  OK: { label: 'OK', badge: 'bg-emerald-50 text-emerald-700', stripe: 'bg-emerald-300' },
+  // Vert pour « tout va bien » : la fraîcheur, distincte du dégradé orange-rouge de l'application.
+  OK: { label: 'OK', badge: 'bg-fresh-50 text-fresh-700', stripe: 'bg-fresh-300' },
 };
 
 // Les actions proposées sur chaque article : il quitte alors l'inventaire actif.
 // (Les statuts consommé / jeté serviront aux statistiques de gaspillage.)
 const ACTIONS: { status: PantryItemStatus; label: string; icon: ReactNode; className: string }[] = [
-  { status: 'CONSUMED', label: 'Consommé', icon: <CheckIcon className="h-4 w-4" />, className: 'hover:bg-emerald-50 hover:text-emerald-700' },
+  { status: 'CONSUMED', label: 'Consommé', icon: <CheckIcon className="h-4 w-4" />, className: 'hover:bg-fresh-50 hover:text-fresh-700' },
   { status: 'FROZEN', label: 'Congelé', icon: <SnowflakeIcon className="h-4 w-4" />, className: 'hover:bg-sky-50 hover:text-sky-700' },
   { status: 'WASTED', label: 'Jeté', icon: <TrashIcon className="h-4 w-4" />, className: 'hover:bg-red-50 hover:text-red-700' },
 ];
@@ -110,7 +110,7 @@ function Thumbnail({ item }: { item: PantryItem }) {
   return (
     <span
       aria-hidden="true"
-      className="grid h-14 w-14 shrink-0 place-items-center rounded-xl bg-brand-50 text-xl font-bold text-brand-700"
+      className="grid h-14 w-14 shrink-0 place-items-center rounded-xl bg-linear-to-br from-fresh-50 to-fresh-100 text-xl font-bold text-fresh-700"
     >
       {item.name.charAt(0).toUpperCase()}
     </span>

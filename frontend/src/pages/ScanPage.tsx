@@ -39,7 +39,7 @@ export function ScanPage() {
   return (
     <>
       <div className="mb-5">
-        <h1 className="text-2xl font-bold tracking-tight">Scanner un produit</h1>
+        <h1 className="text-flame text-2xl font-extrabold tracking-tight">Scanner un produit</h1>
         <p className="text-sm text-ink-500">Visez le code-barres : la fiche du produit se remplit toute seule.</p>
       </div>
 

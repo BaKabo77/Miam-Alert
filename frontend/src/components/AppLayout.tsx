@@ -10,7 +10,7 @@ export function AppLayout() {
 
   return (
     <div className="min-h-dvh pb-28">
-      <header className="sticky top-0 z-10 bg-linear-to-r from-brand-700 to-brand-600 shadow-md">
+      <header className="sticky top-0 z-10 bg-flame shadow-md shadow-hot-700/20">
         <div className="mx-auto flex max-w-md items-center justify-between px-4 py-3">
           <Logo variant="inverse" />
           <button
@@ -41,7 +41,7 @@ export function AppLayout() {
             to="/scan"
             className="-mt-5 flex flex-col items-center gap-1 pb-2 text-xs font-semibold text-brand-700"
           >
-            <span className="grid h-14 w-14 place-items-center rounded-full bg-linear-to-br from-brand-500 to-brand-700 text-white shadow-lg shadow-brand-600/30 ring-4 ring-card">
+            <span className="grid h-14 w-14 place-items-center rounded-full bg-flame-bright text-white shadow-lg shadow-hot-600/30 ring-4 ring-card">
               <ScanIcon className="h-6 w-6" />
             </span>
             Scanner

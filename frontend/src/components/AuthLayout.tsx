@@ -11,7 +11,7 @@ interface AuthLayoutProps {
 // Cadre des pages de connexion et d'inscription : fond dégradé et carte centrée.
 export function AuthLayout({ title, subtitle, children, footer }: AuthLayoutProps) {
   return (
-    <div className="grid min-h-dvh place-items-center bg-linear-to-br from-brand-100 via-surface to-amber-100 px-4 py-10">
+    <div className="grid min-h-dvh place-items-center bg-linear-to-br from-brand-100 via-surface to-fresh-100 px-4 py-10">
       <div className="w-full max-w-sm">
         <div className="mb-8 text-center">
           <Logo size="lg" />

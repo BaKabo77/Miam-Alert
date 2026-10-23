@@ -17,7 +17,7 @@ export function InventoryPage() {
   return (
     <>
       <div className="mb-5">
-        <h1 className="text-2xl font-bold tracking-tight">Mon inventaire</h1>
+        <h1 className="text-flame text-2xl font-extrabold tracking-tight">Mon inventaire</h1>
         <p className="text-sm text-ink-500">
           {items ? `${items.length} produit${items.length > 1 ? 's' : ''}, du plus urgent au moins urgent` : ' '}
         </p>

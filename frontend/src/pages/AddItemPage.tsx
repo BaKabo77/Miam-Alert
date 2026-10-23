@@ -63,7 +63,7 @@ export function AddItemPage() {
   return (
     <>
       <div className="mb-5">
-        <h1 className="text-2xl font-bold tracking-tight">Ajouter un produit</h1>
+        <h1 className="text-flame text-2xl font-extrabold tracking-tight">Ajouter un produit</h1>
         <p className="text-sm text-ink-500">Le code-barres ne contient pas la date : indiquez-la ici.</p>
       </div>
 
@@ -78,7 +78,7 @@ export function AddItemPage() {
             />
           )}
           <div className="min-w-0">
-            <p className="text-xs font-semibold uppercase tracking-wide text-brand-700">Produit scanné</p>
+            <p className="text-xs font-semibold uppercase tracking-wide text-fresh-700">Produit scanné</p>
             <p className="truncate font-semibold">{scanned.name}</p>
             {scanned.brand && <p className="text-sm text-ink-500">{scanned.brand}</p>}
           </div>
