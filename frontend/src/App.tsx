@@ -1,6 +1,7 @@
 import { Navigate, Route, Routes } from 'react-router';
 import { RequireAuth } from './auth/session';
 import { AppLayout } from './components/AppLayout';
+import { AddItemPage } from './pages/AddItemPage';
 import { InventoryPage } from './pages/InventoryPage';
 import { LoginPage } from './pages/LoginPage';
 import { RegisterPage } from './pages/RegisterPage';
@@ -14,6 +15,7 @@ export default function App() {
       <Route element={<RequireAuth />}>
         <Route element={<AppLayout />}>
           <Route path="/" element={<InventoryPage />} />
+          <Route path="/add" element={<AddItemPage />} />
         </Route>
       </Route>
       <Route path="*" element={<Navigate to="/" replace />} />
