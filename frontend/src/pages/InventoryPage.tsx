@@ -1,6 +1,7 @@
 import { useQuery } from '@tanstack/react-query';
 import { useAuth } from '../auth/session';
 import { fetchPantryItems } from '../pantry/pantry-api';
+import { PantryItemRow } from '../pantry/PantryItemRow';
 
 export function InventoryPage() {
   const { session, logout } = useAuth();
@@ -33,10 +34,10 @@ export function InventoryPage() {
         <ul className="divide-y divide-gray-200">
           {items.map((item) => (
             <li key={item.id} className="py-3">
-              <p className="font-medium">{item.name}</p>
-              <p className="text-sm text-gray-600">
-                {item.expiryType} : {item.expiryDate} ({item.daysLeft} j)
-              </p>
+              {items.map((item) => (
+                <PantryItemRow key={item.id} item={item} />
+              ))}
+
             </li>
           ))}
         </ul>
