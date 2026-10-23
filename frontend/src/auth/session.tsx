@@ -113,3 +113,16 @@ export function RequireAuth() {
   }
   return <Outlet />;
 }
+
+// Le foyer de l'utilisateur connecté (la V1 n'en a qu'un). À n'utiliser que dans les pages
+// placées sous <RequireAuth>, où l'utilisateur est forcément connecté.
+// oxlint-disable-next-line react/only-export-components
+export function useHouseholdId(): string {
+  const { session } = useAuth();
+  const householdId = session.status === 'authenticated' ? session.user.households[0]?.id : undefined;
+  if (!householdId) {
+    throw new Error('useHouseholdId must be used on a page that requires authentication');
+  }
+  return householdId;
+}
+

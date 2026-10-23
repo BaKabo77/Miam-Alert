@@ -25,3 +25,31 @@ export async function fetchPantryItems(householdId: string): Promise<PantryItem[
   );
   return page.items;
 }
+
+export type PantryItemStatus = PantryItem['status'];
+
+// Ce que l'API accepte pour créer un article (voir CreatePantryItemDto côté backend).
+export interface NewPantryItem {
+  name: string;
+  quantity: number;
+  unit: PantryItem['unit'];
+  expiryDate: string;
+  expiryType: PantryItem['expiryType'];
+  productId?: string;
+}
+
+export function createPantryItem(householdId: string, item: NewPantryItem): Promise<PantryItem> {
+  return apiRequest<PantryItem>(`/households/${encodeURIComponent(householdId)}/pantry-items`, {
+    method: 'POST',
+    body: item,
+  });
+}
+
+// Consommé, jeté ou congelé : l'article quitte l'inventaire actif.
+export function updatePantryItemStatus(itemId: string, status: PantryItemStatus): Promise<PantryItem> {
+  return apiRequest<PantryItem>(`/pantry-items/${encodeURIComponent(itemId)}`, {
+    method: 'PATCH',
+    body: { status },
+  });
+}
+
