@@ -11,7 +11,7 @@ export default function App() {
       <Route path="/register" element={<RegisterPage />} />
       {/* Toutes les routes placées ici exigent d'être connecté. */}
       <Route element={<RequireAuth />}>
-      <Route path="/" element={<InventoryPage />} />
+        <Route path="/" element={<InventoryPage />} />
       </Route>
       <Route path="*" element={<Navigate to="/" replace />} />
     </Routes>

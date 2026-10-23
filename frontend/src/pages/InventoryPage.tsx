@@ -33,12 +33,7 @@ export function InventoryPage() {
       {items && items.length > 0 && (
         <ul className="divide-y divide-gray-200">
           {items.map((item) => (
-            <li key={item.id} className="py-3">
-              {items.map((item) => (
-                <PantryItemRow key={item.id} item={item} />
-              ))}
-
-            </li>
+            <PantryItemRow key={item.id} item={item} />
           ))}
         </ul>
       )}
