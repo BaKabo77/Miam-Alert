@@ -1,8 +1,8 @@
 import { Navigate, Route, Routes } from 'react-router';
 import { RequireAuth } from './auth/session';
-import { HomePage } from './pages/HomePage';
 import { LoginPage } from './pages/LoginPage';
 import { RegisterPage } from './pages/RegisterPage';
+import { InventoryPage } from './pages/InventoryPage';
 
 export default function App() {
   return (
@@ -11,7 +11,7 @@ export default function App() {
       <Route path="/register" element={<RegisterPage />} />
       {/* Toutes les routes placées ici exigent d'être connecté. */}
       <Route element={<RequireAuth />}>
-        <Route path="/" element={<HomePage />} />
+      <Route path="/" element={<InventoryPage />} />
       </Route>
       <Route path="*" element={<Navigate to="/" replace />} />
     </Routes>
