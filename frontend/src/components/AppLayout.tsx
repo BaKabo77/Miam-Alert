@@ -1,46 +1,72 @@
 import { NavLink, Outlet } from 'react-router';
 import { useAuth } from '../auth/session';
+import { ListIcon, LogoutIcon, PlusIcon, ScanIcon } from './icons';
+import { Logo } from './Logo';
 
-const LINKS = [
-  { to: '/', label: 'Inventaire' },
-  { to: '/add', label: 'Ajouter' },
-  { to: '/scan', label: 'Scanner' },
-];
-
-// Cadre commun à toutes les pages de l'application connectée : barre de navigation en haut,
-// et la page demandée à la place de <Outlet />.
+// Cadre commun à toutes les pages de l'application connectée : barre du haut, la page demandée
+// à la place de <Outlet />, et barre d'onglets en bas (comme une application mobile).
 export function AppLayout() {
   const { logout } = useAuth();
 
   return (
-    <div className="min-h-screen bg-gray-50">
-      <header className="border-b border-gray-200 bg-white">
+    <div className="min-h-dvh pb-28">
+      <header className="sticky top-0 z-10 border-b border-black/5 bg-surface/80 backdrop-blur">
         <div className="mx-auto flex max-w-md items-center justify-between px-4 py-3">
-          <span className="text-lg font-bold text-green-700">Miam'Alert</span>
-          <button type="button" onClick={() => void logout()} className="text-sm text-gray-600 underline">
-            Se déconnecter
+          <Logo />
+          <button
+            type="button"
+            onClick={() => void logout()}
+            aria-label="Se déconnecter"
+            title="Se déconnecter"
+            className="rounded-full p-2 text-ink-500 transition hover:bg-black/5 hover:text-ink-900"
+          >
+            <LogoutIcon />
           </button>
         </div>
-        <nav className="mx-auto flex max-w-md gap-1 px-4 pb-2">
-          {LINKS.map((link) => (
-            <NavLink
-              key={link.to}
-              to={link.to}
-              end
-              // NavLink sait si son lien correspond à la page affichée : on met ce lien en avant.
-              className={({ isActive }) =>
-                `rounded px-3 py-1 text-sm ${isActive ? 'bg-green-700 text-white' : 'text-gray-700 hover:bg-gray-100'}`
-              }
-            >
-              {link.label}
-            </NavLink>
-          ))}
-        </nav>
       </header>
 
-      <main className="mx-auto max-w-md p-4">
+      <main className="mx-auto max-w-md px-4 py-5">
         <Outlet />
       </main>
+
+      <nav
+        aria-label="Navigation principale"
+        // safe-area-inset-bottom : laisse la place à la barre de geste des téléphones récents.
+        className="fixed inset-x-0 bottom-0 z-10 border-t border-black/5 bg-white/90 pb-[env(safe-area-inset-bottom)] backdrop-blur"
+      >
+        <div className="mx-auto grid max-w-md grid-cols-3 items-end px-4">
+          <TabLink to="/" label="Inventaire" icon={<ListIcon />} />
+          {/* Le scan est l'action principale de l'application : bouton central mis en avant. */}
+          <NavLink
+            to="/scan"
+            className="-mt-5 flex flex-col items-center gap-1 pb-2 text-xs font-semibold text-brand-700"
+          >
+            <span className="grid h-14 w-14 place-items-center rounded-full bg-linear-to-br from-brand-500 to-brand-700 text-white shadow-lg shadow-brand-600/30 ring-4 ring-white">
+              <ScanIcon className="h-6 w-6" />
+            </span>
+            Scanner
+          </NavLink>
+          <TabLink to="/add" label="Ajouter" icon={<PlusIcon />} />
+        </div>
+      </nav>
     </div>
+  );
+}
+
+function TabLink({ to, label, icon }: { to: string; label: string; icon: React.ReactNode }) {
+  return (
+    <NavLink
+      to={to}
+      end
+      // NavLink sait si son lien correspond à la page affichée : on met cet onglet en avant.
+      className={({ isActive }) =>
+        `flex flex-col items-center gap-1 py-2.5 text-xs font-semibold transition ${
+          isActive ? 'text-brand-700' : 'text-ink-400 hover:text-ink-700'
+        }`
+      }
+    >
+      {icon}
+      {label}
+    </NavLink>
   );
 }

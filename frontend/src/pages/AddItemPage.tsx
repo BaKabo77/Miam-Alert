@@ -13,6 +13,11 @@ const DATE_SHORTCUTS = [
   { label: '+1 mois', value: () => todayPlusMonths(1) },
 ];
 
+const EXPIRY_TYPES: { value: PantryItem['expiryType']; hint: string }[] = [
+  { value: 'DLC', hint: "À consommer jusqu'au" },
+  { value: 'DDM', hint: 'De préférence avant' },
+];
+
 // Produit trouvé par le scan (page /scan), transmis à ce formulaire pour le pré-remplir.
 export interface ScannedProduct {
   id: string;
@@ -57,36 +62,45 @@ export function AddItemPage() {
 
   return (
     <>
-      <h1 className="mb-4 text-2xl font-bold">Ajouter un produit</h1>
+      <div className="mb-5">
+        <h1 className="text-2xl font-bold tracking-tight">Ajouter un produit</h1>
+        <p className="text-sm text-ink-500">Le code-barres ne contient pas la date : indiquez-la ici.</p>
+      </div>
 
       {scanned && (
-        <div className="mb-4 flex items-center gap-3 rounded bg-white p-3 shadow-sm">
+        <div className="card mb-4 flex items-center gap-3 p-3">
           {/* Image servie par Open Food Facts : l'API n'accepte que des URL https de leur domaine. */}
           {scanned.imageUrl && (
-            <img src={scanned.imageUrl} alt="" className="h-16 w-16 rounded object-contain" />
+            <img
+              src={scanned.imageUrl}
+              alt=""
+              className="h-16 w-16 rounded-xl bg-white object-contain ring-1 ring-black/5"
+            />
           )}
-          <div>
-            <p className="font-medium">{scanned.name}</p>
-            {scanned.brand && <p className="text-sm text-gray-600">{scanned.brand}</p>}
+          <div className="min-w-0">
+            <p className="text-xs font-semibold uppercase tracking-wide text-brand-700">Produit scanné</p>
+            <p className="truncate font-semibold">{scanned.name}</p>
+            {scanned.brand && <p className="text-sm text-ink-500">{scanned.brand}</p>}
           </div>
         </div>
       )}
 
-      <form onSubmit={handleSubmit} className="space-y-4 rounded bg-white p-4 shadow-sm">
+      <form onSubmit={handleSubmit} className="card space-y-5 p-5">
         <label className="block">
-          <span className="text-sm text-gray-700">Nom</span>
+          <span className="label">Nom</span>
           <input
             value={name}
             onChange={(event) => setName(event.target.value)}
             required
             maxLength={200}
-            className="mt-1 w-full rounded border border-gray-300 px-3 py-2"
+            placeholder="Ex. : Yaourts nature"
+            className="input"
           />
         </label>
 
-        <div className="flex gap-3">
-          <label className="block flex-1">
-            <span className="text-sm text-gray-700">Quantité</span>
+        <div className="grid grid-cols-2 gap-3">
+          <label className="block">
+            <span className="label">Quantité</span>
             <input
               type="number"
               value={quantity}
@@ -95,15 +109,15 @@ export function AddItemPage() {
               min={1}
               max={1_000_000}
               step={1}
-              className="mt-1 w-full rounded border border-gray-300 px-3 py-2"
+              className="input"
             />
           </label>
-          <label className="block flex-1">
-            <span className="text-sm text-gray-700">Unité</span>
+          <label className="block">
+            <span className="label">Unité</span>
             <select
               value={unit}
               onChange={(event) => setUnit(event.target.value as PantryItem['unit'])}
-              className="mt-1 w-full rounded border border-gray-300 px-3 py-2"
+              className="input"
             >
               <option value="PIECE">pièce(s)</option>
               <option value="GRAM">grammes</option>
@@ -113,38 +127,38 @@ export function AddItemPage() {
         </div>
 
         <fieldset>
-          <legend className="text-sm text-gray-700">Type de date</legend>
-          <div className="mt-1 flex gap-4">
-            <label className="flex items-center gap-1">
-              <input
-                type="radio"
-                name="expiryType"
-                checked={expiryType === 'DLC'}
-                onChange={() => setExpiryType('DLC')}
-              />
-              DLC <span className="text-xs text-gray-500">(à consommer jusqu'au)</span>
-            </label>
-            <label className="flex items-center gap-1">
-              <input
-                type="radio"
-                name="expiryType"
-                checked={expiryType === 'DDM'}
-                onChange={() => setExpiryType('DDM')}
-              />
-              DDM <span className="text-xs text-gray-500">(de préférence avant)</span>
-            </label>
+          <legend className="label">Type de date</legend>
+          {/* Deux boutons radio présentés comme un sélecteur : has-checked colore l'option choisie. */}
+          <div className="grid grid-cols-2 gap-1 rounded-xl bg-black/5 p-1">
+            {EXPIRY_TYPES.map((option) => (
+              <label
+                key={option.value}
+                className="cursor-pointer rounded-lg px-3 py-2 text-center transition has-checked:bg-white has-checked:shadow-sm has-focus-visible:outline-2 has-focus-visible:outline-brand-600"
+              >
+                <input
+                  type="radio"
+                  name="expiryType"
+                  value={option.value}
+                  checked={expiryType === option.value}
+                  onChange={() => setExpiryType(option.value)}
+                  className="sr-only"
+                />
+                <span className="block text-sm font-semibold">{option.value}</span>
+                <span className="block text-[11px] text-ink-500">{option.hint}</span>
+              </label>
+            ))}
           </div>
         </fieldset>
 
         <div>
           <label className="block">
-            <span className="text-sm text-gray-700">Date</span>
+            <span className="label">Date</span>
             <input
               type="date"
               value={expiryDate}
               onChange={(event) => setExpiryDate(event.target.value)}
               required
-              className="mt-1 w-full rounded border border-gray-300 px-3 py-2"
+              className="input"
             />
           </label>
           <div className="mt-2 flex gap-2">
@@ -153,7 +167,7 @@ export function AddItemPage() {
                 key={shortcut.label}
                 type="button"
                 onClick={() => setExpiryDate(shortcut.value())}
-                className="rounded border border-gray-300 px-2 py-1 text-xs text-gray-700 hover:bg-gray-100"
+                className="chip"
               >
                 {shortcut.label}
               </button>
@@ -162,16 +176,12 @@ export function AddItemPage() {
         </div>
 
         {create.isError && (
-          <p role="alert" className="rounded bg-red-50 px-3 py-2 text-sm text-red-700">
+          <p role="alert" className="alert-error">
             {errorMessage(create.error)}
           </p>
         )}
 
-        <button
-          type="submit"
-          disabled={create.isPending}
-          className="w-full rounded bg-green-700 px-3 py-2 font-medium text-white hover:bg-green-800 disabled:opacity-50"
-        >
+        <button type="submit" disabled={create.isPending} className="btn-primary w-full">
           {create.isPending ? 'Ajout…' : "Ajouter à l'inventaire"}
         </button>
       </form>

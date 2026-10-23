@@ -11,6 +11,8 @@ export interface PantryItem {
   status: 'ACTIVE' | 'CONSUMED' | 'WASTED' | 'FROZEN';
   daysLeft: number;
   urgency: 'EXPIRED' | 'PAST_BEST_BEFORE' | 'URGENT' | 'SOON' | 'OK';
+  // Fiche produit liée (article scanné), ou null pour une saisie manuelle.
+  product: { imageUrl: string | null; nutriscore: string | null } | null;
 }
 
 interface PantryPage {

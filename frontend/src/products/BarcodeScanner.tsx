@@ -31,7 +31,7 @@ export function BarcodeScanner({ onDetected }: BarcodeScannerProps) {
     const video = document.createElement('video');
     video.muted = true; // muted + playsInline : nécessaires pour démarrer sur mobile (notamment iPhone)
     video.playsInline = true;
-    video.className = 'aspect-video w-full rounded bg-black object-cover';
+    video.className = 'block aspect-[4/3] w-full object-cover';
     container.appendChild(video);
 
     let controls: IScannerControls | undefined;
@@ -90,7 +90,7 @@ export function BarcodeScanner({ onDetected }: BarcodeScannerProps) {
 
   if (cameraError) {
     return (
-      <p role="alert" className="rounded bg-amber-50 px-3 py-2 text-sm text-amber-800">
+      <p role="alert" className="alert-warning">
         {cameraError}
       </p>
     );
@@ -98,17 +98,17 @@ export function BarcodeScanner({ onDetected }: BarcodeScannerProps) {
 
   return (
     <div>
-      <div className="relative">
+      <div className="relative overflow-hidden rounded-2xl bg-ink-900 shadow-lg">
         <div ref={containerRef} />
-        {/* Cadre de visée, purement visuel : aide à centrer le code-barres. */}
+        {/* Cadre de visée, purement visuel : l'extérieur est assombri pour guider le regard. */}
         <div
           aria-hidden="true"
-          className="pointer-events-none absolute inset-x-8 top-1/2 h-24 -translate-y-1/2 rounded border-2 border-white/80"
+          className="pointer-events-none absolute inset-x-8 top-1/2 h-28 -translate-y-1/2 rounded-xl border-2 border-white/90 shadow-[0_0_0_9999px_rgba(15,23,42,0.45)]"
         />
       </div>
-      <p className="mt-2 text-sm text-gray-600">
-        Placez le code-barres dans le cadre, à l'horizontale et bien éclairé, à 15–20 cm : trop près, la caméra
-        n'arrive pas à faire la mise au point.
+      <p className="mt-2 text-center text-xs text-ink-500">
+        Code-barres à l'horizontale, bien éclairé, à 15–20 cm : trop près, la caméra n'arrive pas à faire la
+        mise au point.
       </p>
     </div>
   );

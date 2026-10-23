@@ -1,1 +1,74 @@
 @import 'tailwindcss';
+/* Police hébergée avec l'application (et non chargée depuis Google Fonts) : aucune requête vers
+   un tiers, donc pas d'adresse IP des utilisateurs transmise à Google (RGPD), et une politique
+   de sécurité du contenu (CSP) plus stricte possible en production. */
+@import '@fontsource-variable/inter';
+
+/* Les couleurs et la police de l'application, utilisables partout en classes Tailwind
+   (bg-brand-600, text-ink-500...). Changer une valeur ici change toute l'application. */
+@theme {
+  --font-sans: 'Inter Variable', ui-sans-serif, system-ui, sans-serif;
+
+  --color-brand-50: #ecfdf3;
+  --color-brand-100: #d1fae1;
+  --color-brand-200: #a7f3c8;
+  --color-brand-500: #16a34a;
+  --color-brand-600: #15803d;
+  --color-brand-700: #166534;
+  --color-brand-900: #052e16;
+
+  --color-ink-400: #94a3b8;
+  --color-ink-500: #64748b;
+  --color-ink-700: #334155;
+  --color-ink-900: #0f172a;
+
+  --color-surface: #f6f7f4;
+}
+
+@layer base {
+  body {
+    @apply bg-surface font-sans text-ink-900 antialiased;
+  }
+}
+
+/* Styles réutilisés dans toute l'application : un bouton ou un champ a le même aspect partout.
+   Avec Tailwind 4, @utility déclare une classe maison qu'on peut aussi réutiliser dans une autre (@apply). */
+@utility card {
+  @apply rounded-2xl bg-white shadow-sm ring-1 ring-black/5;
+}
+
+@utility btn {
+  @apply inline-flex items-center justify-center gap-2 rounded-xl px-4 py-2.5 text-sm font-semibold transition
+    focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-brand-600
+    disabled:cursor-not-allowed disabled:opacity-50;
+}
+
+@utility btn-primary {
+  @apply btn bg-brand-600 text-white shadow-sm hover:bg-brand-700;
+}
+
+@utility btn-secondary {
+  @apply btn bg-white text-ink-700 ring-1 ring-black/10 hover:bg-ink-400/10;
+}
+
+@utility label {
+  @apply mb-1.5 block text-sm font-medium text-ink-700;
+}
+
+@utility input {
+  @apply block w-full rounded-xl border-0 bg-white px-3.5 py-2.5 text-ink-900 ring-1 ring-black/10
+    placeholder:text-ink-400 focus:ring-2 focus:ring-brand-500 focus:outline-none;
+}
+
+@utility chip {
+  @apply rounded-full bg-white px-3 py-1.5 text-xs font-semibold text-ink-700 ring-1 ring-black/10 transition
+    hover:bg-brand-50 hover:text-brand-700 hover:ring-brand-200;
+}
+
+@utility alert-error {
+  @apply rounded-xl bg-red-50 px-3.5 py-2.5 text-sm text-red-700 ring-1 ring-red-200;
+}
+
+@utility alert-warning {
+  @apply rounded-xl bg-amber-50 px-3.5 py-2.5 text-sm text-amber-800 ring-1 ring-amber-200;
+}

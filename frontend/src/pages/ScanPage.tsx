@@ -38,24 +38,28 @@ export function ScanPage() {
 
   return (
     <>
-      <h1 className="mb-4 text-2xl font-bold">Scanner un produit</h1>
+      <div className="mb-5">
+        <h1 className="text-2xl font-bold tracking-tight">Scanner un produit</h1>
+        <p className="text-sm text-ink-500">Visez le code-barres : la fiche du produit se remplit toute seule.</p>
+      </div>
 
       {lookup.isIdle && <BarcodeScanner key={scanAttempt} onDetected={(barcode) => lookup.mutate(barcode)} />}
 
-      {lookup.isPending && <p className="text-gray-500">Recherche du produit…</p>}
+      {lookup.isPending && (
+        <div className="card flex items-center gap-3 p-5">
+          <span className="h-5 w-5 animate-spin rounded-full border-2 border-brand-200 border-t-brand-600" />
+          <p className="font-medium">Recherche du produit…</p>
+        </div>
+      )}
 
       {lookup.isError && (
-        <div role="alert" className="space-y-3 rounded bg-white p-4 shadow-sm">
-          <p className="text-sm text-gray-800">{errorMessage(lookup.error)}</p>
+        <div role="alert" className="card space-y-4 p-5">
+          <p className="text-sm text-ink-700">{errorMessage(lookup.error)}</p>
           <div className="flex gap-2">
-            <button
-              type="button"
-              onClick={scanAgain}
-              className="rounded border border-gray-300 px-3 py-1 text-sm hover:bg-gray-100"
-            >
+            <button type="button" onClick={scanAgain} className="btn-secondary flex-1">
               Scanner un autre produit
             </button>
-            <Link to="/add" className="rounded bg-green-700 px-3 py-1 text-sm text-white hover:bg-green-800">
+            <Link to="/add" className="btn-primary flex-1">
               Saisir à la main
             </Link>
           </div>
@@ -63,26 +67,25 @@ export function ScanPage() {
       )}
 
       {/* Secours : caméra indisponible, code abîmé... La validation EAN complète est faite par l'API. */}
-      <form onSubmit={handleManualSubmit} className="mt-6 flex gap-2">
-        <label className="flex-1">
-          <span className="sr-only">Code-barres</span>
+      <form onSubmit={handleManualSubmit} className="card mt-4 p-4">
+        <label className="label" htmlFor="manual-barcode">
+          Ou tapez le code-barres
+        </label>
+        <div className="flex gap-2">
           <input
+            id="manual-barcode"
             value={manualBarcode}
             onChange={(event) => setManualBarcode(event.target.value)}
             inputMode="numeric"
             pattern="\d{8}|\d{13}"
-            placeholder="Ou tapez le code-barres (8 ou 13 chiffres)"
+            placeholder="8 ou 13 chiffres"
             required
-            className="w-full rounded border border-gray-300 px-3 py-2"
+            className="input"
           />
-        </label>
-        <button
-          type="submit"
-          disabled={lookup.isPending}
-          className="rounded bg-green-700 px-3 py-2 text-white hover:bg-green-800 disabled:opacity-50"
-        >
-          Chercher
-        </button>
+          <button type="submit" disabled={lookup.isPending} className="btn-primary">
+            Chercher
+          </button>
+        </div>
       </form>
     </>
   );

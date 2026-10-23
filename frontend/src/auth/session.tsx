@@ -106,7 +106,11 @@ export function RequireAuth() {
   const { session } = useAuth();
 
   if (session.status === 'loading') {
-    return <p className="p-4 text-gray-500">Chargement…</p>;
+    return (
+      <div className="grid min-h-dvh place-items-center" aria-label="Chargement">
+        <span className="h-8 w-8 animate-spin rounded-full border-4 border-brand-100 border-t-brand-600" />
+      </div>
+    );
   }
   if (session.status === 'anonymous') {
     return <Navigate to="/login" replace />;

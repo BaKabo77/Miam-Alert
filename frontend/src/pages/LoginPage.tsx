@@ -1,6 +1,7 @@
 import { useState, type FormEvent } from 'react';
 import { Link, Navigate, useNavigate } from 'react-router';
 import { useAuth } from '../auth/session';
+import { AuthLayout } from '../components/AuthLayout';
 import { ApiError } from '../lib/api';
 
 export function LoginPage() {
@@ -30,64 +31,53 @@ export function LoginPage() {
   }
 
   return (
-    <main className="mx-auto max-w-sm p-6">
-      <h1 className="mb-6 text-2xl font-bold text-green-700">Connexion</h1>
-
+    <AuthLayout
+      title="Connexion"
+      subtitle="Content de vous revoir !"
+      footer={
+        <>
+          Pas encore de compte ?{' '}
+          <Link to="/register" className="font-semibold text-brand-700 hover:underline">
+            Créer un compte
+          </Link>
+        </>
+      }
+    >
       {/* Hors ligne, l'application s'ouvre (PWA) mais la session ne peut pas être vérifiée. */}
       {!navigator.onLine && (
-        <p className="mb-4 rounded bg-amber-50 px-3 py-2 text-sm text-amber-800">
-          Vous êtes hors ligne. La connexion nécessite un accès au réseau.
-        </p>
+        <p className="alert-warning mb-4">Vous êtes hors ligne. La connexion nécessite un accès au réseau.</p>
       )}
 
       <form onSubmit={handleSubmit} className="space-y-4">
         <label className="block">
-          <span className="text-sm text-gray-700">Email</span>
-          <input
-            name="email"
-            type="email"
-            required
-            maxLength={254}
-            autoComplete="email"
-            className="mt-1 w-full rounded border border-gray-300 px-3 py-2"
-          />
+          <span className="label">Email</span>
+          <input name="email" type="email" required maxLength={254} autoComplete="email" className="input" />
         </label>
 
         <label className="block">
-          <span className="text-sm text-gray-700">Mot de passe</span>
+          <span className="label">Mot de passe</span>
           <input
             name="password"
             type="password"
             required
             maxLength={128}
             autoComplete="current-password"
-            className="mt-1 w-full rounded border border-gray-300 px-3 py-2"
+            className="input"
           />
         </label>
 
         {/* Le message n'apparaît que s'il y a une erreur. role="alert" : lu par les lecteurs d'écran. */}
         {error && (
-          <p role="alert" className="rounded bg-red-50 px-3 py-2 text-sm text-red-700">
+          <p role="alert" className="alert-error">
             {error}
           </p>
         )}
 
-        <button
-          type="submit"
-          disabled={submitting}
-          className="w-full rounded bg-green-700 px-3 py-2 font-medium text-white hover:bg-green-800 disabled:opacity-50"
-        >
-          {submitting ? 'Patientez…' : 'Se connecter'}
+        <button type="submit" disabled={submitting} className="btn-primary w-full">
+          {submitting ? 'Connexion…' : 'Se connecter'}
         </button>
       </form>
-
-      <p className="mt-6 text-sm text-gray-600">
-        Pas encore de compte ?{' '}
-        <Link to="/register" className="text-green-700 underline">
-          Créer un compte
-        </Link>
-      </p>
-    </main>
+    </AuthLayout>
   );
 }
 

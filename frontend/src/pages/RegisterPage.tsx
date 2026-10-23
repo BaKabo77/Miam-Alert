@@ -1,6 +1,7 @@
 import { useState, type FormEvent } from 'react';
 import { Link, Navigate, useNavigate } from 'react-router';
 import { useAuth } from '../auth/session';
+import { AuthLayout } from '../components/AuthLayout';
 import { ApiError } from '../lib/api';
 
 export function RegisterPage() {
@@ -29,24 +30,26 @@ export function RegisterPage() {
   }
 
   return (
-    <main className="mx-auto max-w-sm p-6">
-      <h1 className="mb-6 text-2xl font-bold text-green-700">Créer un compte</h1>
-
+    <AuthLayout
+      title="Créer un compte"
+      subtitle="Quelques secondes pour arrêter de gaspiller."
+      footer={
+        <>
+          Déjà un compte ?{' '}
+          <Link to="/login" className="font-semibold text-brand-700 hover:underline">
+            Se connecter
+          </Link>
+        </>
+      }
+    >
       <form onSubmit={handleSubmit} className="space-y-4">
         <label className="block">
-          <span className="text-sm text-gray-700">Email</span>
-          <input
-            name="email"
-            type="email"
-            required
-            maxLength={254}
-            autoComplete="email"
-            className="mt-1 w-full rounded border border-gray-300 px-3 py-2"
-          />
+          <span className="label">Email</span>
+          <input name="email" type="email" required maxLength={254} autoComplete="email" className="input" />
         </label>
 
         <label className="block">
-          <span className="text-sm text-gray-700">Mot de passe (12 caractères minimum)</span>
+          <span className="label">Mot de passe</span>
           {/* Mêmes règles que l'API, vérifiées ici pour le confort de l'utilisateur.
               "new-password" : le navigateur propose de générer un mot de passe fort. */}
           <input
@@ -56,32 +59,22 @@ export function RegisterPage() {
             minLength={12}
             maxLength={128}
             autoComplete="new-password"
-            className="mt-1 w-full rounded border border-gray-300 px-3 py-2"
+            className="input"
           />
+          <span className="mt-1.5 block text-xs text-ink-500">12 caractères minimum. Une phrase est idéale.</span>
         </label>
 
         {error && (
-          <p role="alert" className="rounded bg-red-50 px-3 py-2 text-sm text-red-700">
+          <p role="alert" className="alert-error">
             {error}
           </p>
         )}
 
-        <button
-          type="submit"
-          disabled={submitting}
-          className="w-full rounded bg-green-700 px-3 py-2 font-medium text-white hover:bg-green-800 disabled:opacity-50"
-        >
-          {submitting ? 'Patientez…' : 'Créer mon compte'}
+        <button type="submit" disabled={submitting} className="btn-primary w-full">
+          {submitting ? 'Création…' : 'Créer mon compte'}
         </button>
       </form>
-
-      <p className="mt-6 text-sm text-gray-600">
-        Déjà un compte ?{' '}
-        <Link to="/login" className="text-green-700 underline">
-          Se connecter
-        </Link>
-      </p>
-    </main>
+    </AuthLayout>
   );
 }
 
