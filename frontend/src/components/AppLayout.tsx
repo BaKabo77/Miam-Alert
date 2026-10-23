@@ -10,15 +10,15 @@ export function AppLayout() {
 
   return (
     <div className="min-h-dvh pb-28">
-      <header className="sticky top-0 z-10 border-b border-black/5 bg-surface/80 backdrop-blur">
+      <header className="sticky top-0 z-10 bg-linear-to-r from-brand-700 to-brand-600 shadow-md">
         <div className="mx-auto flex max-w-md items-center justify-between px-4 py-3">
-          <Logo />
+          <Logo variant="inverse" />
           <button
             type="button"
             onClick={() => void logout()}
             aria-label="Se déconnecter"
             title="Se déconnecter"
-            className="rounded-full p-2 text-ink-500 transition hover:bg-black/5 hover:text-ink-900"
+            className="rounded-full p-2 text-white/85 transition hover:bg-white/10 hover:text-white"
           >
             <LogoutIcon />
           </button>
@@ -32,7 +32,7 @@ export function AppLayout() {
       <nav
         aria-label="Navigation principale"
         // safe-area-inset-bottom : laisse la place à la barre de geste des téléphones récents.
-        className="fixed inset-x-0 bottom-0 z-10 border-t border-black/5 bg-white/90 pb-[env(safe-area-inset-bottom)] backdrop-blur"
+        className="fixed inset-x-0 bottom-0 z-10 border-t border-brand-900/10 bg-card/95 pb-[env(safe-area-inset-bottom)] backdrop-blur"
       >
         <div className="mx-auto grid max-w-md grid-cols-3 items-end px-4">
           <TabLink to="/" label="Inventaire" icon={<ListIcon />} />
@@ -41,7 +41,7 @@ export function AppLayout() {
             to="/scan"
             className="-mt-5 flex flex-col items-center gap-1 pb-2 text-xs font-semibold text-brand-700"
           >
-            <span className="grid h-14 w-14 place-items-center rounded-full bg-linear-to-br from-brand-500 to-brand-700 text-white shadow-lg shadow-brand-600/30 ring-4 ring-white">
+            <span className="grid h-14 w-14 place-items-center rounded-full bg-linear-to-br from-brand-500 to-brand-700 text-white shadow-lg shadow-brand-600/30 ring-4 ring-card">
               <ScanIcon className="h-6 w-6" />
             </span>
             Scanner

@@ -51,9 +51,9 @@ export function InventoryPage() {
 function Summary({ items }: { items: PantryItem[] }) {
   const count = (...levels: PantryItem['urgency'][]) => items.filter((item) => levels.includes(item.urgency)).length;
   const tiles = [
-    { label: 'Périmés', value: count('EXPIRED'), className: 'from-red-50 to-white text-red-700' },
-    { label: 'À manger vite', value: count('URGENT', 'PAST_BEST_BEFORE'), className: 'from-amber-50 to-white text-amber-800' },
-    { label: 'Cette semaine', value: count('SOON'), className: 'from-yellow-50 to-white text-yellow-800' },
+    { label: 'Périmés', value: count('EXPIRED'), className: 'from-red-100 to-card text-red-700' },
+    { label: 'À manger vite', value: count('URGENT', 'PAST_BEST_BEFORE'), className: 'from-amber-100 to-card text-amber-800' },
+    { label: 'Cette semaine', value: count('SOON'), className: 'from-yellow-100 to-card text-yellow-800' },
   ];
 
   return (

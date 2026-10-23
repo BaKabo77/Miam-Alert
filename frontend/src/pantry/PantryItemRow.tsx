@@ -68,7 +68,7 @@ export function PantryItemRow({ item }: PantryItemRowProps) {
         </div>
       </div>
 
-      <div className="mt-3 flex justify-end gap-1 border-t border-black/5 pt-2">
+      <div className="mt-3 flex justify-end gap-1 border-t border-brand-900/10 pt-2">
         {ACTIONS.map((action) => (
           <button
             key={action.status}
@@ -103,7 +103,7 @@ function Thumbnail({ item }: { item: PantryItem }) {
         src={item.product.imageUrl}
         alt=""
         loading="lazy"
-        className="h-14 w-14 shrink-0 rounded-xl bg-white object-contain ring-1 ring-black/5"
+        className="h-14 w-14 shrink-0 rounded-xl bg-card object-contain ring-1 ring-brand-900/10"
       />
     );
   }

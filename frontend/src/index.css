@@ -22,12 +22,14 @@
      d'au moins 4,5:1 sur fond clair (accessibilité WCAG AA) ; ink-400 réservé aux
      indications non essentielles (texte d'exemple des champs). */
   --color-ink-400: #a8a29e;
-  --color-ink-500: #6f6863;
+  --color-ink-500: #645c57;
   --color-ink-700: #44403c;
   --color-ink-900: #1c1917;
 
-  /* Fond crème. */
-  --color-surface: #fbf6ef;
+  /* Fond sable, cartes ivoire et champs beige : des tons chauds plutôt que du blanc pur. */
+  --color-surface: #f3e5d3;
+  --color-card: #fff9f0;
+  --color-field: #fdf3e6;
 }
 
 @layer base {
@@ -39,7 +41,7 @@
 /* Styles réutilisés dans toute l'application : un bouton ou un champ a le même aspect partout.
    Avec Tailwind 4, @utility déclare une classe maison qu'on peut aussi réutiliser dans une autre (@apply). */
 @utility card {
-  @apply rounded-2xl bg-white shadow-sm ring-1 ring-black/5;
+  @apply rounded-2xl bg-card shadow-sm ring-1 ring-brand-900/10;
 }
 
 @utility btn {
@@ -53,7 +55,7 @@
 }
 
 @utility btn-secondary {
-  @apply btn bg-white text-ink-700 ring-1 ring-black/10 hover:bg-ink-400/10;
+  @apply btn bg-card text-ink-700 ring-1 ring-brand-900/15 hover:bg-brand-50;
 }
 
 @utility label {
@@ -61,12 +63,12 @@
 }
 
 @utility input {
-  @apply block w-full rounded-xl border-0 bg-white px-3.5 py-2.5 text-ink-900 ring-1 ring-black/10
+  @apply block w-full rounded-xl border-0 bg-field px-3.5 py-2.5 text-ink-900 ring-1 ring-brand-900/15
     placeholder:text-ink-400 focus:ring-2 focus:ring-brand-500 focus:outline-none;
 }
 
 @utility chip {
-  @apply rounded-full bg-white px-3 py-1.5 text-xs font-semibold text-ink-700 ring-1 ring-black/10 transition
+  @apply rounded-full bg-field px-3 py-1.5 text-xs font-semibold text-ink-700 ring-1 ring-brand-900/15 transition
     hover:bg-brand-50 hover:text-brand-700 hover:ring-brand-200;
 }
 
