@@ -1,0 +1,157 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 512 512">
+  <!-- Logo Miam'Alert : tomate scannée. Version sans texte, pour l'icône et la barre de l'application. -->
+  <defs>
+    <!-- 1. Dégradés de fond (Style App Icon Premium) -->
+    <radialGradient id="bgGrad" cx="50%" cy="0%" r="100%" fx="50%" fy="0%">
+      <stop offset="0%" stop-color="#2A2F3A" />
+      <stop offset="100%" stop-color="#0F1115" />
+    </radialGradient>
+    
+    <linearGradient id="borderGrad" x1="0%" y1="0%" x2="100%" y2="100%">
+      <stop offset="0%" stop-color="#4B5363" />
+      <stop offset="100%" stop-color="#1F232B" />
+    </linearGradient>
+
+    <!-- 2. Dégradés de la Tomate -->
+    <linearGradient id="tomatoBody" x1="0%" y1="0%" x2="0%" y2="100%">
+      <stop offset="0%" stop-color="#FF512F" />
+      <stop offset="80%" stop-color="#DD2476" />
+      <stop offset="100%" stop-color="#900C3F" />
+    </linearGradient>
+    
+    <radialGradient id="tomatoHighlight" cx="35%" cy="25%" r="60%">
+      <stop offset="0%" stop-color="#FFFFFF" stop-opacity="0.4" />
+      <stop offset="60%" stop-color="#FFFFFF" stop-opacity="0" />
+    </radialGradient>
+
+    <!-- 3. Dégradés des feuilles -->
+    <linearGradient id="leafGrad" x1="0%" y1="100%" x2="100%" y2="0%">
+      <stop offset="0%" stop-color="#00B09B" />
+      <stop offset="100%" stop-color="#96C93D" />
+    </linearGradient>
+
+    <!-- 4. Dégradés et effets du Faisceau Laser (Cyan/Néon) -->
+    <linearGradient id="laserCore" x1="0%" y1="0%" x2="100%" y2="0%">
+      <stop offset="0%" stop-color="#00F0FF" stop-opacity="0" />
+      <stop offset="20%" stop-color="#00F0FF" stop-opacity="1" />
+      <stop offset="80%" stop-color="#00F0FF" stop-opacity="1" />
+      <stop offset="100%" stop-color="#00F0FF" stop-opacity="0" />
+    </linearGradient>
+    
+    <linearGradient id="laserTrail" x1="0%" y1="0%" x2="0%" y2="100%">
+      <stop offset="0%" stop-color="#00F0FF" stop-opacity="0.3" />
+      <stop offset="100%" stop-color="#00F0FF" stop-opacity="0" />
+    </linearGradient>
+
+    <!-- Filtres pour ombres et lumières (Glow) -->
+    <filter id="neonGlow" x="-50%" y="-50%" width="200%" height="200%">
+      <feGaussianBlur stdDeviation="8" result="blur1" />
+      <feGaussianBlur stdDeviation="15" result="blur2" />
+      <feMerge>
+        <feMergeNode in="blur2" />
+        <feMergeNode in="blur1" />
+        <feMergeNode in="SourceGraphic" />
+      </feMerge>
+    </filter>
+
+    <filter id="dropShadow" x="-20%" y="-20%" width="140%" height="140%">
+      <feDropShadow dx="0" dy="12" stdDeviation="15" flood-color="#000000" flood-opacity="0.6" />
+    </filter>
+
+    <!-- Masque pour contenir le code-barres strictement dans la tomate -->
+    <clipPath id="tomatoClip">
+      <path d="M256,160 C350,160 395,205 395,270 C395,345 335,390 256,390 C177,390 117,345 117,270 C117,205 162,160 256,160 Z" />
+    </clipPath>
+  </defs>
+
+  <!-- ================= FOND DE L'ICÔNE ================= -->
+  <!-- Base arrondie type iOS -->
+  <rect x="16" y="16" width="480" height="480" rx="110" fill="url(#bgGrad)" stroke="url(#borderGrad)" stroke-width="4" filter="url(#dropShadow)" />
+
+  <!-- Subtil fond quadrillé tech (opacité très faible) -->
+  <g stroke="#FFFFFF" stroke-width="1" opacity="0.04">
+    <path d="M256,16 L256,496 M16,256 L496,256" />
+    <circle cx="256" cy="256" r="140" fill="none" />
+    <circle cx="256" cy="256" r="210" fill="none" />
+    <!-- Cibles aux coins -->
+    <path d="M70,70 L90,70 M70,70 L70,90 M442,70 L422,70 M442,70 L442,90 M70,442 L90,442 M70,442 L70,422 M442,442 L422,442 M442,442 L442,422" stroke-width="2" />
+  </g>
+
+  <g transform="translate(0 14)"><!-- ================= CADRE DE SCAN (VISEUR) ================= -->
+  <g stroke="#00F0FF" stroke-width="12" stroke-linecap="round" stroke-linejoin="round" fill="none" filter="url(#neonGlow)" opacity="0.85">
+    <!-- Haut Gauche -->
+    <path d="M 125 155 L 125 130 A 20 20 0 0 1 145 110 L 170 110" />
+    <!-- Haut Droit -->
+    <path d="M 342 110 L 367 110 A 20 20 0 0 1 387 130 L 387 155" />
+    <!-- Bas Gauche -->
+    <path d="M 125 330 L 125 355 A 20 20 0 0 0 145 375 L 170 375" />
+    <!-- Bas Droit -->
+    <path d="M 342 375 L 367 375 A 20 20 0 0 0 387 355 L 387 330" />
+  </g>
+
+  <!-- ================= LA TOMATE (ALIMENT) ================= -->
+  <g filter="url(#dropShadow)">
+    <!-- Forme principale (Dégradé de couleurs chaudes) -->
+    <path d="M256,160 C350,160 395,205 395,270 C395,345 335,390 256,390 C177,390 117,345 117,270 C117,205 162,160 256,160 Z" fill="url(#tomatoBody)" />
+    <!-- Calque de surbrillance (Reflet brillant pour l'effet volume) -->
+    <path d="M256,160 C350,160 395,205 395,270 C395,345 335,390 256,390 C177,390 117,345 117,270 C117,205 162,160 256,160 Z" fill="url(#tomatoHighlight)" />
+  </g>
+
+  <!-- ================= CODE-BARRES RÉDUIT ET PROPORTIONNÉ ================= -->
+  <!-- Code-barres plus petit, avec des barres de garde plus longues type EAN -->
+  <g clip-path="url(#tomatoClip)" fill="#110305" opacity="0.85">
+    <!-- Garde Gauche -->
+    <rect x="180" y="235" width="4" height="70" rx="1" />
+    <rect x="187" y="235" width="4" height="70" rx="1" />
+    <!-- Bloc Data 1 -->
+    <rect x="195" y="235" width="6" height="60" rx="1" />
+    <rect x="204" y="235" width="3" height="60" rx="1" />
+    <rect x="212" y="235" width="8" height="60" rx="1" />
+    <rect x="224" y="235" width="4" height="60" rx="1" />
+    <rect x="232" y="235" width="10" height="60" rx="1" />
+    <rect x="245" y="235" width="5" height="60" rx="1" />
+    <!-- Garde Centrale -->
+    <rect x="253" y="235" width="3" height="70" rx="1" />
+    <rect x="259" y="235" width="3" height="70" rx="1" />
+    <!-- Bloc Data 2 -->
+    <rect x="266" y="235" width="8" height="60" rx="1" />
+    <rect x="277" y="235" width="5" height="60" rx="1" />
+    <rect x="286" y="235" width="10" height="60" rx="1" />
+    <rect x="300" y="235" width="4" height="60" rx="1" />
+    <rect x="308" y="235" width="6" height="60" rx="1" />
+    <rect x="318" y="235" width="3" height="60" rx="1" />
+    <!-- Garde Droite -->
+    <rect x="325" y="235" width="4" height="70" rx="1" />
+    <rect x="332" y="235" width="4" height="70" rx="1" />
+  </g>
+
+  <!-- ================= FEUILLES ET PÉDONCULE ================= -->
+  <g filter="url(#dropShadow)">
+    <!-- Tige centrale -->
+    <path d="M 256 155 C 252 130, 262 110, 278 95 C 265 110, 265 130, 265 155 Z" fill="#689F38" />
+    <!-- Couronnes de feuilles -->
+    <path d="M 256 150 C 295 125, 345 135, 355 160 C 320 165, 285 155, 256 150 Z" fill="url(#leafGrad)" />
+    <path d="M 256 150 C 217 125, 167 135, 157 160 C 192 165, 227 155, 256 150 Z" fill="url(#leafGrad)" />
+    <path d="M 256 150 C 275 170, 305 205, 298 215 C 280 195, 265 180, 256 150 Z" fill="url(#leafGrad)" />
+    <path d="M 256 150 C 237 170, 207 205, 214 215 C 232 195, 247 180, 256 150 Z" fill="url(#leafGrad)" />
+  </g>
+
+  <!-- ================= RAYON LASER (SCAN) ================= -->
+  <g>
+    <!-- Traînée lumineuse descendante -->
+    <rect x="90" y="280" width="332" height="70" fill="url(#laserTrail)" clip-path="url(#tomatoClip)" />
+    
+    <!-- Ligne de Laser brillante avec néon -->
+    <line x1="75" y1="280" x2="437" y2="280" stroke="url(#laserCore)" stroke-width="6" stroke-linecap="round" filter="url(#neonGlow)" />
+    
+    <!-- Ligne de coeur blanc ultra-lumineux -->
+    <line x1="110" y1="280" x2="402" y2="280" stroke="#FFFFFF" stroke-width="2.5" stroke-linecap="round" />
+    
+    <!-- Petites étincelles optiques sur le laser -->
+    <circle cx="150" cy="280" r="3.5" fill="#FFFFFF" filter="url(#neonGlow)" />
+    <circle cx="256" cy="280" r="5" fill="#FFFFFF" filter="url(#neonGlow)" />
+    <circle cx="362" cy="280" r="3.5" fill="#FFFFFF" filter="url(#neonGlow)" />
+  </g>
+
+</g>
+</svg>
