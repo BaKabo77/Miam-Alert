@@ -1,0 +1,25 @@
+# En-têtes de sécurité, inclus dans CHAQUE bloc location : dans Nginx, un add_header placé dans
+# un location annule tous ceux hérités du bloc server. Les définir une seule fois au niveau server
+# les ferait disparaître silencieusement des réponses qui ont leur propre Cache-Control.
+
+# Content Security Policy : liste blanche de ce que la page a le droit de charger.
+# Même si une faille XSS injectait du code, le navigateur refuserait de l'exécuter (pas de script
+# en ligne ni de domaine tiers) et d'envoyer des données ailleurs qu'à l'API (connect-src).
+#   - img-src : photos des produits, servies par Open Food Facts (l'API n'accepte que ce domaine).
+#   - frame-ancestors 'none' : l'application ne peut pas être affichée dans un cadre (clickjacking).
+add_header Content-Security-Policy "default-src 'none'; script-src 'self'; style-src 'self'; img-src 'self' https://*.openfoodfacts.org; font-src 'self'; connect-src 'self' __API_URL__; manifest-src 'self'; worker-src 'self'; base-uri 'none'; form-action 'self'; frame-ancestors 'none'; object-src 'none'" always;
+
+# Le navigateur doit respecter le type annoncé (pas de fichier texte exécuté comme script).
+add_header X-Content-Type-Options "nosniff" always;
+
+# Doublon de frame-ancestors pour les anciens navigateurs.
+add_header X-Frame-Options "DENY" always;
+
+# Aucune adresse de page transmise aux sites tiers (photos Open Food Facts).
+add_header Referrer-Policy "no-referrer" always;
+
+# Seule la caméra est utilisable (scan), et uniquement par l'application elle-même.
+add_header Permissions-Policy "camera=(self), microphone=(), geolocation=(), payment=(), usb=()" always;
+
+# Isole la fenêtre de l'application des pages ouvertes depuis un autre site.
+add_header Cross-Origin-Opener-Policy "same-origin" always;
