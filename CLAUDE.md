@@ -187,7 +187,7 @@ Points d'environnement à connaître :
 - Conteneurs de production : non-root, lecture seule, `cap_drop: ALL`, `no-new-privileges`, chacun ne reçoit que ses variables. L'API fait confiance à un seul proxy (`TRUST_PROXY=1`, jamais `true`).
 
 ### Dépendances et CI
-- `npm audit` et Renovate pour les vulnérabilités et mises à jour des dépendances.
+- `npm audit` pour les vulnérabilités ; Renovate pour les mises à jour des dépendances (prévu, pas encore en place).
 - CI GitLab : lint, compilation, tests unitaires et e2e (PostgreSQL en service), `npm audit --audit-level=high`, détection de secrets (GitLab Secret Detection) et analyse statique (GitLab SAST).
 - Versions des dépendances verrouillées (`package-lock.json` commité).
 
@@ -211,18 +211,19 @@ Avant de considérer une fonctionnalité terminée :
 
 ## Feuille de route
 
-1. **Environnement** : Docker Compose (PostgreSQL, Adminer, backend NestJS), Prisma initialisé.
-2. **Socle de sécurité** (avant toute fonctionnalité) : validation des variables d'environnement, `helmet`, CORS restreint, `ValidationPipe` global strict, throttler global, filtre d'exception global, guard JWT global avec décorateur `@Public()`.
-3. **Schéma Prisma de départ** (UUID partout) + `PrismaService` branché dans NestJS + première migration.
-4. **Module `auth`** : inscription, connexion, argon2, access token court + refresh token en cookie `httpOnly` avec rotation, déconnexion, rate limiting renforcé, tests e2e.
-5. **Module `pantry`** : CRUD des produits en saisie manuelle, tri par date de péremption, contrôle d'appartenance au foyer, tests IDOR.
-6. **Module `products`** : récupération Open Food Facts par code-barres (validation EAN, timeout, nettoyage des données) + cache.
-7. **Alertes** : job quotidien, une notification groupée par foyer (pas une par produit).
+1. ✅ **Environnement** : Docker Compose (PostgreSQL, Adminer, backend NestJS), Prisma initialisé.
+2. ✅ **Socle de sécurité** (avant toute fonctionnalité) : validation des variables d'environnement, `helmet`, CORS restreint, `ValidationPipe` global strict, throttler global, filtre d'exception global, guard JWT global avec décorateur `@Public()`.
+3. ✅ **Schéma Prisma de départ** (UUID partout) + `PrismaService` branché dans NestJS + première migration.
+4. ✅ **Module `auth`** : inscription, connexion, argon2, access token court + refresh token en cookie `httpOnly` avec rotation, déconnexion, rate limiting renforcé, tests e2e.
+5. ✅ **Module `pantry`** : CRUD des produits en saisie manuelle, tri par date de péremption, contrôle d'appartenance au foyer, tests IDOR.
+6. ✅ **Module `products`** : récupération Open Food Facts par code-barres (validation EAN, timeout, nettoyage des données) + cache.
+7. ✅ **Alertes** : job quotidien, une alerte groupée par foyer (pas une par produit), bandeau dans le front. Notifications push reportées.
 8. **Recettes V1** : base locale + algorithme de score.
-9. **CI de sécurité** (avancée juste après l'étape 5) : pipeline GitLab CI (lint, tests, `npm audit`, détection de secrets, SAST), Renovate. Rédaction de `SECURITY.md`.
-10. **Front PWA** minimal : connexion, inventaire, ajout manuel, puis scan caméra (cookies `httpOnly`, pas de token dans le `localStorage`).
-11. **Déploiement** : Dockerfile de production multi-stage non-root, HTTPS + HSTS derrière Nginx, BDD non exposée.
-12. **V2** : foyer partagé avec rôles, statistiques de gaspillage, liste de courses, OCR de la date, recettes par IA, mode don, export et suppression des données (RGPD), vérification d'email.
+9. ✅ **CI de sécurité** (avancée juste après l'étape 5) : pipeline GitLab CI (lint, tests, `npm audit`, détection de secrets, SAST), `SECURITY.md`. Reste : Renovate.
+10. ✅ **Front PWA** minimal : connexion, inventaire, ajout manuel, puis scan caméra (cookies `httpOnly`, pas de token dans le `localStorage`).
+11. ✅ **Déploiement** : Dockerfiles de production multi-stage non-root, HTTPS + HSTS derrière Caddy, BDD non exposée, serveur durci (`v0.3.0`).
+    - **11 bis. Déploiement continu** : images construites par GitLab CI, analysées par Trivy, poussées dans le registre GitLab ; déploiement d'un tag par bouton, via un utilisateur `deploy` dont la clé ne peut lancer que le script de déploiement.
+12. **V2** : foyer partagé avec rôles, statistiques de gaspillage, liste de courses, OCR de la date, recettes par IA, mode don, export et suppression des données (RGPD), vérification d'email, notifications push.
 
 Tester chaque module via l'API (Postman ou Bruno) avant de passer au suivant ; le front ne vient qu'après une API fonctionnelle de bout en bout.
 
@@ -235,9 +236,9 @@ Version `v0.3.0` : application en ligne sur https://miam-alert.fr (API sur api.m
   - Images : `backend/Dockerfile` (cibles `runtime` et `migrate`), `frontend/Dockerfile` (Nginx unprivileged, CSP générée avec l'URL de l'API, validée au build), `deploy/caddy/` (Caddy non-root).
   - `docker-compose.prod.yml` : db (réseau interne sans Internet), migrate (avant l'API), api, web, proxy (seul exposé, 80/443).
   - Serveur : VPS IONOS, accès par l'alias SSH local `miam-vps` (clé dédiée), root et mots de passe interdits en SSH, ufw, fail2ban, mises à jour automatiques, Docker officiel. L'utilisateur n'est pas dans le groupe docker (équivalent root) : les commandes Docker passent par `sudo`, que seul le développeur lance.
-  - Déploiement actuel (manuel) : dépôt cloné dans `~/miam-alert` avec une clé de déploiement GitLab en lecture seule, secrets dans `~/miam-alert/.env.prod` (générés sur le serveur, chmod 600), puis `git pull` et `sudo docker compose -f docker-compose.prod.yml --env-file .env.prod up -d --build`.
+  - Déploiement actuel (manuel) : dépôt cloné dans `~/miam-alert` avec une clé de déploiement GitLab en lecture seule, secrets dans `~/miam-alert/.env.prod` (générés sur le serveur, chmod 600). Le serveur suit un tag de version, pas une branche : `git fetch --tags && git checkout vX.Y.Z`, puis `sudo docker compose -f docker-compose.prod.yml --env-file .env.prod up -d --build`.
 - Attention : l'apostrophe du dossier `Miam'Alert` casse `npm run build` du front sur l'hôte (Workbox) ; construire dans le conteneur. Renommer le dossier en `miam-alert` réglerait le problème.
 
-Prochaine étape : déploiement continu (étape 5 du plan de mise en ligne) : images construites par GitLab CI, analysées par Trivy, poussées dans le registre GitLab, puis déployées sur le serveur. Petit correctif en attente : ajouter `woff2` au cache du service worker (police hors ligne). Ensuite : recettes V1 (étape 8).
+Prochaine étape : déploiement continu (étape 11 bis). Petits points en attente : ajouter `woff2` au cache du service worker (police hors ligne), mettre en place Renovate. Ensuite : recettes V1 (étape 8).
 
 Mettre à jour cette section au fil de l'avancement.
