@@ -166,7 +166,7 @@ Points d'environnement à connaître :
 - V2 IA : clé d'API uniquement côté serveur, quotas par utilisateur, sortie du LLM validée par un schéma avant utilisation, attention à l'injection de prompt via les noms de produits.
 
 ### Données personnelles (RGPD)
-- Minimisation : ne collecter que le nécessaire (email, mot de passe, données d'inventaire).
+- Minimisation : ne collecter que le nécessaire (email, mot de passe, données d'inventaire). Prénom et nom **facultatifs** (accueil, futur foyer partagé), modifiables et effaçables via `PATCH /me`. Pas de téléphone ni de date de naissance : aucun usage dans l'application.
 - Suppression de compte réelle (et des données associées) et export des données de l'utilisateur, prévus dans la feuille de route.
 - Aucune donnée personnelle ni token dans les logs.
 

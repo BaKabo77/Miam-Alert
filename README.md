@@ -46,7 +46,8 @@ Projet personnel conçu **security by design** : chaque fonctionnalité est pens
 | `POST /auth/login` | Public, 10 req/min | Obtenir un access token (et le refresh token en cookie) |
 | `POST /auth/refresh` | Cookie de session, 10 req/min | Renouveler les tokens |
 | `POST /auth/logout` | Cookie de session, 10 req/min | Révoquer la session |
-| `GET /me` | Connecté | Profil et foyers |
+| `GET /me` | Connecté | Profil (prénom et nom facultatifs) et foyers |
+| `PATCH /me` | Connecté | Modifier ou effacer son prénom et son nom |
 | `POST /households/:householdId/pantry-items` | Membre du foyer | Ajouter un article |
 | `GET /households/:householdId/pantry-items` | Membre du foyer | Lister l'inventaire, trié par urgence, paginé |
 | `GET` / `PATCH` / `DELETE /pantry-items/:itemId` | Membre du foyer de l'article | Lire, modifier, supprimer un article |
@@ -80,6 +81,10 @@ Toutes les routes exigent un access token, sauf celles marquées « Public ».
 - URL fixe construite proprement, redirections refusées (pas de SSRF), timeout de 5 s.
 - Données reçues considérées comme **non fiables** : types vérifiés, longueurs bornées, caractères de contrôle retirés, images acceptées uniquement en HTTPS depuis le domaine d'Open Food Facts.
 - En cas de panne : `503` sans détail, l'application reste utilisable en saisie manuelle.
+
+### Données personnelles
+- Minimisation (RGPD) : seuls l'email et le mot de passe sont obligatoires ; le prénom et le nom sont facultatifs, modifiables et effaçables à tout moment. Pas de téléphone ni de date de naissance, inutiles pour l'application.
+- Les noms ne peuvent contenir que des lettres, espaces, apostrophes, traits d'union et points, et n'apparaissent jamais dans les logs.
 
 ### Journalisation
 - Événements de sécurité en JSON (connexions, échecs, refresh, vol de session détecté, accès refusé à un foyer, rate limit).
