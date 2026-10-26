@@ -1,6 +1,8 @@
 node_modules
 dist
 coverage
+# Tests : exécutés en CI sur le code source, inutiles dans une image.
+test
 src/generated
 *.tsbuildinfo
 # Ne jamais copier de secret dans une image.
