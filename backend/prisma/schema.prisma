@@ -66,6 +66,7 @@ model Household {
 
   members     HouseholdMember[]
   pantryItems PantryItem[]
+  alerts      Alert[]
 }
 
 // Table de liaison User <-> Household : un utilisateur peut appartenir à plusieurs foyers
@@ -143,4 +144,27 @@ model RefreshToken {
 
   @@index([userId])
   @@index([familyId])
+}
+
+// Alerte quotidienne d'un foyer : UNE par foyer et par jour, avec seulement des compteurs.
+// La liste des produits concernés est relue dans l'inventaire (pas de donnée en double).
+model Alert {
+  id           String    @id @default(uuid()) @db.Uuid
+  householdId  String    @db.Uuid
+  // Jour de l'alerte (date sans heure, comme les dates de péremption).
+  date         DateTime  @db.Date
+  // DLC dépassée : à jeter.
+  expiredCount Int
+  // À consommer aujourd'hui ou dans les 2 jours, ou DDM dépassée.
+  urgentCount  Int
+  // Rempli quand l'utilisateur ferme le bandeau.
+  readAt       DateTime?
+  createdAt    DateTime  @default(now())
+
+  // Cascade : supprimer un foyer supprime ses alertes.
+  household Household @relation(fields: [householdId], references: [id], onDelete: Cascade)
+
+  // Idempotence : la base refuse une deuxième alerte pour le même foyer le même jour,
+  // même si la tâche planifiée s'exécute plusieurs fois.
+  @@unique([householdId, date])
 }
