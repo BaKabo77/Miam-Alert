@@ -4,18 +4,25 @@
 
 Projet personnel conçu **security by design** : chaque fonctionnalité est pensée, codée et testée avec la sécurité en tête, en s'appuyant sur l'OWASP Top 10 et l'OWASP API Security Top 10.
 
-> **Statut : API backend fonctionnelle (v0.1.0).** Le front (PWA React avec scan caméra) et les alertes sont les prochaines étapes.
+> **Statut : application fonctionnelle de bout en bout (v0.2.0)** : API sécurisée et application web installable (PWA) avec scan du code-barres. Prochaines étapes : alertes quotidiennes et mise en ligne.
 >
 > Le développement se fait sur GitLab (CI/CD, merge requests) ; ce dépôt GitHub en est un miroir en lecture seule.
 
 ---
+
+<p align="center">
+  <img src="docs/screenshots/login.webp" alt="Page de connexion" width="250" />
+  <img src="docs/screenshots/inventory.webp" alt="Inventaire trié par urgence, avec compteurs et badges" width="250" />
+  <img src="docs/screenshots/add.webp" alt="Ajout d'un produit scanné, avec raccourcis de date" width="250" />
+</p>
 
 ## Fonctionnalités
 
 - **Compte et session** : inscription, connexion, session renouvelée en arrière-plan, déconnexion réelle côté serveur.
 - **Inventaire du foyer** : ajout, modification, suppression d'articles ; statut consommé / jeté / congelé.
 - **Tri par urgence** : chaque article reçoit un niveau d'urgence calculé (périmé, à consommer sous 2 jours, cette semaine…), en distinguant la **DLC** (date limite, stricte) de la **DDM** (date de durabilité minimale, indicative).
-- **Recherche par code-barres** : fiche produit (nom, marque, photo, Nutri-Score) récupérée sur [Open Food Facts](https://world.openfoodfacts.org) puis mise en cache.
+- **Scan du code-barres** avec la caméra (ou saisie du code) : fiche produit (nom, marque, photo, Nutri-Score) récupérée sur [Open Food Facts](https://world.openfoodfacts.org) puis mise en cache ; il ne reste qu'à saisir la date, avec des raccourcis (+3 j, +1 sem, +1 mois).
+- **Application installable** sur téléphone et ordinateur (PWA), pensée d'abord pour le mobile.
 
 ## Stack
 
@@ -27,7 +34,8 @@ Projet personnel conçu **security by design** : chaque fonctionnalité est pens
 | Tests | Vitest, Supertest |
 | Environnement | Docker Compose (Node 24) |
 | CI | GitLab CI |
-| Front (à venir) | React + Vite en PWA, scan avec `@zxing/browser` |
+| Front | React 19, Vite, TypeScript, Tailwind CSS 4, React Router, TanStack Query |
+| Scan et PWA | `@zxing/browser`, `vite-plugin-pwa` (Workbox) |
 
 ## API
 
@@ -77,6 +85,14 @@ Toutes les routes exigent un access token, sauf celles marquées « Public ».
 - Événements de sécurité en JSON (connexions, échecs, refresh, vol de session détecté, accès refusé à un foyer, rate limit).
 - Les champs journalisables sont imposés par le typage : aucun email, mot de passe ni token ne peut y figurer, et un test le vérifie.
 
+### Côté navigateur
+- **Aucun token lisible par JavaScript** : l'access token reste en mémoire (jamais de `localStorage`), le refresh token est dans un cookie `HttpOnly`. Une faille XSS ne permettrait pas d'emporter la session.
+- Un seul renouvellement de session à la fois, pour ne pas déclencher la détection de vol de token.
+- Affichage des données externes (noms de produits) toujours échappé par React, jamais injecté en HTML.
+- La PWA ne met en cache que les fichiers de l'application, **jamais les réponses de l'API** : rien ne reste lisible après une déconnexion, même sur un appareil partagé.
+- Police et icônes hébergées avec l'application : aucune requête vers un tiers (pas de Google Fonts), donc aucune adresse IP transmise.
+- Contrastes de couleurs vérifiés (WCAG AA), formulaires utilisables au clavier.
+
 ### Chaîne de développement
 - Aucun secret dans le dépôt : configuration validée au démarrage, l'API refuse de démarrer si une variable manque ou si le secret JWT est trop court.
 - Dépendances verrouillées, scripts d'installation npm bloqués sauf autorisation nominative.
@@ -88,6 +104,7 @@ Toutes les routes exigent un access token, sauf celles marquées « Public ».
 - **Unitaires** : calcul de l'urgence, clé de contrôle EAN, nettoyage des données Open Food Facts, client HTTP (réseau simulé).
 - **End-to-end** sur une vraie base PostgreSQL dédiée : authentification (token expiré, falsifié, `alg: none`, refresh réutilisé), validation, **tentatives d'accès aux données d'un autre foyer**, absence de données sensibles dans les logs.
 - Aucun test ne dépend d'un service extérieur.
+- Le parcours de l'application (connexion, inventaire, ajout, scan d'un code-barres filmé) a été vérifié dans Chrome avec une caméra simulée.
 
 ## Intégration continue
 
@@ -95,9 +112,9 @@ Chaque merge request déclenche un pipeline GitLab CI :
 
 | Étape | Contenu |
 |---|---|
-| Qualité | Lint, compilation TypeScript, build, tests unitaires |
+| Qualité | API : lint, compilation TypeScript, build, tests unitaires ; front : lint, compilation, build |
 | Tests | Tests e2e sur un PostgreSQL éphémère |
-| Sécurité | `npm audit` (échec si vulnérabilité haute), détection de secrets, analyse statique (SAST) |
+| Sécurité | `npm audit` de l'API et du front (échec si vulnérabilité haute), détection de secrets, analyse statique (SAST) |
 
 ## Lancer le projet
 
@@ -109,6 +126,7 @@ docker compose up -d --build
 docker compose exec backend npx prisma migrate deploy
 ```
 
+- Application : http://localhost:5173
 - API : http://localhost:3000
 - Adminer (dev uniquement) : http://localhost:8080
 
@@ -122,8 +140,8 @@ docker compose exec backend npm run test:e2e    # e2e (base miam_alert_test, cr�
 ## Feuille de route
 
 - [x] Socle de sécurité, authentification, inventaire, recherche de produits, CI
+- [x] Application web PWA : connexion, inventaire, ajout, scan caméra, installation sur téléphone
 - [ ] Alertes quotidiennes groupées par foyer
-- [ ] Front PWA React : connexion, inventaire, scan caméra, mode hors ligne
 - [ ] Déploiement : image Docker de production non-root, HTTPS et HSTS derrière Nginx
 - [ ] Recettes suggérées selon les produits les plus urgents
 - [ ] Foyer partagé, statistiques de gaspillage, export et suppression des données (RGPD)
@@ -136,3 +154,5 @@ Choix assumés, documentés plutôt que masqués :
 - Un access token reste valable jusqu'à 15 minutes après une déconnexion (principe du JWT, d'où sa durée courte).
 - Deux onglets qui renouvellent la session au même instant la font révoquer (détection stricte du vol de token) ; le front évitera les renouvellements simultanés.
 - « Aujourd'hui » est calculé en UTC : entre minuit et 2 h en France, l'urgence peut être décalée d'un jour.
+- Hors ligne, l'application s'ouvre mais demande de se connecter : les données de l'API ne sont volontairement pas mises en cache (voir « Côté navigateur »).
+- Le scan par la caméra nécessite HTTPS (exigence des navigateurs) : sur téléphone, il fonctionnera une fois l'application en ligne.

@@ -25,7 +25,7 @@ Règles pour Claude Code :
 | Backend | NestJS (TypeScript) |
 | ORM | Prisma |
 | Base de données | PostgreSQL 16 |
-| Front (plus tard) | React + Vite + TypeScript en PWA (scan caméra, notifications push, hors ligne) |
+| Front | React 19 + Vite + TypeScript, Tailwind CSS 4, React Router, TanStack Query, PWA (vite-plugin-pwa) |
 | Scan code-barres | `@zxing/browser` (EAN-13 / EAN-8) |
 | Données produit | API Open Food Facts (gratuite) |
 | Tâches planifiées | `@nestjs/schedule`, puis BullMQ + Redis si besoin |
@@ -69,7 +69,8 @@ miam-alert/             # nom technique (npm, Docker) ; nom affiché : Miam'Aler
 │   ├── Dockerfile.dev
 │   ├── prisma/
 │   └── src/
-├── frontend/           # plus tard (React)
+├── frontend/           # React (Vite), PWA
+├── docs/screenshots/   # captures du README
 ├── .gitlab-ci.yml      # pipeline de CI (qualité, tests, sécurité)
 ├── docker-compose.yml
 ├── .env                # jamais commité
@@ -220,16 +221,16 @@ Tester chaque module via l'API (Postman ou Bruno) avant de passer au suivant ; l
 
 ## État actuel
 
-Étapes 1 à 6 terminées, CI de sécurité en place (étape 9 avancée). Prochaine version : `v0.1.0` (API seule).
-- Socle de sécurité : variables d'environnement validées, helmet, CORS en liste blanche, corps JSON limité à 16 ko, ValidationPipe strict, rate limiting global (100 req/min) journalisé, filtre d'exception global, guard JWT global avec @Public().
-- Base : schéma Prisma (User, Household, HouseholdMember, Product, PantryItem, RefreshToken), PrismaService global avec passwordHash exclu par défaut, base de test dédiée (miam_alert_test).
-- Authentification : register (argon2id), login (access token 15 min + refresh token en cookie httpOnly), refresh avec rotation et détection de réutilisation, logout, GET /me, logs de sécurité en JSON. Routes /auth/* limitées à 10 req/min.
-- Inventaire : POST/GET /households/:householdId/pantry-items (tri par urgence, DLC avant DDM, pagination bornée à 100, filtre par statut), GET/PATCH/DELETE /pantry-items/:itemId. Appartenance au foyer vérifiée par HouseholdAccessService (404, refus journalisés) ou intégrée à la requête Prisma. Urgence calculée (EXPIRED, PAST_BEST_BEFORE, URGENT, SOON, OK). Lien facultatif vers une fiche produit (productId).
-- Produits : GET /products/:barcode (access token, 30 req/min), EAN-8/13 avec clé de contrôle, client Open Food Facts (URL fixe, timeout 5 s, redirections refusées), données nettoyées avant stockage, cache en table Product, 404 si inconnu, 503 sans détail si indisponible.
-- Tests : 36 unitaires, 91 e2e (dont IDOR), aucun appel réseau réel (client Open Food Facts remplacé par un faux en e2e).
-- GitLab : branches develop/main protégées, MR en fast-forward avec pipeline obligatoire, miroir vers GitHub. Pipeline : lint, compilation, build, tests unitaires, e2e sur PostgreSQL, npm audit, Secret Detection, SAST.
+Version `v0.1.0` publiée (API). Étape 10 (front PWA) terminée, prochaine version : `v0.2.0`.
+- Socle de sécurité, base, authentification, inventaire et produits : voir README (36 tests unitaires, 91 e2e dont IDOR).
+- Front (`frontend/`) : React 19 + Vite + TypeScript + Tailwind 4, dans Docker (port 5173, aucun secret transmis), CI GitLab (lint, build, audit).
+  - `lib/api.ts` : client HTTP unique, access token en mémoire, un seul refresh à la fois sur 401.
+  - `auth/session.tsx` : session (AuthProvider, useAuth, RequireAuth, useHouseholdId), restaurée au chargement via le cookie.
+  - Pages : connexion, inscription, inventaire (tri par urgence, compteurs, actions consommé / congelé / jeté via useMutation), ajout (formulaire contrôlé, raccourcis de date), scan (`@zxing/browser`, EAN-13/8, chargé à la demande, saisie manuelle de secours).
+  - PWA : manifeste + service worker, seuls les fichiers de l'app sont mis en cache (jamais l'API). Logo « tomate scannée » (`public/logo-mark.svg`) et icônes.
+  - Style : thème dans `src/index.css` (`@theme` : brand orange, hot rouge, fresh vert, ink, surface/card/field ; utilitaires `bg-flame`, `card`, `btn-primary`…), police Inter auto-hébergée, contrastes WCAG AA vérifiés.
+- Attention : l'apostrophe du dossier `Miam'Alert` casse `npm run build` du front sur l'hôte (Workbox) ; construire dans le conteneur (`docker compose exec frontend npm run build`). Renommer le dossier en `miam-alert` réglerait le problème.
 
-À faire avant `v0.1.0` : mise à jour de Vitest (3 vulnérabilités modérées), scan de l'historique Git complet (Secret Detection), MR develop → main puis tag `v0.1.0`.
-Prochaine étape fonctionnelle : alertes (étape 7), puis front React (étape 10).
+Prochaine étape : alertes (étape 7 : job quotidien, une alerte groupée par foyer, bandeau dans le front), puis déploiement (Dockerfiles de production, HTTPS).
 
 Mettre à jour cette section au fil de l'avancement.
