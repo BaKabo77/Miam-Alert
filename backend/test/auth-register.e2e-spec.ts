@@ -77,4 +77,38 @@ describe('POST /auth/register (e2e)', () => {
   it('rejects unexpected fields (mass assignment)', () => {
     return register({ email: 'marie@example.com', password: VALID_PASSWORD, role: 'OWNER' }).expect(400);
   });
+
+  describe('optional first and last name', () => {
+    const storedUser = (id: string) => prisma.user.findUniqueOrThrow({ where: { id } });
+
+    it('stores the names when they are given', async () => {
+      const res = await register({
+        email: 'marie@example.com',
+        password: VALID_PASSWORD,
+        firstName: ' Marie ',
+        lastName: 'Curie',
+      }).expect(201);
+
+      expect(await storedUser(res.body.id)).toMatchObject({ firstName: 'Marie', lastName: 'Curie' });
+    });
+
+    it('creates the account without names, or with blank names', async () => {
+      const res = await register({
+        email: 'marie@example.com',
+        password: VALID_PASSWORD,
+        firstName: '   ',
+      }).expect(201);
+
+      expect(await storedUser(res.body.id)).toMatchObject({ firstName: null, lastName: null });
+    });
+
+    it.each([
+      ['a null name', { firstName: null }],
+      ['a name with digits', { lastName: 'Curie 2' }],
+      ['an HTML tag', { firstName: '<b>Marie</b>' }],
+      ['a name that is too long', { firstName: 'a'.repeat(101) }],
+    ])('rejects %s', async (_label, names) => {
+      await register({ email: 'marie@example.com', password: VALID_PASSWORD, ...names }).expect(400);
+    });
+  });
 });

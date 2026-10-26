@@ -42,6 +42,8 @@ export class AuthService {
         data: {
           email: dto.email,
           passwordHash,
+          firstName: dto.firstName,
+          lastName: dto.lastName,
           memberships: {
             create: { role: 'OWNER', household: { create: { name: DEFAULT_HOUSEHOLD_NAME } } },
           },

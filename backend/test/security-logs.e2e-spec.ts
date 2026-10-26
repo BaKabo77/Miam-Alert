@@ -39,7 +39,9 @@ describe('Security event logs (e2e)', () => {
   it('logs the authentication events without any secret or personal data', async () => {
     const server = app.getHttpServer();
 
-    await request(server).post('/auth/register').send({ email: EMAIL, password: PASSWORD });
+    await request(server)
+      .post('/auth/register')
+      .send({ email: EMAIL, password: PASSWORD, firstName: 'Marie', lastName: 'Curie' });
     await request(server).post('/auth/login').send({ email: EMAIL, password: 'wrong password!!' });
     const login = await request(server).post('/auth/login').send({ email: EMAIL, password: PASSWORD });
     const cookie = ([] as string[]).concat(login.headers['set-cookie'] ?? [])[0].split(';')[0];
@@ -54,6 +56,7 @@ describe('Security event logs (e2e)', () => {
 
     const allLogs = messages.join('\n');
     expect(allLogs).not.toContain(EMAIL);
+    expect(allLogs).not.toContain('Curie');
     expect(allLogs).not.toContain(PASSWORD);
     expect(allLogs).not.toContain(login.body.accessToken);
     expect(allLogs).not.toContain(cookie.split('=')[1]);
