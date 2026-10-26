@@ -3,6 +3,7 @@ import { NestFactory } from '@nestjs/core';
 import { NestExpressApplication } from '@nestjs/platform-express';
 import helmet from 'helmet';
 import { AppModule } from './app.module.js';
+import { applyTrustProxy } from './common/trust-proxy.js';
 import { EnvironmentVariables } from './config/env.validation.js';
 
 async function bootstrap() {
@@ -11,6 +12,9 @@ async function bootstrap() {
     bodyParser: false,
   });
   const config = app.get(ConfigService<EnvironmentVariables, true>);
+
+  // En production, l'API est derrière le reverse proxy (Caddy) : voir trust-proxy.ts.
+  applyTrustProxy(app, config.get('TRUST_PROXY', { infer: true }));
 
   // En-têtes de sécurité : interdit l'affichage dans une iframe (clickjacking), empêche
   // le navigateur de deviner le type des fichiers, masque "X-Powered-By: Express", etc.

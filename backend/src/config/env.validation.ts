@@ -44,6 +44,13 @@ export class EnvironmentVariables {
     { each: true },
   )
   CORS_ORIGINS: string[];
+
+  // Nombre de reverse proxys devant l'API (1 en production derrière Caddy, 0 en dev).
+  // Facultatif : sans proxy, X-Forwarded-For est ignoré (voir common/trust-proxy.ts).
+  @IsInt()
+  @Min(0)
+  @Max(3)
+  TRUST_PROXY: number = 0;
 }
 
 export function validateEnv(config: Record<string, unknown>): EnvironmentVariables {
