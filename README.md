@@ -4,7 +4,7 @@
 
 Projet personnel conçu **security by design** : chaque fonctionnalité est pensée, codée et testée avec la sécurité en tête, en s'appuyant sur l'OWASP Top 10 et l'OWASP API Security Top 10.
 
-> **Statut : application fonctionnelle de bout en bout (v0.2.0)** : API sécurisée et application web installable (PWA) avec scan du code-barres. Prochaines étapes : alertes quotidiennes et mise en ligne.
+> **Statut : en ligne sur [miam-alert.fr](https://miam-alert.fr) (v0.3.0)** : API sécurisée, application web installable (PWA) avec scan du code-barres, alerte quotidienne. Prochaines étapes : déploiement continu, puis recettes.
 >
 > Le développement se fait sur GitLab (CI/CD, merge requests) ; ce dépôt GitHub en est un miroir en lecture seule.
 
@@ -18,10 +18,11 @@ Projet personnel conçu **security by design** : chaque fonctionnalité est pens
 
 ## Fonctionnalités
 
-- **Compte et session** : inscription, connexion, session renouvelée en arrière-plan, déconnexion réelle côté serveur.
+- **Compte et session** : inscription, connexion, session renouvelée en arrière-plan, déconnexion réelle côté serveur ; profil avec prénom et nom facultatifs.
 - **Inventaire du foyer** : ajout, modification, suppression d'articles ; statut consommé / jeté / congelé.
 - **Tri par urgence** : chaque article reçoit un niveau d'urgence calculé (périmé, à consommer sous 2 jours, cette semaine…), en distinguant la **DLC** (date limite, stricte) de la **DDM** (date de durabilité minimale, indicative).
 - **Scan du code-barres** avec la caméra (ou saisie du code) : fiche produit (nom, marque, photo, Nutri-Score) récupérée sur [Open Food Facts](https://world.openfoodfacts.org) puis mise en cache ; il ne reste qu'à saisir la date, avec des raccourcis (+3 j, +1 sem, +1 mois).
+- **Alerte du jour** : chaque matin à 9 h, une alerte unique par foyer résume les produits périmés et à consommer d'urgence (pas une notification par produit), affichée en bandeau sur l'inventaire.
 - **Application installable** sur téléphone et ordinateur (PWA), pensée d'abord pour le mobile.
 
 ## Stack
@@ -32,8 +33,10 @@ Projet personnel conçu **security by design** : chaque fonctionnalité est pens
 | Base de données | PostgreSQL 16, Prisma 7 |
 | Authentification | JWT (`@nestjs/jwt`), argon2id (`@node-rs/argon2`) |
 | Tests | Vitest, Supertest |
+| Tâches planifiées | `@nestjs/schedule` |
 | Environnement | Docker Compose (Node 24) |
 | CI | GitLab CI |
+| Production | VPS dans l'UE, Docker Compose, Caddy (HTTPS Let's Encrypt), Nginx (front) |
 | Front | React 19, Vite, TypeScript, Tailwind CSS 4, React Router, TanStack Query |
 | Scan et PWA | `@zxing/browser`, `vite-plugin-pwa` (Workbox) |
 
@@ -52,10 +55,14 @@ Projet personnel conçu **security by design** : chaque fonctionnalité est pens
 | `GET /households/:householdId/pantry-items` | Membre du foyer | Lister l'inventaire, trié par urgence, paginé |
 | `GET` / `PATCH` / `DELETE /pantry-items/:itemId` | Membre du foyer de l'article | Lire, modifier, supprimer un article |
 | `GET /products/:barcode` | Connecté, 30 req/min | Fiche produit par code-barres EAN |
+| `GET /households/:householdId/alerts/today` | Membre du foyer | Alerte du jour du foyer (ou aucune) |
+| `POST /alerts/:alertId/read` | Membre du foyer de l'alerte | Marquer l'alerte comme lue |
 
 Toutes les routes exigent un access token, sauf celles marquées « Public ».
 
 ## Sécurité
+
+Correspondance avec l'OWASP Top 10 et procédure de signalement d'une faille : voir [SECURITY.md](SECURITY.md).
 
 ### Authentification et sessions
 - Mots de passe hachés avec **argon2id** aux paramètres recommandés par l'OWASP ; 12 caractères minimum plutôt que des règles de complexité (recommandations NIST et ANSSI).
@@ -98,6 +105,17 @@ Toutes les routes exigent un access token, sauf celles marquées « Public ».
 - Police et icônes hébergées avec l'application : aucune requête vers un tiers (pas de Google Fonts), donc aucune adresse IP transmise.
 - Contrastes de couleurs vérifiés (WCAG AA), formulaires utilisables au clavier.
 
+### Mise en production
+- **Images Docker de production** construites en plusieurs étapes : ni outils de compilation, ni dépendances de développement, ni gestionnaire de paquets dans l'image finale.
+- **Aucun conteneur en root** (API, front, reverse proxy, base), système de fichiers en lecture seule, aucune capacité Linux, `no-new-privileges`.
+- **Seul le reverse proxy est exposé** (ports 80 et 443) ; la base de données vit sur un réseau Docker interne sans accès à Internet.
+- **HTTPS partout** : certificats Let's Encrypt renouvelés automatiquement, TLS 1.2 minimum, HSTS, enregistrement DNS **CAA** limitant l'émission de certificats à Let's Encrypt.
+- **Front** : Content Security Policy stricte (aucun script en ligne ni domaine tiers, connexions limitées à l'API), `Permissions-Policy` (caméra seulement), protection contre le clickjacking.
+- **Vraie IP du client** transmise par le proxy, sans possibilité de l'usurper (`X-Forwarded-For` falsifié ignoré, testé) : rate limiting et journaux restent fiables.
+- **Moindre privilège pour les secrets** : générés sur le serveur, chaque conteneur ne reçoit que les siens (le front et le proxy ne voient jamais le secret JWT ni le mot de passe de la base).
+- **Serveur durci** : connexion SSH par clé uniquement, root interdit, pare-feu, fail2ban, mises à jour de sécurité automatiques ; clé de déploiement GitLab en lecture seule.
+- Migrations de la base appliquées avant le démarrage de l'API : le code ne tourne jamais sur un schéma qui ne lui correspond pas.
+
 ### Chaîne de développement
 - Aucun secret dans le dépôt : configuration validée au démarrage, l'API refuse de démarrer si une variable manque ou si le secret JWT est trop court.
 - Dépendances verrouillées, scripts d'installation npm bloqués sauf autorisation nominative.
@@ -106,10 +124,10 @@ Toutes les routes exigent un access token, sauf celles marquées « Public ».
 
 ## Tests
 
-- **Unitaires** : calcul de l'urgence, clé de contrôle EAN, nettoyage des données Open Food Facts, client HTTP (réseau simulé).
-- **End-to-end** sur une vraie base PostgreSQL dédiée : authentification (token expiré, falsifié, `alg: none`, refresh réutilisé), validation, **tentatives d'accès aux données d'un autre foyer**, absence de données sensibles dans les logs.
+- **Unitaires** (40) : calcul de l'urgence, contenu de l'alerte du jour, clé de contrôle EAN, nettoyage des données Open Food Facts, client HTTP (réseau simulé).
+- **End-to-end** (125) sur une vraie base PostgreSQL dédiée : authentification (token expiré, falsifié, `alg: none`, refresh réutilisé), validation, **tentatives d'accès aux données d'un autre foyer**, génération idempotente des alertes, rate limiting derrière un proxy (IP usurpée), absence de données sensibles dans les logs.
 - Aucun test ne dépend d'un service extérieur.
-- Le parcours de l'application (connexion, inventaire, ajout, scan d'un code-barres filmé) a été vérifié dans Chrome avec une caméra simulée.
+- Le parcours de l'application (connexion, inventaire, ajout, scan d'un code-barres filmé) a été vérifié dans Chrome avec une caméra simulée, puis avec les images de production derrière le reverse proxy en HTTPS.
 
 ## Intégration continue
 
@@ -142,12 +160,24 @@ docker compose exec backend npm test            # unitaires
 docker compose exec backend npm run test:e2e    # e2e (base miam_alert_test, créée automatiquement)
 ```
 
+### Production
+
+Sur le serveur (Docker installé, enregistrements DNS `@`, `www` et `api` pointant vers lui) :
+
+```bash
+cp .env.prod.example .env.prod && chmod 600 .env.prod   # puis générer les secrets (voir le fichier)
+sudo docker compose -f docker-compose.prod.yml --env-file .env.prod up -d --build
+```
+
+Caddy obtient les certificats HTTPS au premier démarrage ; les migrations sont appliquées avant le lancement de l'API.
+
 ## Feuille de route
 
 - [x] Socle de sécurité, authentification, inventaire, recherche de produits, CI
 - [x] Application web PWA : connexion, inventaire, ajout, scan caméra, installation sur téléphone
-- [ ] Alertes quotidiennes groupées par foyer
-- [ ] Déploiement : image Docker de production non-root, HTTPS et HSTS derrière Nginx
+- [x] Alertes quotidiennes groupées par foyer
+- [x] Mise en ligne : images Docker de production non-root, HTTPS et HSTS, serveur durci
+- [ ] Déploiement continu : images construites et analysées (Trivy) par la CI, puis déployées
 - [ ] Recettes suggérées selon les produits les plus urgents
 - [ ] Foyer partagé, statistiques de gaspillage, export et suppression des données (RGPD)
 
@@ -160,4 +190,6 @@ Choix assumés, documentés plutôt que masqués :
 - Deux onglets qui renouvellent la session au même instant la font révoquer (détection stricte du vol de token) ; le front évitera les renouvellements simultanés.
 - « Aujourd'hui » est calculé en UTC : entre minuit et 2 h en France, l'urgence peut être décalée d'un jour.
 - Hors ligne, l'application s'ouvre mais demande de se connecter : les données de l'API ne sont volontairement pas mises en cache (voir « Côté navigateur »).
-- Le scan par la caméra nécessite HTTPS (exigence des navigateurs) : sur téléphone, il fonctionnera une fois l'application en ligne.
+- Déploiement encore manuel (construction des images sur le serveur) : l'automatisation par la CI est la prochaine étape.
+- Les secrets de production sont passés aux conteneurs en variables d'environnement : lisibles par un administrateur du serveur (`docker inspect`). Les secrets Docker (fichiers) seraient un cran au-dessus.
+- L'alerte du jour s'affiche dans l'application ; les notifications push viendront plus tard.

@@ -29,8 +29,9 @@ Règles pour Claude Code :
 | Scan code-barres | `@zxing/browser` (EAN-13 / EAN-8) |
 | Données produit | API Open Food Facts (gratuite) |
 | Tâches planifiées | `@nestjs/schedule`, puis BullMQ + Redis si besoin |
-| Environnement | Docker Compose (db, adminer, backend) |
-| Dépôt et CI/CD | GitLab (GitLab CI), miroir en lecture seule vers GitHub ; déploiement Docker + Nginx (plus tard) |
+| Environnement | Docker Compose : dev (db, adminer, backend, frontend), prod (`docker-compose.prod.yml`) |
+| Dépôt et CI/CD | GitLab (GitLab CI), miroir en lecture seule vers GitHub |
+| Production | VPS IONOS (UE, Ubuntu 24.04), reverse proxy Caddy (HTTPS Let's Encrypt), front servi par Nginx |
 
 ## Contraintes et décisions déjà prises
 
@@ -66,15 +67,20 @@ Commencer petit : `User`, `Household`, `HouseholdMember`, `Product`, `PantryItem
 ```
 miam-alert/             # nom technique (npm, Docker) ; nom affiché : Miam'Alert
 ├── backend/            # NestJS
+│   ├── Dockerfile      # image de production (multi-stage, non-root)
 │   ├── Dockerfile.dev
 │   ├── prisma/
 │   └── src/
-├── frontend/           # React (Vite), PWA
+├── frontend/           # React (Vite), PWA ; Dockerfile + nginx/ pour la production
+├── deploy/caddy/       # reverse proxy de production (Caddyfile, image non-root)
 ├── docs/screenshots/   # captures du README
 ├── .gitlab-ci.yml      # pipeline de CI (qualité, tests, sécurité)
-├── docker-compose.yml
+├── docker-compose.yml       # développement
+├── docker-compose.prod.yml  # production
+├── SECURITY.md
 ├── .env                # jamais commité
 ├── .env.example        # commité, valeurs factices
+├── .env.prod.example   # modèle des secrets de production (le vrai .env.prod reste sur le serveur)
 └── .gitignore
 ```
 
@@ -177,7 +183,8 @@ Points d'environnement à connaître :
 ### Docker et déploiement
 - Dockerfile de production séparé, **multi-stage**, image minimale, exécution en **utilisateur non-root**.
 - En production, PostgreSQL et Adminer ne sont pas exposés publiquement (Adminer uniquement en dev).
-- HTTPS obligatoire derrière Nginx, avec HSTS.
+- HTTPS obligatoire derrière le reverse proxy Caddy (Let's Encrypt, TLS 1.2+), avec HSTS. Enregistrement DNS CAA limité à Let's Encrypt.
+- Conteneurs de production : non-root, lecture seule, `cap_drop: ALL`, `no-new-privileges`, chacun ne reçoit que ses variables. L'API fait confiance à un seul proxy (`TRUST_PROXY=1`, jamais `true`).
 
 ### Dépendances et CI
 - `npm audit` et Renovate pour les vulnérabilités et mises à jour des dépendances.
@@ -221,16 +228,16 @@ Tester chaque module via l'API (Postman ou Bruno) avant de passer au suivant ; l
 
 ## État actuel
 
-Version `v0.1.0` publiée (API). Étape 10 (front PWA) terminée, prochaine version : `v0.2.0`.
-- Socle de sécurité, base, authentification, inventaire et produits : voir README (36 tests unitaires, 91 e2e dont IDOR).
-- Front (`frontend/`) : React 19 + Vite + TypeScript + Tailwind 4, dans Docker (port 5173, aucun secret transmis), CI GitLab (lint, build, audit).
-  - `lib/api.ts` : client HTTP unique, access token en mémoire, un seul refresh à la fois sur 401.
-  - `auth/session.tsx` : session (AuthProvider, useAuth, RequireAuth, useHouseholdId), restaurée au chargement via le cookie.
-  - Pages : connexion, inscription, inventaire (tri par urgence, compteurs, actions consommé / congelé / jeté via useMutation), ajout (formulaire contrôlé, raccourcis de date), scan (`@zxing/browser`, EAN-13/8, chargé à la demande, saisie manuelle de secours).
-  - PWA : manifeste + service worker, seuls les fichiers de l'app sont mis en cache (jamais l'API). Logo « tomate scannée » (`public/logo-mark.svg`) et icônes.
-  - Style : thème dans `src/index.css` (`@theme` : brand orange, hot rouge, fresh vert, ink, surface/card/field ; utilitaires `bg-flame`, `card`, `btn-primary`…), police Inter auto-hébergée, contrastes WCAG AA vérifiés.
-- Attention : l'apostrophe du dossier `Miam'Alert` casse `npm run build` du front sur l'hôte (Workbox) ; construire dans le conteneur (`docker compose exec frontend npm run build`). Renommer le dossier en `miam-alert` réglerait le problème.
+Version `v0.3.0` : application en ligne sur https://miam-alert.fr (API sur api.miam-alert.fr). Versions précédentes : `v0.1.0` (API), `v0.2.0` (front PWA).
+- Socle de sécurité, base, authentification, inventaire, produits, front PWA : voir README (40 tests unitaires, 125 e2e dont IDOR).
+- Alertes (étape 7) : job quotidien à 9 h (Europe/Paris), une alerte par foyer et par jour (contrainte unique, idempotent), bandeau sur l'inventaire, `npm run alerts:generate` pour générer à la demande. Notifications push reportées.
+- Production (étape 11) :
+  - Images : `backend/Dockerfile` (cibles `runtime` et `migrate`), `frontend/Dockerfile` (Nginx unprivileged, CSP générée avec l'URL de l'API, validée au build), `deploy/caddy/` (Caddy non-root).
+  - `docker-compose.prod.yml` : db (réseau interne sans Internet), migrate (avant l'API), api, web, proxy (seul exposé, 80/443).
+  - Serveur : VPS IONOS, accès par l'alias SSH local `miam-vps` (clé dédiée), root et mots de passe interdits en SSH, ufw, fail2ban, mises à jour automatiques, Docker officiel. L'utilisateur n'est pas dans le groupe docker (équivalent root) : les commandes Docker passent par `sudo`, que seul le développeur lance.
+  - Déploiement actuel (manuel) : dépôt cloné dans `~/miam-alert` avec une clé de déploiement GitLab en lecture seule, secrets dans `~/miam-alert/.env.prod` (générés sur le serveur, chmod 600), puis `git pull` et `sudo docker compose -f docker-compose.prod.yml --env-file .env.prod up -d --build`.
+- Attention : l'apostrophe du dossier `Miam'Alert` casse `npm run build` du front sur l'hôte (Workbox) ; construire dans le conteneur. Renommer le dossier en `miam-alert` réglerait le problème.
 
-Prochaine étape : alertes (étape 7 : job quotidien, une alerte groupée par foyer, bandeau dans le front), puis déploiement (Dockerfiles de production, HTTPS).
+Prochaine étape : déploiement continu (étape 5 du plan de mise en ligne) : images construites par GitLab CI, analysées par Trivy, poussées dans le registre GitLab, puis déployées sur le serveur. Petit correctif en attente : ajouter `woff2` au cache du service worker (police hors ligne). Ensuite : recettes V1 (étape 8).
 
 Mettre à jour cette section au fil de l'avancement.
