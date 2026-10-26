@@ -5,6 +5,7 @@ import { AppLayout } from './components/AppLayout';
 import { AddItemPage } from './pages/AddItemPage';
 import { InventoryPage } from './pages/InventoryPage';
 import { LoginPage } from './pages/LoginPage';
+import { ProfilePage } from './pages/ProfilePage';
 import { RegisterPage } from './pages/RegisterPage';
 
 // Page de scan chargée à la demande : la bibliothèque de lecture de codes-barres est lourde,
@@ -21,6 +22,7 @@ export default function App() {
         <Route element={<AppLayout />}>
           <Route path="/" element={<InventoryPage />} />
           <Route path="/add" element={<AddItemPage />} />
+          <Route path="/profile" element={<ProfilePage />} />
           <Route
             path="/scan"
             element={

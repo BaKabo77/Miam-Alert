@@ -1,27 +1,30 @@
 import { NavLink, Outlet } from 'react-router';
 import { useAuth } from '../auth/session';
-import { ListIcon, LogoutIcon, PlusIcon, ScanIcon } from './icons';
+import { initials } from './initials';
+import { ListIcon, PlusIcon, ScanIcon, UserIcon } from './icons';
 import { Logo } from './Logo';
 
 // Cadre commun à toutes les pages de l'application connectée : barre du haut, la page demandée
 // à la place de <Outlet />, et barre d'onglets en bas (comme une application mobile).
 export function AppLayout() {
-  const { logout } = useAuth();
+  const { session } = useAuth();
+  const user = session.status === 'authenticated' ? session.user : null;
+  const userInitials = user ? initials(user.firstName, user.lastName) : '';
 
   return (
     <div className="min-h-dvh pb-28">
       <header className="sticky top-0 z-10 bg-flame shadow-md shadow-hot-700/20">
         <div className="mx-auto flex max-w-md items-center justify-between px-4 py-3">
           <Logo variant="inverse" />
-          <button
-            type="button"
-            onClick={() => void logout()}
-            aria-label="Se déconnecter"
-            title="Se déconnecter"
-            className="rounded-full p-2 text-white/85 transition hover:bg-white/10 hover:text-white"
+          {/* Avatar : initiales si un prénom ou un nom est renseigné, sinon une icône. */}
+          <NavLink
+            to="/profile"
+            aria-label="Mon profil"
+            title="Mon profil"
+            className="grid h-10 w-10 place-items-center rounded-full bg-white/15 text-sm font-bold text-white ring-1 ring-white/30 transition hover:bg-white/25"
           >
-            <LogoutIcon />
-          </button>
+            {userInitials || <UserIcon />}
+          </NavLink>
         </div>
       </header>
 

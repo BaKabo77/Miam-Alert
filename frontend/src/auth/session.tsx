@@ -25,6 +25,7 @@ interface AuthContextValue {
   login: (email: string, password: string) => Promise<void>;
   register: (data: RegisterData) => Promise<void>;
   logout: () => Promise<void>;
+  updateProfile: (names: ProfileNames) => Promise<User>;
 }
 
 // Prénom et nom facultatifs : un champ vide est ignoré par l'API.
@@ -33,6 +34,12 @@ export interface RegisterData {
   password: string;
   firstName?: string;
   lastName?: string;
+}
+
+// Un champ vide efface le prénom ou le nom (l'API le transforme en null).
+export interface ProfileNames {
+  firstName: string;
+  lastName: string;
 }
 
 const AuthContext = createContext<AuthContextValue | null>(null);
@@ -82,6 +89,13 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     await login(data.email, data.password);
   }
 
+  async function updateProfile(names: ProfileNames): Promise<User> {
+    const user = await apiRequest<User>('/me', { method: 'PATCH', body: names });
+    // La session est mise à jour avec la réponse de l'API : l'accueil affiche le nouveau prénom.
+    setSession({ status: 'authenticated', user });
+    return user;
+  }
+
   async function logout() {
     try {
       // Révocation de la session côté serveur, pas seulement l'oubli du token côté navigateur.
@@ -93,7 +107,9 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   }
 
   return (
-    <AuthContext.Provider value={{ session, login, register, logout }}>{children}</AuthContext.Provider>
+    <AuthContext.Provider value={{ session, login, register, logout, updateProfile }}>
+      {children}
+    </AuthContext.Provider>
   );
 }
 
