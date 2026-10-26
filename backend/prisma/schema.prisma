@@ -47,6 +47,10 @@ model User {
   email        String   @unique @db.VarChar(254)
   // Le hash argon2, jamais le mot de passe. Ce champ ne doit jamais sortir de l'API.
   passwordHash String
+  // Facultatifs (minimisation RGPD) : servent seulement à saluer l'utilisateur et, plus tard,
+  // à identifier les membres d'un foyer partagé. Modifiables et effaçables par l'utilisateur.
+  firstName    String?  @db.VarChar(100)
+  lastName     String?  @db.VarChar(100)
   createdAt    DateTime @default(now())
   updatedAt    DateTime @updatedAt
 
