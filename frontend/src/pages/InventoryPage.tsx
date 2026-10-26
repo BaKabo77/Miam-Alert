@@ -1,4 +1,5 @@
 import { useQuery } from '@tanstack/react-query';
+import { AlertBanner } from '../alerts/AlertBanner';
 import { Link } from 'react-router';
 import { useAuth, useHouseholdId } from '../auth/session';
 import { PlusIcon, ScanIcon } from '../components/icons';
@@ -25,6 +26,8 @@ export function InventoryPage() {
           {items ? `${items.length} produit${items.length > 1 ? 's' : ''}, du plus urgent au moins urgent` : ' '}
         </p>
       </div>
+
+      <AlertBanner householdId={householdId} />
 
       {isPending && <LoadingSkeleton />}
 
