@@ -41,7 +41,7 @@ export function RegisterPage() {
       footer={
         <>
           Déjà un compte ?{' '}
-          <Link to="/login" className="font-semibold text-brand-700 hover:underline">
+          <Link to="/login" className="font-bold text-ink-900 underline underline-offset-4 hover:text-peach-800">
             Se connecter
           </Link>
         </>
@@ -52,13 +52,13 @@ export function RegisterPage() {
         <div className="grid grid-cols-2 gap-3">
           <label className="block">
             <span className="label">
-              Prénom <span className="font-normal text-ink-500">(facultatif)</span>
+              Prénom <span className="font-normal text-ink-600">(facultatif)</span>
             </span>
             <input name="firstName" maxLength={100} autoComplete="given-name" className="input" />
           </label>
           <label className="block">
             <span className="label">
-              Nom <span className="font-normal text-ink-500">(facultatif)</span>
+              Nom <span className="font-normal text-ink-600">(facultatif)</span>
             </span>
             <input name="lastName" maxLength={100} autoComplete="family-name" className="input" />
           </label>
@@ -82,7 +82,7 @@ export function RegisterPage() {
             autoComplete="new-password"
             className="input"
           />
-          <span className="mt-1.5 block text-xs text-ink-500">12 caractères minimum. Une phrase est idéale.</span>
+          <span className="mt-2 block text-xs text-ink-600">12 caractères minimum. Une phrase est idéale.</span>
         </label>
 
         {error && (

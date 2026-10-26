@@ -62,30 +62,30 @@ export function AddItemPage() {
 
   return (
     <>
-      <div className="mb-5">
-        <h1 className="text-flame text-2xl font-extrabold tracking-tight">Ajouter un produit</h1>
-        <p className="text-sm text-ink-500">Le code-barres ne contient pas la date : indiquez-la ici.</p>
+      <div className="mb-6">
+        <h1 className="page-title">Ajouter un produit</h1>
+        <p className="page-subtitle">Le code-barres ne contient pas la date : indiquez-la ici.</p>
       </div>
 
       {scanned && (
-        <div className="card mb-4 flex items-center gap-3 p-3">
+        <div className="mb-6 flex items-center gap-3.5 rounded-3xl bg-mint-100 p-4">
           {/* Image servie par Open Food Facts : l'API n'accepte que des URL https de leur domaine. */}
           {scanned.imageUrl && (
             <img
               src={scanned.imageUrl}
               alt=""
-              className="h-16 w-16 rounded-xl bg-card object-contain ring-1 ring-brand-900/10"
+              className="h-16 w-16 rounded-2xl bg-white object-contain p-1.5"
             />
           )}
           <div className="min-w-0">
-            <p className="text-xs font-semibold uppercase tracking-wide text-fresh-700">Produit scanné</p>
-            <p className="truncate font-semibold">{scanned.name}</p>
-            {scanned.brand && <p className="text-sm text-ink-500">{scanned.brand}</p>}
+            <p className="text-xs font-bold tracking-wide text-mint-800 uppercase">Produit scanné</p>
+            <p className="truncate text-[17px] font-bold">{scanned.name}</p>
+            {scanned.brand && <p className="text-sm text-ink-600">{scanned.brand}</p>}
           </div>
         </div>
       )}
 
-      <form onSubmit={handleSubmit} className="card space-y-5 p-5">
+      <form onSubmit={handleSubmit} className="space-y-6">
         <label className="block">
           <span className="label">Nom</span>
           <input
@@ -128,12 +128,12 @@ export function AddItemPage() {
 
         <fieldset>
           <legend className="label">Type de date</legend>
-          {/* Deux boutons radio présentés comme un sélecteur : has-checked colore l'option choisie. */}
-          <div className="grid grid-cols-2 gap-1 rounded-xl bg-brand-900/8 p-1">
+          {/* Deux boutons radio présentés comme deux cartes : has-checked colore l'option choisie. */}
+          <div className="grid grid-cols-2 gap-2">
             {EXPIRY_TYPES.map((option) => (
               <label
                 key={option.value}
-                className="cursor-pointer rounded-lg px-3 py-2 text-center transition has-checked:bg-card has-checked:shadow-sm has-focus-visible:outline-2 has-focus-visible:outline-brand-600"
+                className="cursor-pointer rounded-2xl border border-line px-3 py-3 text-center transition hover:border-ink-400 has-checked:border-ink-900 has-checked:bg-peach-100 has-checked:ring-1 has-checked:ring-ink-900 has-focus-visible:outline-2 has-focus-visible:outline-offset-2 has-focus-visible:outline-ink-900"
               >
                 <input
                   type="radio"
@@ -143,8 +143,8 @@ export function AddItemPage() {
                   onChange={() => setExpiryType(option.value)}
                   className="sr-only"
                 />
-                <span className="block text-sm font-semibold">{option.value}</span>
-                <span className="block text-[11px] text-ink-500">{option.hint}</span>
+                <span className="block text-base font-extrabold">{option.value}</span>
+                <span className="block text-xs text-ink-600">{option.hint}</span>
               </label>
             ))}
           </div>
@@ -161,7 +161,7 @@ export function AddItemPage() {
               className="input"
             />
           </label>
-          <div className="mt-2 flex gap-2">
+          <div className="mt-3 flex gap-2">
             {DATE_SHORTCUTS.map((shortcut) => (
               <button
                 key={shortcut.label}

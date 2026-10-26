@@ -21,8 +21,8 @@ export default defineConfig({
         lang: 'fr',
         start_url: '/',
         display: 'standalone',
-        background_color: '#fdeee3',
-        theme_color: '#c2410c',
+        background_color: '#ffffff',
+        theme_color: '#ffffff',
         icons: [
           { src: 'pwa-192.png', sizes: '192x192', type: 'image/png' },
           { src: 'pwa-512.png', sizes: '512x512', type: 'image/png' },
@@ -30,10 +30,11 @@ export default defineConfig({
         ],
       },
       workbox: {
-        // Seuls les fichiers DE L'APPLICATION sont mis en cache (HTML, JS, CSS, icônes).
+        // Seuls les fichiers DE L'APPLICATION sont mis en cache (HTML, JS, CSS, icônes, police).
         // Les réponses de l'API ne le sont jamais : l'inventaire et le profil resteraient lisibles
         // dans le cache du navigateur après la déconnexion, par exemple sur un appareil partagé.
-        globPatterns: ['**/*.{js,css,html,svg,png}'],
+        // Police : seulement les caractères latins en style normal, les seuls utilisés en français.
+        globPatterns: ['**/*.{js,css,html,svg,png}', '**/*latin*-wght-normal*.woff2'],
         navigateFallback: '/index.html',
         // Si l'API est un jour servie sous /api sur le même domaine, ses URL ne doivent pas
         // être confondues avec des pages de l'application.

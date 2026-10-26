@@ -134,7 +134,7 @@ export function RequireAuth() {
   if (session.status === 'loading') {
     return (
       <div className="grid min-h-dvh place-items-center" aria-label="Chargement">
-        <span className="h-8 w-8 animate-spin rounded-full border-4 border-brand-100 border-t-brand-600" />
+        <span className="h-8 w-8 animate-spin rounded-full border-4 border-mist border-t-brand" />
       </div>
     );
   }

@@ -13,38 +13,42 @@ export function AppLayout() {
 
   return (
     <div className="min-h-dvh pb-28">
-      <header className="sticky top-0 z-10 bg-flame shadow-md shadow-hot-700/20">
-        <div className="mx-auto flex max-w-md items-center justify-between px-4 py-3">
-          <Logo variant="inverse" />
+      <header className="sticky top-0 z-10 border-b border-line bg-white/95 backdrop-blur">
+        <div className="mx-auto flex max-w-md items-center justify-between px-5 py-3">
+          <Logo />
           {/* Avatar : initiales si un prénom ou un nom est renseigné, sinon une icône. */}
           <NavLink
             to="/profile"
             aria-label="Mon profil"
             title="Mon profil"
-            className="grid h-10 w-10 place-items-center rounded-full bg-white/15 text-sm font-bold text-white ring-1 ring-white/30 transition hover:bg-white/25"
+            className={({ isActive }) =>
+              `grid h-10 w-10 place-items-center rounded-full bg-peach-100 text-sm font-bold text-peach-800 transition hover:ring-2 hover:ring-peach-800/20 ${
+                isActive ? 'ring-2 ring-ink-900' : ''
+              }`
+            }
           >
             {userInitials || <UserIcon />}
           </NavLink>
         </div>
       </header>
 
-      <main className="mx-auto max-w-md px-4 py-5">
+      <main className="mx-auto max-w-md px-5 pt-6">
         <Outlet />
       </main>
 
       <nav
         aria-label="Navigation principale"
         // safe-area-inset-bottom : laisse la place à la barre de geste des téléphones récents.
-        className="fixed inset-x-0 bottom-0 z-10 border-t border-brand-900/10 bg-card/95 pb-[env(safe-area-inset-bottom)] backdrop-blur"
+        className="fixed inset-x-0 bottom-0 z-10 border-t border-line bg-white/95 pb-[env(safe-area-inset-bottom)] backdrop-blur"
       >
-        <div className="mx-auto grid max-w-md grid-cols-3 items-end px-4">
+        <div className="mx-auto grid max-w-md grid-cols-3 items-end px-5">
           <TabLink to="/" label="Inventaire" icon={<ListIcon />} />
           {/* Le scan est l'action principale de l'application : bouton central mis en avant. */}
           <NavLink
             to="/scan"
-            className="-mt-5 flex flex-col items-center gap-1 pb-2 text-xs font-semibold text-brand-700"
+            className="-mt-6 flex flex-col items-center gap-1 pb-2 text-xs font-bold text-ink-900"
           >
-            <span className="grid h-14 w-14 place-items-center rounded-full bg-flame-bright text-white shadow-lg shadow-hot-600/30 ring-4 ring-card">
+            <span className="grid h-15 w-15 place-items-center rounded-full bg-brand text-ink-900 ring-4 ring-white transition hover:bg-brand-hover">
               <ScanIcon className="h-6 w-6" />
             </span>
             Scanner
@@ -63,13 +67,18 @@ function TabLink({ to, label, icon }: { to: string; label: string; icon: React.R
       end
       // NavLink sait si son lien correspond à la page affichée : on met cet onglet en avant.
       className={({ isActive }) =>
-        `flex flex-col items-center gap-1 py-2.5 text-xs font-semibold transition ${
-          isActive ? 'text-brand-700' : 'text-ink-500 hover:text-ink-900'
+        `group flex flex-col items-center gap-1 py-2.5 text-xs font-bold transition ${
+          isActive ? 'text-ink-900' : 'text-ink-600 hover:text-ink-900'
         }`
       }
     >
-      {icon}
-      {label}
+      {({ isActive }) => (
+        <>
+          {/* Pastille derrière l'icône de l'onglet actif. */}
+          <span className={`rounded-full px-4 py-1 transition ${isActive ? 'bg-peach-100' : ''}`}>{icon}</span>
+          {label}
+        </>
+      )}
     </NavLink>
   );
 }

@@ -38,23 +38,23 @@ export function ScanPage() {
 
   return (
     <>
-      <div className="mb-5">
-        <h1 className="text-flame text-2xl font-extrabold tracking-tight">Scanner un produit</h1>
-        <p className="text-sm text-ink-500">Visez le code-barres : la fiche du produit se remplit toute seule.</p>
+      <div className="mb-6">
+        <h1 className="page-title">Scanner un produit</h1>
+        <p className="page-subtitle">Visez le code-barres : la fiche du produit se remplit toute seule.</p>
       </div>
 
       {lookup.isIdle && <BarcodeScanner key={scanAttempt} onDetected={(barcode) => lookup.mutate(barcode)} />}
 
       {lookup.isPending && (
         <div className="card flex items-center gap-3 p-5">
-          <span className="h-5 w-5 animate-spin rounded-full border-2 border-brand-200 border-t-brand-600" />
-          <p className="font-medium">Recherche du produit…</p>
+          <span className="h-5 w-5 animate-spin rounded-full border-2 border-mist border-t-brand" />
+          <p className="font-semibold">Recherche du produit…</p>
         </div>
       )}
 
       {lookup.isError && (
-        <div role="alert" className="card space-y-4 p-5">
-          <p className="text-sm text-ink-700">{errorMessage(lookup.error)}</p>
+        <div role="alert" className="space-y-4 rounded-3xl bg-sun-100 p-5">
+          <p className="text-[15px] font-medium text-sun-800">{errorMessage(lookup.error)}</p>
           <div className="flex gap-2">
             <button type="button" onClick={scanAgain} className="btn-secondary flex-1">
               Scanner un autre produit
@@ -67,7 +67,7 @@ export function ScanPage() {
       )}
 
       {/* Secours : caméra indisponible, code abîmé... La validation EAN complète est faite par l'API. */}
-      <form onSubmit={handleManualSubmit} className="card mt-4 p-4">
+      <form onSubmit={handleManualSubmit} className="mt-6">
         <label className="label" htmlFor="manual-barcode">
           Ou tapez le code-barres
         </label>

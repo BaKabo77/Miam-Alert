@@ -1,4 +1,5 @@
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
+import { BellIcon, CloseIcon } from '../components/icons';
 import { type Alert, fetchTodayAlert, markAlertAsRead } from './alerts-api';
 
 // Bandeau de l'alerte du jour, en haut de l'inventaire. Invisible s'il n'y a pas d'alerte,
@@ -27,29 +28,25 @@ export function AlertBanner({ householdId }: { householdId: string }) {
   }
 
   return (
-    <section
-      aria-label="Alerte du jour"
-      className="bg-flame mb-5 flex items-start gap-3 rounded-2xl p-4 text-white shadow-md shadow-hot-600/25"
-    >
-      <span aria-hidden="true" className="text-2xl leading-none">
-        ⚠️
+    // Bloc noir avec une pastille orange : le seul élément sombre de la page, il attire l'œil.
+    <section aria-label="Alerte du jour" className="mb-6 flex items-start gap-3.5 rounded-3xl bg-ink-900 p-4 text-white">
+      <span className="grid h-10 w-10 shrink-0 place-items-center rounded-full bg-brand text-ink-900">
+        <BellIcon />
       </span>
       <div className="flex-1">
         {/* "Ce matin" : les compteurs datent du calcul de 9 h, la liste ci-dessous est à jour. */}
-        <p className="text-xs font-semibold uppercase tracking-wide text-white/85">Alerte de ce matin</p>
-        <p className="font-semibold">{alertMessage(alert)}</p>
-        <p className="mt-0.5 text-sm text-white/90">Commencez par le haut de votre inventaire.</p>
+        <p className="text-xs font-bold tracking-wide text-brand uppercase">Alerte de ce matin</p>
+        <p className="mt-0.5 text-[17px] font-bold">{alertMessage(alert)}</p>
+        <p className="mt-0.5 text-sm text-white/75">Commencez par le haut de votre inventaire.</p>
       </div>
       <button
         type="button"
         onClick={() => dismiss.mutate(alert.id)}
         aria-label="Fermer l'alerte"
         title="Fermer l'alerte"
-        className="-mr-1 -mt-1 rounded-full p-1.5 text-white/85 transition hover:bg-white/15 hover:text-white"
+        className="-mt-1 -mr-1 rounded-full p-1.5 text-white/75 transition hover:bg-white/10 hover:text-white"
       >
-        <svg viewBox="0 0 24 24" className="h-5 w-5" fill="none" stroke="currentColor" strokeWidth={2} aria-hidden="true">
-          <path d="M18 6 6 18M6 6l12 12" strokeLinecap="round" />
-        </svg>
+        <CloseIcon />
       </button>
     </section>
   );

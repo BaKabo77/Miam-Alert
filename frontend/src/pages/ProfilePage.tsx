@@ -1,6 +1,6 @@
 import { useState, type FormEvent } from 'react';
 import { useAuth } from '../auth/session';
-import { LogoutIcon } from '../components/icons';
+import { LogoutIcon, UserIcon } from '../components/icons';
 import { initials } from '../components/initials';
 import { ApiError } from '../lib/api';
 
@@ -37,27 +37,27 @@ export function ProfilePage() {
 
   return (
     <>
-      <div className="mb-5">
-        <h1 className="text-flame text-2xl font-extrabold tracking-tight">Mon profil</h1>
-        <p className="text-sm text-ink-500">Vos informations et votre session.</p>
+      <div className="mb-6">
+        <h1 className="page-title">Mon profil</h1>
+        <p className="page-subtitle">Vos informations et votre session.</p>
       </div>
 
-      <div className="card mb-4 flex items-center gap-4 p-4">
+      <div className="mb-8 flex items-center gap-4 rounded-3xl bg-ink-900 p-5 text-white">
         <span
           aria-hidden="true"
-          className="bg-flame-bright grid h-14 w-14 shrink-0 place-items-center rounded-full text-lg font-bold text-white"
+          className="grid h-14 w-14 shrink-0 place-items-center rounded-full bg-brand text-lg font-black text-ink-900"
         >
-          {initials(user.firstName, user.lastName) || '🙂'}
+          {initials(user.firstName, user.lastName) || <UserIcon className="h-6 w-6" />}
         </span>
         <div className="min-w-0">
-          <p className="truncate font-semibold">
+          <p className="truncate text-[17px] font-bold">
             {[user.firstName, user.lastName].filter(Boolean).join(' ') || 'Nom non renseigné'}
           </p>
-          <p className="truncate text-sm text-ink-500">{user.email}</p>
+          <p className="truncate text-sm text-white/75">{user.email}</p>
         </div>
       </div>
 
-      <form onSubmit={handleSubmit} className="card mb-4 space-y-4 p-5">
+      <form onSubmit={handleSubmit} className="mb-8 space-y-4">
         <div className="grid grid-cols-2 gap-3">
           <label className="block">
             <span className="label">Prénom</span>
@@ -86,14 +86,14 @@ export function ProfilePage() {
             />
           </label>
         </div>
-        <p className="text-xs text-ink-500">
+        <p className="text-xs text-ink-600">
           Facultatifs. Laissez un champ vide pour effacer l'information : elle est alors supprimée de nos
           données.
         </p>
 
         {/* role="status" : la confirmation est annoncée par les lecteurs d'écran. */}
         {status === 'saved' && (
-          <p role="status" className="rounded-xl bg-fresh-50 px-3.5 py-2.5 text-sm text-fresh-700 ring-1 ring-fresh-100">
+          <p role="status" className="alert-success">
             Profil enregistré.
           </p>
         )}
@@ -108,8 +108,8 @@ export function ProfilePage() {
         </button>
       </form>
 
-      <div className="card p-5">
-        <p className="mb-3 text-sm text-ink-500">
+      <div className="border-t border-line pt-6">
+        <p className="mb-4 text-sm text-ink-600">
           La déconnexion met fin à votre session sur cet appareil, y compris côté serveur.
         </p>
         <button type="button" onClick={() => void logout()} className="btn-secondary w-full">

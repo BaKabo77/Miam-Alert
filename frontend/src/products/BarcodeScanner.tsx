@@ -98,15 +98,15 @@ export function BarcodeScanner({ onDetected }: BarcodeScannerProps) {
 
   return (
     <div>
-      <div className="relative overflow-hidden rounded-2xl bg-ink-900 shadow-lg">
+      <div className="relative overflow-hidden rounded-3xl bg-ink-900">
         <div ref={containerRef} />
         {/* Cadre de visée, purement visuel : l'extérieur est assombri pour guider le regard. */}
         <div
           aria-hidden="true"
-          className="pointer-events-none absolute inset-x-8 top-1/2 h-28 -translate-y-1/2 rounded-xl border-2 border-white/90 shadow-[0_0_0_9999px_rgba(15,23,42,0.45)]"
+          className="pointer-events-none absolute inset-x-8 top-1/2 h-28 -translate-y-1/2 rounded-2xl border-[3px] border-brand shadow-[0_0_0_9999px_rgba(18,18,18,0.5)]"
         />
       </div>
-      <p className="mt-2 text-center text-xs text-ink-500">
+      <p className="mt-3 text-center text-xs text-ink-600">
         Code-barres à l'horizontale, bien éclairé, à 15–20 cm : trop près, la caméra n'arrive pas à faire la
         mise au point.
       </p>
