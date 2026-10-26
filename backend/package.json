@@ -57,5 +57,8 @@
   "allowScripts": {
     "prisma@7.10.1": true,
     "@prisma/engines@7.10.1": true
+  },
+  "overrides": {
+    "multer": "2.5.0"
   }
 }
