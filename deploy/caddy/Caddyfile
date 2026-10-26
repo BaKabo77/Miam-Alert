@@ -1,0 +1,40 @@
+# Reverse proxy de production : SEUL point d'entrée depuis Internet (ports 80 et 443).
+# Caddy obtient et renouvelle seul les certificats Let's Encrypt, et redirige HTTP vers HTTPS.
+# {$DOMAIN} vient de l'environnement (miam-alert.fr en production).
+{
+	# Pas d'API d'administration : personne ne peut modifier la configuration à chaud.
+	admin off
+}
+
+(security_headers) {
+	header {
+		# HSTS : pendant un an, le navigateur refuse de se connecter au domaine et à ses
+		# sous-domaines autrement qu'en HTTPS (pas de détournement vers HTTP sur un Wi-Fi piégé).
+		Strict-Transport-Security "max-age=31536000; includeSubDomains"
+		# Ne pas annoncer les logiciels utilisés (Caddy, Nginx).
+		-Server
+		defer
+	}
+}
+
+# Le front (application React servie par Nginx).
+{$DOMAIN} {
+	import security_headers
+	reverse_proxy web:8080
+}
+
+www.{$DOMAIN} {
+	import security_headers
+	redir https://{$DOMAIN}{uri} permanent
+}
+
+# L'API. Caddy remplace l'en-tête X-Forwarded-For envoyé par le client par sa vraie IP :
+# l'API ne fait confiance qu'à ce proxy (TRUST_PROXY=1).
+api.{$DOMAIN} {
+	import security_headers
+	# Première barrière contre les corps de requête énormes (l'API limite déjà le JSON à 16 ko).
+	request_body {
+		max_size 64KB
+	}
+	reverse_proxy api:3000
+}

@@ -1,0 +1,140 @@
+# Environnement de PRODUCTION.
+# Lancement (sur le serveur) : docker compose -f docker-compose.prod.yml --env-file .env.prod up -d --build
+#
+# Seul Caddy est joignable depuis Internet (ports 80 et 443). La base de données n'a aucun port
+# publié et vit sur un réseau interne sans accès à Internet. Pas d'Adminer en production.
+# Chaque conteneur ne reçoit que les variables dont il a besoin (le front et Caddy ne voient
+# jamais JWT_SECRET ni le mot de passe de la base).
+
+name: miam-alert-prod
+
+# Réglages communs de durcissement des conteneurs.
+x-hardened: &hardened
+  restart: unless-stopped
+  # Interdit à un processus d'obtenir plus de droits que ceux de son lancement (setuid...).
+  security_opt:
+    - no-new-privileges:true
+  # Logs Docker plafonnés : sans limite, ils finiraient par remplir le disque.
+  logging:
+    driver: json-file
+    options:
+      max-size: 10m
+      max-file: '3'
+
+services:
+  db:
+    <<: *hardened
+    image: postgres:16-alpine
+    environment:
+      POSTGRES_USER: ${POSTGRES_USER:?POSTGRES_USER manquant}
+      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD:?POSTGRES_PASSWORD manquant}
+      POSTGRES_DB: ${POSTGRES_DB:?POSTGRES_DB manquant}
+    volumes:
+      - db-data:/var/lib/postgresql/data
+    networks:
+      - internal
+    healthcheck:
+      test: ['CMD-SHELL', 'pg_isready -U "$${POSTGRES_USER}" -d "$${POSTGRES_DB}"']
+      interval: 5s
+      timeout: 5s
+      retries: 10
+
+  # Applique les migrations Prisma puis s'arrête. L'API ne démarre que si elles ont réussi :
+  # le code ne tourne jamais sur un schéma de base qui ne lui correspond pas.
+  migrate:
+    <<: *hardened
+    restart: 'no'
+    build:
+      context: ./backend
+      target: migrate
+    environment:
+      DATABASE_URL: postgresql://${POSTGRES_USER}:${POSTGRES_PASSWORD}@db:5432/${POSTGRES_DB}?schema=public
+    depends_on:
+      db:
+        condition: service_healthy
+    networks:
+      - internal
+
+  api:
+    <<: *hardened
+    build:
+      context: ./backend
+      target: runtime
+    environment:
+      NODE_ENV: production
+      PORT: 3000
+      DATABASE_URL: postgresql://${POSTGRES_USER}:${POSTGRES_PASSWORD}@db:5432/${POSTGRES_DB}?schema=public
+      JWT_SECRET: ${JWT_SECRET:?JWT_SECRET manquant}
+      CORS_ORIGINS: https://${DOMAIN:?DOMAIN manquant}
+      # Un seul proxy devant l'API : Caddy (voir src/common/trust-proxy.ts).
+      TRUST_PROXY: 1
+    depends_on:
+      migrate:
+        condition: service_completed_successfully
+    # Système de fichiers en lecture seule : un attaquant ne pourrait ni modifier le code
+    # ni déposer d'outil. /tmp reste inscriptible, en mémoire.
+    read_only: true
+    tmpfs:
+      - /tmp
+    # Aucune capacité Linux : l'API n'en a besoin d'aucune.
+    cap_drop:
+      - ALL
+    # internal pour joindre la base, edge pour Caddy et pour sortir vers Open Food Facts.
+    networks:
+      - internal
+      - edge
+
+  web:
+    <<: *hardened
+    build:
+      context: ./frontend
+      args:
+        VITE_API_URL: https://api.${DOMAIN:?DOMAIN manquant}
+    read_only: true
+    tmpfs:
+      - /tmp
+    cap_drop:
+      - ALL
+    networks:
+      - edge
+
+  proxy:
+    <<: *hardened
+    build: ./deploy/caddy
+    environment:
+      DOMAIN: ${DOMAIN:?DOMAIN manquant}
+    ports:
+      - '80:80'
+      - '443:443'
+      - '443:443/udp' # HTTP/3
+    # Autorise l'ouverture des ports 80 et 443 sans root ni capacité, dans ce conteneur seulement.
+    sysctls:
+      net.ipv4.ip_unprivileged_port_start: 0
+    volumes:
+      # Certificats et clés privées TLS : conservés entre les redémarrages (sinon Let's Encrypt
+      # serait sollicité à chaque démarrage et finirait par refuser, limite de 5 par semaine).
+      - caddy-data:/data
+      - caddy-config:/config
+    read_only: true
+    tmpfs:
+      - /tmp
+    cap_drop:
+      - ALL
+    depends_on:
+      api:
+        condition: service_healthy
+      web:
+        condition: service_healthy
+    networks:
+      - edge
+
+networks:
+  # Réseau de la base : "internal" = aucune route vers Internet, ni entrante ni sortante.
+  internal:
+    internal: true
+  edge: {}
+
+volumes:
+  db-data:
+  caddy-data:
+  caddy-config:
