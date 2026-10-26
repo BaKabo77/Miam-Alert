@@ -83,11 +83,11 @@ describe('Daily alerts generation (e2e)', () => {
     expect(await prisma.alert.count()).toBe(1);
   });
 
-  it('is scheduled every day at 7:00, Paris time', () => {
+  it('is scheduled every day at 9:00, Paris time', () => {
     const job = app.get(SchedulerRegistry).getCronJob('daily-alerts');
     const next = job.nextDate().setZone('Europe/Paris');
 
-    expect(next.hour).toBe(7);
+    expect(next.hour).toBe(9);
     expect(next.minute).toBe(0);
   });
 });

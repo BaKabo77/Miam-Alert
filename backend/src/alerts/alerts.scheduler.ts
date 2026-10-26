@@ -9,8 +9,8 @@ export class AlertsScheduler {
 
   constructor(private readonly alerts: AlertsService) {}
 
-  // Chaque jour à 7 h, heure de Paris (le fuseau gère tout seul le passage à l'heure d'été).
-  @Cron('0 7 * * *', { name: 'daily-alerts', timeZone: 'Europe/Paris' })
+  // Chaque jour à 9 h, heure de Paris (le fuseau gère tout seul le passage à l'heure d'été).
+  @Cron('0 9 * * *', { name: 'daily-alerts', timeZone: 'Europe/Paris' })
   async generateDailyAlerts(): Promise<void> {
     try {
       await this.alerts.generateDailyAlerts();
