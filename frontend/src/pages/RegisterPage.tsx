@@ -20,7 +20,12 @@ export function RegisterPage() {
     setError(null);
     setSubmitting(true);
     try {
-      await register(String(form.get('email')), String(form.get('password')));
+      await register({
+        email: String(form.get('email')),
+        password: String(form.get('password')),
+        firstName: String(form.get('firstName') ?? ''),
+        lastName: String(form.get('lastName') ?? ''),
+      });
       navigate('/', { replace: true });
     } catch (caught) {
       setError(errorMessage(caught));
@@ -43,6 +48,22 @@ export function RegisterPage() {
       }
     >
       <form onSubmit={handleSubmit} className="space-y-4">
+        {/* Facultatifs : seulement pour vous saluer (minimisation des données personnelles). */}
+        <div className="grid grid-cols-2 gap-3">
+          <label className="block">
+            <span className="label">
+              Prénom <span className="font-normal text-ink-500">(facultatif)</span>
+            </span>
+            <input name="firstName" maxLength={100} autoComplete="given-name" className="input" />
+          </label>
+          <label className="block">
+            <span className="label">
+              Nom <span className="font-normal text-ink-500">(facultatif)</span>
+            </span>
+            <input name="lastName" maxLength={100} autoComplete="family-name" className="input" />
+          </label>
+        </div>
+
         <label className="block">
           <span className="label">Email</span>
           <input name="email" type="email" required maxLength={254} autoComplete="email" className="input" />
@@ -83,7 +104,7 @@ function errorMessage(error: unknown): string {
     return 'Un compte existe déjà avec cet email.';
   }
   if (error instanceof ApiError && error.status === 400) {
-    return 'Email invalide ou mot de passe trop court (12 caractères minimum).';
+    return 'Vérifiez les champs : email valide, mot de passe de 12 caractères minimum, nom et prénom sans chiffres.';
   }
   if (error instanceof ApiError && error.status === 429) {
     return 'Trop de tentatives. Réessayez dans une minute.';

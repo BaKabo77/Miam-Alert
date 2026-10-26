@@ -9,6 +9,8 @@ import { apiRequest, refreshSession, setAccessToken, setSessionExpiredHandler } 
 export interface User {
   id: string;
   email: string;
+  firstName: string | null;
+  lastName: string | null;
   households: { id: string; name: string; role: 'OWNER' | 'MEMBER' }[];
 }
 
@@ -21,8 +23,16 @@ type Session =
 interface AuthContextValue {
   session: Session;
   login: (email: string, password: string) => Promise<void>;
-  register: (email: string, password: string) => Promise<void>;
+  register: (data: RegisterData) => Promise<void>;
   logout: () => Promise<void>;
+}
+
+// Prénom et nom facultatifs : un champ vide est ignoré par l'API.
+export interface RegisterData {
+  email: string;
+  password: string;
+  firstName?: string;
+  lastName?: string;
 }
 
 const AuthContext = createContext<AuthContextValue | null>(null);
@@ -62,14 +72,14 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     setSession({ status: 'authenticated', user });
   }
 
-  async function register(email: string, password: string) {
+  async function register(data: RegisterData) {
     await apiRequest('/auth/register', {
       method: 'POST',
-      body: { email, password },
+      body: data,
       retryOnUnauthorized: false,
     });
     // Compte créé : on connecte directement l'utilisateur.
-    await login(email, password);
+    await login(data.email, data.password);
   }
 
   async function logout() {

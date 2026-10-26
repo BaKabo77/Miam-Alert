@@ -1,12 +1,14 @@
 import { useQuery } from '@tanstack/react-query';
 import { Link } from 'react-router';
-import { useHouseholdId } from '../auth/session';
+import { useAuth, useHouseholdId } from '../auth/session';
 import { PlusIcon, ScanIcon } from '../components/icons';
 import { fetchPantryItems, type PantryItem } from '../pantry/pantry-api';
 import { PantryItemRow } from '../pantry/PantryItemRow';
 
 export function InventoryPage() {
   const householdId = useHouseholdId();
+  const { session } = useAuth();
+  const firstName = session.status === 'authenticated' ? session.user.firstName : null;
 
   // TanStack Query appelle l'API et nous donne : les données, "en cours de chargement ?", "erreur ?".
   const { data: items, isPending, isError } = useQuery({
@@ -17,6 +19,7 @@ export function InventoryPage() {
   return (
     <>
       <div className="mb-5">
+        {firstName && <p className="text-sm font-semibold text-ink-500">Bonjour {firstName} 👋</p>}
         <h1 className="text-flame text-2xl font-extrabold tracking-tight">Mon inventaire</h1>
         <p className="text-sm text-ink-500">
           {items ? `${items.length} produit${items.length > 1 ? 's' : ''}, du plus urgent au moins urgent` : ' '}
