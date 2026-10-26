@@ -181,6 +181,8 @@ Caddy obtient les certificats HTTPS au premier démarrage ; les migrations sont 
 - [ ] Recettes suggérées selon les produits les plus urgents
 - [ ] Foyer partagé, statistiques de gaspillage, export et suppression des données (RGPD)
 
+Toutes les évolutions envisagées, classées par priorité : [docs/EVOLUTIONS.md](docs/EVOLUTIONS.md).
+
 ## Limites connues
 
 Choix assumés, documentés plutôt que masqués :
