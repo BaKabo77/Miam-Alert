@@ -2,7 +2,7 @@
 // Un seul endroit à modifier si l'éditeur, le contact ou l'hébergeur changent.
 
 export const PUBLISHER = {
-  name: 'TRAORE',
+  name: 'TRAORE Koba',
   email: 'traorekoba7@gmail.com',
 };
 
