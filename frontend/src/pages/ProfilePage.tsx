@@ -2,6 +2,7 @@ import { useState, type FormEvent } from 'react';
 import { useAuth } from '../auth/session';
 import { LogoutIcon, UserIcon } from '../components/icons';
 import { initials } from '../components/initials';
+import { LegalLinks } from '../legal/LegalLayout';
 import { ApiError } from '../lib/api';
 
 export function ProfilePage() {
@@ -116,6 +117,8 @@ export function ProfilePage() {
           <LogoutIcon className="h-4 w-4" /> Se déconnecter
         </button>
       </div>
+
+      <LegalLinks className="mt-10" />
     </>
   );
 }

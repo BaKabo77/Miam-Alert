@@ -1,4 +1,5 @@
 import type { ReactNode } from 'react';
+import { LegalLinks } from '../legal/LegalLayout';
 import { Logo } from './Logo';
 
 interface AuthLayoutProps {
@@ -42,6 +43,7 @@ export function AuthLayout({ title, subtitle, children, footer }: AuthLayoutProp
         <div className="mt-6">{children}</div>
 
         <p className="mt-8 text-center text-[15px] text-ink-600">{footer}</p>
+        <LegalLinks className="mt-10" />
       </div>
     </div>
   );

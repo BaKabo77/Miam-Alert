@@ -4,7 +4,9 @@ import { RequireAuth } from './auth/session';
 import { AppLayout } from './components/AppLayout';
 import { AddItemPage } from './pages/AddItemPage';
 import { InventoryPage } from './pages/InventoryPage';
+import { LegalNoticePage } from './pages/LegalNoticePage';
 import { LoginPage } from './pages/LoginPage';
+import { PrivacyPage } from './pages/PrivacyPage';
 import { ProfilePage } from './pages/ProfilePage';
 import { RegisterPage } from './pages/RegisterPage';
 
@@ -17,6 +19,9 @@ export default function App() {
     <Routes>
       <Route path="/login" element={<LoginPage />} />
       <Route path="/register" element={<RegisterPage />} />
+      {/* Pages légales : publiques, car elles doivent être consultables avant de créer un compte. */}
+      <Route path="/legal" element={<LegalNoticePage />} />
+      <Route path="/privacy" element={<PrivacyPage />} />
       {/* Toutes les routes placées ici exigent d'être connecté, et partagent la même barre de navigation. */}
       <Route element={<RequireAuth />}>
         <Route element={<AppLayout />}>

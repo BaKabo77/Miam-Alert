@@ -92,6 +92,7 @@ Correspondance avec l'OWASP Top 10 et procédure de signalement d'une faille : v
 ### Données personnelles
 - Minimisation (RGPD) : seuls l'email et le mot de passe sont obligatoires ; le prénom et le nom sont facultatifs, modifiables et effaçables à tout moment. Pas de téléphone ni de date de naissance, inutiles pour l'application.
 - Les noms ne peuvent contenir que des lettres, espaces, apostrophes, traits d'union et points, et n'apparaissent jamais dans les logs.
+- **Mentions légales et politique de confidentialité** consultables sans compte : données collectées, bases légales, durées de conservation, prestataires (dont la transmission de l'adresse IP à Open Food Facts lors de l'affichage des photos), droits et recours. Un seul cookie, strictement nécessaire : pas de bandeau de consentement.
 
 ### Journalisation
 - Événements de sécurité en JSON (connexions, échecs, refresh, vol de session détecté, accès refusé à un foyer, rate limit).
