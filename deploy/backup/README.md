@@ -11,12 +11,26 @@ Chaque nuit à 3 h (heure de Paris), `miam-backup.timer` lance `miam-backup.sh` 
 |---|---|
 | Chiffrement asymétrique | Le serveur peut chiffrer mais pas déchiffrer : un attaquant qui le compromet ne lit pas les anciennes sauvegardes. La clé privée est conservée hors ligne par l'administrateur. |
 | Chiffrement avant l'envoi | L'hébergeur du stockage ne voit qu'un fichier illisible (RGPD). |
-| Clé Backblaze limitée à `listBuckets` et `writeFiles` (créée avec l'outil `b2` : l'option « Write Only » de l'interface autorise aussi la suppression) | Le serveur dépose des fichiers mais ne peut ni les lire ni les supprimer : un attaquant ou un rançongiciel ne peut pas effacer les copies externes. La rotation (30 jours) est faite par une règle de cycle de vie de Backblaze. |
+| Clé Backblaze limitée à `listBuckets` et `writeFiles` (créée avec l'outil `b2` : l'option « Write Only » de l'interface autorise aussi la suppression) | Le serveur dépose des fichiers mais ne peut ni les lister ni les lire (testé : `403`). La rotation (30 jours) est faite par une règle de cycle de vie de Backblaze, jamais par le serveur. |
+| **Object Lock en mode Compliance, 30 jours** | `writeFiles` permet encore de *masquer* un fichier (une « suppression » S3 sans numéro de version renvoie `204`), et la règle de cycle de vie supprime ensuite les fichiers masqués : un attaquant pourrait ainsi faire effacer les sauvegardes par Backblaze. Le verrouillage rend chaque version impossible à supprimer pendant 30 jours, par quiconque (y compris la clé maître) : sauvegardes immuables, la défense de référence contre les rançongiciels. Faille trouvée en testant la suppression, pas en la déduisant des droits de la clé. |
 | Stockage hors d'IONOS | Un incident chez l'hébergeur du serveur n'emporte pas les sauvegardes. |
 | Script copié dans `/usr/local/sbin`, propriété de root | systemd l'exécute en root : il ne doit pas être modifiable par un utilisateur ordinaire (le dépôt cloné appartient à `kabo`). |
 | Service systemd durci | Système en lecture seule sauf le dossier des sauvegardes, `/tmp` privé, aucun gain de privilèges. |
 
 Perte de données maximale en cas de panne : 24 heures (une sauvegarde par nuit).
+
+## Mise en place du stockage (Backblaze B2)
+
+1. Compte en région **EU Central**, double authentification activée.
+2. Bucket **privé**, chiffrement par défaut activé, **Object Lock** activé avec une rétention par défaut en mode **Compliance**, 30 jours.
+3. Règle de cycle de vie : masquer après 30 jours, supprimer 1 jour après le masquage (Object Lock bloque toute suppression anticipée).
+4. Clé d'application créée depuis un poste d'administration, jamais depuis le serveur :
+
+```bash
+b2 account authorize   # clé maître, saisie à la main
+b2 key create --bucket <bucket> miam-vps-backup-wo listBuckets,writeFiles
+b2 account clear       # la clé maître ne reste pas sur le poste
+```
 
 ## Installation sur le serveur
 
