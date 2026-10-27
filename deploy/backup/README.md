@@ -11,7 +11,7 @@ Chaque nuit à 3 h (heure de Paris), `miam-backup.timer` lance `miam-backup.sh` 
 |---|---|
 | Chiffrement asymétrique | Le serveur peut chiffrer mais pas déchiffrer : un attaquant qui le compromet ne lit pas les anciennes sauvegardes. La clé privée est conservée hors ligne par l'administrateur. |
 | Chiffrement avant l'envoi | L'hébergeur du stockage ne voit qu'un fichier illisible (RGPD). |
-| Clé Backblaze en écriture seule | Le serveur dépose des fichiers mais ne peut ni les lire ni les supprimer : un attaquant ou un rançongiciel ne peut pas effacer les copies externes. La rotation (30 jours) est faite par une règle de cycle de vie de Backblaze. |
+| Clé Backblaze limitée à `listBuckets` et `writeFiles` (créée avec l'outil `b2` : l'option « Write Only » de l'interface autorise aussi la suppression) | Le serveur dépose des fichiers mais ne peut ni les lire ni les supprimer : un attaquant ou un rançongiciel ne peut pas effacer les copies externes. La rotation (30 jours) est faite par une règle de cycle de vie de Backblaze. |
 | Stockage hors d'IONOS | Un incident chez l'hébergeur du serveur n'emporte pas les sauvegardes. |
 | Script copié dans `/usr/local/sbin`, propriété de root | systemd l'exécute en root : il ne doit pas être modifiable par un utilisateur ordinaire (le dépôt cloné appartient à `kabo`). |
 | Service systemd durci | Système en lecture seule sauf le dossier des sauvegardes, `/tmp` privé, aucun gain de privilèges. |

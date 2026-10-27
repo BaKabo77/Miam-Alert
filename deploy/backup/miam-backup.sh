@@ -21,9 +21,18 @@ source "$CONFIG"
 : "${COMPOSE_DIR:?COMPOSE_DIR manquant dans $CONFIG}"
 : "${AGE_RECIPIENT:?AGE_RECIPIENT manquant dans $CONFIG}"
 : "${B2_BUCKET:?B2_BUCKET manquant dans $CONFIG}"
-: "${RCLONE_CONFIG_B2_ACCOUNT:?RCLONE_CONFIG_B2_ACCOUNT manquant dans $CONFIG}"
-: "${RCLONE_CONFIG_B2_KEY:?RCLONE_CONFIG_B2_KEY manquant dans $CONFIG}"
-export RCLONE_CONFIG_B2_TYPE=b2 RCLONE_CONFIG_B2_ACCOUNT RCLONE_CONFIG_B2_KEY
+: "${B2_KEY_ID:?B2_KEY_ID manquant dans $CONFIG}"
+: "${B2_APPLICATION_KEY:?B2_APPLICATION_KEY manquant dans $CONFIG}"
+B2_S3_ENDPOINT=${B2_S3_ENDPOINT:-https://s3.eu-central-003.backblazeb2.com}
+
+# Remote rclone "b2" décrit par variables d'environnement (aucun fichier de configuration).
+# API compatible S3 de Backblaze : le rclone d'Ubuntu (mis à jour par les correctifs de sécurité
+# automatiques) parle encore la version 1 de l'API native de B2, refusée par les comptes récents.
+export RCLONE_CONFIG_B2_TYPE=s3 \
+  RCLONE_CONFIG_B2_PROVIDER=Other \
+  RCLONE_CONFIG_B2_ENDPOINT="$B2_S3_ENDPOINT" \
+  RCLONE_CONFIG_B2_ACCESS_KEY_ID="$B2_KEY_ID" \
+  RCLONE_CONFIG_B2_SECRET_ACCESS_KEY="$B2_APPLICATION_KEY"
 
 log() { echo "[miam-backup] $*"; }
 
@@ -94,11 +103,14 @@ mkdir -p "$BACKUP_DIR"
 age --recipient "$AGE_RECIPIENT" --output "$BACKUP_DIR/$FILE" "$WORK/db.dump"
 
 # ---------- 4. Copie externe ----------
-# La clé B2 ne permet que d'écrire : pas de lecture, pas de suppression. --no-check-dest évite
-# de lister le contenu du bucket (refusé) ; la suppression des anciennes copies est faite par
-# une règle de cycle de vie de Backblaze, jamais par ce serveur.
+# La clé B2 ne permet que d'écrire : pas de lecture, pas de suppression. Les options évitent toute
+# opération de lecture, qui serait refusée : vérifier si le fichier existe déjà (--no-check-dest),
+# si le bucket existe (--s3-no-check-bucket), relire le fichier après l'envoi (--s3-no-head).
+# La suppression des anciennes copies est faite par une règle de cycle de vie de Backblaze,
+# jamais par ce serveur.
 log "envoi vers Backblaze B2"
-rclone copyto --no-check-dest --retries 3 "$BACKUP_DIR/$FILE" "b2:$B2_BUCKET/$FILE"
+rclone copyto --no-check-dest --s3-no-check-bucket --s3-no-head --retries 3 \
+  "$BACKUP_DIR/$FILE" "b2:$B2_BUCKET/$FILE"
 
 # ---------- 5. Rotation locale ----------
 find "$BACKUP_DIR" -name 'miam-alert-*.dump.age' -mtime +"$LOCAL_RETENTION_DAYS" -delete
