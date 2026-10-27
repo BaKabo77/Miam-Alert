@@ -7,6 +7,8 @@ export type SecurityEvent =
   | 'auth.refresh'
   | 'auth.refresh.reuse_detected'
   | 'auth.logout'
+  | 'auth.password_changed'
+  | 'auth.password_change.denied'
   | 'rate_limit.exceeded'
   | 'household.access_denied'
   | 'account.deleted'

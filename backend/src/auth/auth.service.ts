@@ -1,10 +1,17 @@
-import { ConflictException, Injectable, UnauthorizedException } from '@nestjs/common';
+import {
+  BadRequestException,
+  ConflictException,
+  ForbiddenException,
+  Injectable,
+  UnauthorizedException,
+} from '@nestjs/common';
 import { JwtService } from '@nestjs/jwt';
 import { randomUUID } from 'node:crypto';
 import { SecurityLogger } from '../common/security-logger.js';
 import { Prisma } from '../generated/prisma/client.js';
 import { PrismaService } from '../prisma/prisma.service.js';
 import type { AccessTokenPayload, AuthTokens, UserResponse } from './auth.types.js';
+import { ChangePasswordDto } from './dto/change-password.dto.js';
 import { LoginDto } from './dto/login.dto.js';
 import { RegisterDto } from './dto/register.dto.js';
 import { hashPassword, verifyPassword } from './password.js';
@@ -134,6 +141,40 @@ export class AuthService {
       await this.revokeFamily(stored.familyId);
       this.security.log('auth.logout', { userId: stored.userId });
     }
+  }
+
+  // Changement de mot de passe : toutes les sessions sont révoquées (un appareil perdu ou un voleur
+  // de session est déconnecté), puis une nouvelle session est ouverte pour l'appareil courant.
+  async changePassword(userId: string, dto: ChangePasswordDto): Promise<AuthTokens> {
+    const user = await this.prisma.user.findUnique({
+      where: { id: userId },
+      select: { passwordHash: true },
+    });
+    if (!user) {
+      throw new UnauthorizedException();
+    }
+
+    // 403 et non 401 : la session est valide, seul l'ancien mot de passe est refusé
+    // (un 401 ferait croire au front que la session a expiré).
+    if (!(await verifyPassword(user.passwordHash, dto.currentPassword))) {
+      this.security.warn('auth.password_change.denied', { userId });
+      throw new ForbiddenException('Invalid password');
+    }
+    if (dto.newPassword === dto.currentPassword) {
+      throw new BadRequestException('New password must be different');
+    }
+
+    const passwordHash = await hashPassword(dto.newPassword);
+    await this.prisma.$transaction([
+      this.prisma.user.update({ where: { id: userId }, data: { passwordHash } }),
+      this.prisma.refreshToken.updateMany({
+        where: { userId, revokedAt: null },
+        data: { revokedAt: new Date() },
+      }),
+    ]);
+
+    this.security.log('auth.password_changed', { userId });
+    return this.issueTokens(userId, randomUUID());
   }
 
   private findRefreshToken(refreshToken: string | undefined) {
