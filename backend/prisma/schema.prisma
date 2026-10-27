@@ -94,6 +94,9 @@ model Product {
   brand      String?  @db.VarChar(200)
   imageUrl   String?  @db.VarChar(500)
   category   String?  @db.VarChar(100)
+  // Tous les tags de catégorie Open Food Facts (nettoyés, 30 au plus) : le premier tag, très
+  // général ("en:snacks"), ne suffit pas pour suggérer une date de péremption.
+  categories String[] @default([]) @db.VarChar(100)
   nutriscore String?  @db.Char(1)
   createdAt  DateTime @default(now())
   updatedAt  DateTime @updatedAt

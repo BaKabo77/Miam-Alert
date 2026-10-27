@@ -3,6 +3,7 @@ import type { Prisma } from '../generated/prisma/client.js';
 import { PrismaService } from '../prisma/prisma.service.js';
 import { OpenFoodFactsClient, OpenFoodFactsUnavailableError } from './open-food-facts.client.js';
 import type { ProductData, ProductResponse } from './products.types.js';
+import { suggestExpiry } from './shelf-life.js';
 
 const PRODUCT_SELECT = {
   id: true,
@@ -11,8 +12,11 @@ const PRODUCT_SELECT = {
   brand: true,
   imageUrl: true,
   category: true,
+  categories: true,
   nutriscore: true,
 } satisfies Prisma.ProductSelect;
+
+type ProductRow = Prisma.ProductGetPayload<{ select: typeof PRODUCT_SELECT }>;
 
 @Injectable()
 export class ProductsService {
@@ -30,7 +34,7 @@ export class ProductsService {
       select: PRODUCT_SELECT,
     });
     if (cached) {
-      return cached;
+      return toResponse(cached);
     }
 
     let data: ProductData | null;
@@ -51,11 +55,18 @@ export class ProductsService {
 
     // upsert plutôt que create : si deux utilisateurs scannent le même produit au même instant,
     // la contrainte d'unicité du code-barres ne provoque pas d'erreur.
-    return this.prisma.product.upsert({
+    const product = await this.prisma.product.upsert({
       where: { barcode },
       create: data,
       update: {},
       select: PRODUCT_SELECT,
     });
+    return toResponse(product);
   }
+}
+
+// Réponse construite explicitement : la liste des catégories reste interne, seule la
+// suggestion qui en découle est renvoyée.
+function toResponse({ categories, ...product }: ProductRow): ProductResponse {
+  return { ...product, suggestedExpiry: suggestExpiry(categories) };
 }

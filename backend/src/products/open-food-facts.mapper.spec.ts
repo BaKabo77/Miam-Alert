@@ -20,8 +20,20 @@ describe('toProductData', () => {
       brand: 'Nutella',
       imageUrl: nutella.image_front_url,
       category: 'en:breakfasts',
+      // "en:Petit-déjeuners" est mal formé (majuscule, accent) : écarté.
+      categories: ['en:breakfasts', 'en:spreads'],
       nutriscore: 'E',
     });
+  });
+
+  it('keeps a bounded list of well-formed, unique category tags', () => {
+    const tags = ['en:spreads', 'en:spreads', '<script>', 42, `en:${'x'.repeat(200)}`, ...Array.from({ length: 50 }, (_, i) => `en:tag-${i}`)];
+    const categories = toProductData(BARCODE, { ...nutella, categories_tags: tags })?.categories ?? [];
+
+    expect(categories[0]).toBe('en:spreads');
+    expect(new Set(categories).size).toBe(categories.length);
+    expect(categories).toHaveLength(30);
+    expect(categories.every((tag) => /^en:[a-z0-9-]+$/.test(tag) && tag.length <= 100)).toBe(true);
   });
 
   it('returns null when the product has no usable name', () => {
@@ -69,6 +81,7 @@ describe('toProductData', () => {
       brand: null,
       imageUrl: null,
       category: null,
+      categories: [],
       nutriscore: null,
     });
   });

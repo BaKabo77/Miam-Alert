@@ -56,6 +56,7 @@ describe('GET /products/:barcode (e2e)', () => {
       brand: 'Ferrero',
       imageUrl: null,
       category: 'en:spreads',
+      categories: ['en:spreads'],
       nutriscore: 'E',
     });
 
@@ -63,6 +64,9 @@ describe('GET /products/:barcode (e2e)', () => {
     const second = await lookup(NUTELLA).expect(200);
 
     expect(first.body).toMatchObject({ barcode: NUTELLA, name: 'Nutella', nutriscore: 'E' });
+    // Date suggérée calculée côté serveur ; la liste brute des catégories reste interne.
+    expect(first.body.suggestedExpiry).toEqual({ days: 180, expiryType: 'DDM' });
+    expect(first.body).not.toHaveProperty('categories');
     expect(second.body).toEqual(first.body);
     // Le second appel est servi par le cache : Open Food Facts n'est appelé qu'une fois.
     expect(fakeOpenFoodFacts.fetchProduct).toHaveBeenCalledTimes(1);

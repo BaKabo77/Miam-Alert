@@ -6,6 +6,8 @@ import type { ProductData } from './products.types.js';
 const MAX_NAME_LENGTH = 200;
 const MAX_IMAGE_URL_LENGTH = 500;
 const MAX_CATEGORY_LENGTH = 100;
+// Une fiche réelle en compte rarement plus d'une quinzaine : au-delà, le reste est ignoré.
+const MAX_CATEGORIES = 30;
 
 // Seules les images servies en HTTPS par Open Food Facts sont acceptées : une URL quelconque
 // ferait charger au navigateur de l'utilisateur une ressource d'un domaine inconnu.
@@ -24,13 +26,16 @@ export function toProductData(barcode: string, raw: unknown): ProductData | null
     return null;
   }
 
+  const categories = cleanCategories(raw.categories_tags);
+
   return {
     barcode,
     name,
     // "Nutella, Ferrero" : on garde la première marque.
     brand: typeof raw.brands === 'string' ? cleanText(raw.brands.split(',')[0], MAX_NAME_LENGTH) : null,
     imageUrl: cleanImageUrl(raw.image_front_url),
-    category: cleanCategory(raw.categories_tags),
+    category: categories[0] ?? null,
+    categories,
     nutriscore: cleanNutriscore(raw.nutriscore_grade),
   };
 }
@@ -61,16 +66,17 @@ function cleanImageUrl(value: unknown): string | null {
   }
 }
 
-// Premier tag de catégorie bien formé (les tags mal formés, fréquents, sont ignorés).
-function cleanCategory(value: unknown): string | null {
+// Tags de catégorie bien formés, sans doublon et en nombre borné (les tags mal formés, fréquents,
+// sont ignorés). Ordre d'Open Food Facts conservé : du plus général au plus précis.
+function cleanCategories(value: unknown): string[] {
   if (!Array.isArray(value)) {
-    return null;
+    return [];
   }
-  const tag = value.find(
+  const tags = value.filter(
     (item): item is string =>
       typeof item === 'string' && item.length <= MAX_CATEGORY_LENGTH && CATEGORY_PATTERN.test(item),
   );
-  return tag ?? null;
+  return [...new Set(tags)].slice(0, MAX_CATEGORIES);
 }
 
 // Nutri-Score de A à E ; "unknown", "not-applicable" ou toute autre valeur deviennent null.
