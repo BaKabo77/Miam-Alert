@@ -11,9 +11,9 @@ Catalogue de tout ce qui pourrait être ajouté à Miam'Alert à terme : fonctio
 
 Dans l'ordre, maintenant que de vrais utilisateurs peuvent créer un compte :
 
-1. 🔴 **Sauvegardes de la base de données** : aujourd'hui, une panne de disque ou une fausse manipulation ferait tout perdre.
-2. 🔴 **Mentions légales et politique de confidentialité** : obligatoires en France pour un site public qui collecte des emails (LCEN, RGPD art. 13).
-3. 🔴 **Mot de passe oublié, suppression du compte, export des données** : un utilisateur doit pouvoir récupérer son accès et exercer ses droits RGPD sans écrire au développeur.
+1. ✅ ~~Sauvegardes de la base de données~~ : quotidiennes, chiffrées, restauration testée, copie immuable hors du serveur (v0.4.0).
+2. ✅ ~~Mentions légales et politique de confidentialité~~ (v0.3.2).
+3. 🔴 **Mot de passe oublié** : un utilisateur qui oublie son mot de passe perd son compte. ✅ Suppression du compte et export des données faits (v0.4.0).
 4. 🟠 **Déploiement continu** avec analyse des images (Trivy).
 5. 🟠 **Supervision** : être prévenu quand le site tombe, avant les utilisateurs.
 6. 🟠 **Recettes V1**, la fonctionnalité qui donne tout son sens à l'application.
@@ -82,7 +82,7 @@ Dans l'ordre, maintenant que de vrais utilisateurs peuvent créer un compte :
 | Idée | Intérêt | Effort | Priorité | Notes de sécurité |
 |---|---|---|---|---|
 | Thème sombre | Confort, usage le soir | S | 🟢 | Contrastes WCAG AA à revérifier. |
-| Police mise en cache hors ligne (`woff2`) | Affichage identique hors ligne | S | 🟠 | |
+| ✅ Police mise en cache hors ligne (`woff2`) | Affichage identique hors ligne | S | Fait | |
 | Audit d'accessibilité complet (lecteur d'écran, RGAA) | Inclusion, qualité perçue | M | 🟢 | |
 | Traduction (anglais) | Portfolio lisible à l'international | M | 🟢 | |
 
@@ -92,11 +92,11 @@ Dans l'ordre, maintenant que de vrais utilisateurs peuvent créer un compte :
 
 | Idée | Intérêt | Effort | Priorité | Notes de sécurité |
 |---|---|---|---|---|
-| Mentions légales | Obligation légale (LCEN) : éditeur, hébergeur | S | 🔴 | |
-| Politique de confidentialité | Obligation RGPD : données, finalités, durées, droits | S | 🔴 | Le seul cookie (session) est strictement nécessaire : pas de bandeau de consentement requis, à expliquer dans la politique. |
+| ✅ Mentions légales | Obligation légale (LCEN) : éditeur, hébergeur | S | Fait | |
+| ✅ Politique de confidentialité | Obligation RGPD : données, finalités, durées, droits | S | Fait | Le seul cookie (session) est strictement nécessaire : pas de bandeau de consentement requis, à expliquer dans la politique. |
 | Mot de passe oublié | Sinon, un oubli = compte perdu | M | 🔴 | Jeton aléatoire, haché, à usage unique, expirant (30 min) ; réponse identique que l'email existe ou non ; toutes les sessions révoquées après changement. |
-| Suppression du compte | Droit à l'effacement (art. 17) | M | 🔴 | Ré-authentification avant suppression ; suppression réelle en cascade (foyer, articles, sessions, alertes). |
-| Export des données | Droit à la portabilité (art. 20) | S | 🔴 | Export JSON des seules données de l'utilisateur ; rate limit. |
+| ✅ Suppression du compte | Droit à l'effacement (art. 17) | M | Fait | Ré-authentification avant suppression ; suppression réelle en cascade (foyer, articles, sessions, alertes). |
+| ✅ Export des données | Droit à la portabilité (art. 20) | S | Fait | Export JSON des seules données de l'utilisateur ; rate limit. |
 | Changement de mot de passe | Hygiène de base | S | 🟠 | Ancien mot de passe exigé ; autres sessions révoquées. |
 | Vérification de l'email | Supprime la limite connue du `409` à l'inscription | M | 🟠 | Jeton à usage unique ; service d'envoi d'emails à choisir (Brevo, hébergé dans l'UE). |
 | Changement d'email | Cycle de vie complet | M | 🟢 | Confirmation sur l'ancienne et la nouvelle adresse. |
@@ -131,9 +131,9 @@ Dans l'ordre, maintenant que de vrais utilisateurs peuvent créer un compte :
 
 | Idée | Intérêt | Effort | Priorité | Notes |
 |---|---|---|---|---|
-| Sauvegarde quotidienne de PostgreSQL | Aucune sauvegarde aujourd'hui | S | 🔴 | `pg_dump` planifié, **chiffré** (age ou GPG) avant de quitter le serveur. |
-| Copie hors du serveur | Un serveur perdu ne doit pas emporter ses sauvegardes | S | 🔴 | Stockage objet dans l'UE ; identifiants en écriture seule (un serveur compromis ne peut pas effacer les sauvegardes). |
-| Test de restauration régulier | Une sauvegarde jamais restaurée n'est pas une sauvegarde | S | 🔴 | Restauration automatique dans une base jetable, chaque mois. |
+| ✅ Sauvegarde quotidienne de PostgreSQL | Protéger les données | S | Fait | `pg_dump` planifié, **chiffré** (age ou GPG) avant de quitter le serveur. |
+| ✅ Copie hors du serveur | Un serveur perdu ne doit pas emporter ses sauvegardes | S | Fait | Stockage objet dans l'UE ; identifiants en écriture seule (un serveur compromis ne peut pas effacer les sauvegardes). |
+| ✅ Test de restauration régulier | Une sauvegarde jamais restaurée n'est pas une sauvegarde | S | Fait | Restauration d'essai à chaque sauvegarde ; restauration complète manuelle tous les trois mois. |
 | Plan de reprise documenté | Savoir remonter le service en une heure | S | 🟠 | Procédure pas à pas dans `docs/`. |
 
 ### Déploiement

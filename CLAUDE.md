@@ -229,16 +229,22 @@ Tester chaque module via l'API (Postman ou Bruno) avant de passer au suivant ; l
 
 ## État actuel
 
-Version `v0.3.0` : application en ligne sur https://miam-alert.fr (API sur api.miam-alert.fr). Versions précédentes : `v0.1.0` (API), `v0.2.0` (front PWA).
-- Socle de sécurité, base, authentification, inventaire, produits, front PWA : voir README (40 tests unitaires, 125 e2e dont IDOR).
-- Alertes (étape 7) : job quotidien à 9 h (Europe/Paris), une alerte par foyer et par jour (contrainte unique, idempotent), bandeau sur l'inventaire, `npm run alerts:generate` pour générer à la demande. Notifications push reportées.
+Version `v0.4.0` en ligne sur https://miam-alert.fr (API sur api.miam-alert.fr). Versions : `v0.1.0` (API), `v0.2.0` (front PWA), `v0.3.0` (alertes, mise en ligne), `v0.3.1` (identité visuelle), `v0.3.2` (pages légales), `v0.4.0` (suppression du compte, export).
+- Socle de sécurité, base, authentification, inventaire, produits, front PWA : voir README (40 tests unitaires, 141 e2e dont IDOR).
+- Alertes (étape 7) : job quotidien à 9 h (Europe/Paris), une alerte par foyer et par jour (contrainte unique, idempotent), bandeau sur l'inventaire, `npm run alerts:generate`. Notifications push reportées.
+- Front : style « fond blanc, composants colorés » (police Schibsted Grotesk auto-hébergée, tokens dans `src/index.css`, contrastes WCAG AA), pages légales publiques `/legal` et `/privacy` (infos éditeur dans `src/legal/publisher.ts`).
+- RGPD : `DELETE /me` (mot de passe redemandé, 403 si faux, foyers dont l'utilisateur est seul membre supprimés avec inventaire et alertes) ; `GET /me/export` (JSON, champs explicites, sans hash ni identifiant interne, `no-store`, 5/min). Le cache TanStack Query est vidé à la fin de session.
 - Production (étape 11) :
-  - Images : `backend/Dockerfile` (cibles `runtime` et `migrate`), `frontend/Dockerfile` (Nginx unprivileged, CSP générée avec l'URL de l'API, validée au build), `deploy/caddy/` (Caddy non-root).
+  - Images : `backend/Dockerfile` (cibles `runtime` et `migrate`), `frontend/Dockerfile` (Nginx unprivileged, CSP générée avec l'URL de l'API), `deploy/caddy/` (Caddy non-root).
   - `docker-compose.prod.yml` : db (réseau interne sans Internet), migrate (avant l'API), api, web, proxy (seul exposé, 80/443).
-  - Serveur : VPS IONOS, accès par l'alias SSH local `miam-vps` (clé dédiée), root et mots de passe interdits en SSH, ufw, fail2ban, mises à jour automatiques, Docker officiel. L'utilisateur n'est pas dans le groupe docker (équivalent root) : les commandes Docker passent par `sudo`, que seul le développeur lance.
-  - Déploiement actuel (manuel) : dépôt cloné dans `~/miam-alert` avec une clé de déploiement GitLab en lecture seule, secrets dans `~/miam-alert/.env.prod` (générés sur le serveur, chmod 600). Le serveur suit un tag de version, pas une branche : `git fetch --tags && git checkout vX.Y.Z`, puis `sudo docker compose -f docker-compose.prod.yml --env-file .env.prod up -d --build`.
-- Attention : l'apostrophe du dossier `Miam'Alert` casse `npm run build` du front sur l'hôte (Workbox) ; construire dans le conteneur. Renommer le dossier en `miam-alert` réglerait le problème.
+  - Serveur : VPS IONOS, alias SSH local `miam-vps` (clé dédiée), root et mots de passe interdits en SSH, ufw, fail2ban, mises à jour automatiques. Les commandes Docker passent par `sudo`, que seul le développeur lance.
+  - Déploiement (manuel) : le serveur suit un tag, `git fetch --tags && git checkout vX.Y.Z`, puis `sudo docker compose -f docker-compose.prod.yml --env-file .env.prod up -d --build`.
+  - Sauvegardes (`deploy/backup/`, voir son README) : chaque nuit à 3 h, pg_dump, restauration d'essai, chiffrement age (clé publique seule sur le serveur), copie locale 7 jours et Backblaze B2 UE 30 jours avec Object Lock (clé limitée à listBuckets + writeFiles).
+- Pièges connus :
+  - L'apostrophe du dossier `Miam'Alert` casse `npm run build` du front sur l'hôte (Workbox) : construire dans le conteneur.
+  - Après un test de mutation (fichier modifié puis restauré), redémarrer le backend de dev : le compilateur en mode watch peut garder la version modifiée dans `dist/`.
+  - Si SSH reste bloqué après « Server accepts key », l'agent GNOME attend le déverrouillage de la clé : `ssh-add ~/.ssh/miam-alert-vps` ou `-o IdentityAgent=none`.
 
-Prochaine étape : déploiement continu (étape 11 bis). Petits points en attente : ajouter `woff2` au cache du service worker (police hors ligne), mettre en place Renovate. Ensuite : recettes V1 (étape 8).
+Prochaine étape : mot de passe oublié et changement de mot de passe (service d'envoi d'emails à choisir, puis SPF/DKIM/DMARC), purge automatique des sessions expirées et des vieilles alertes (annoncée dans la politique de confidentialité). Ensuite : déploiement continu (11 bis), supervision, recettes V1 (étape 8), Renovate.
 
 Mettre à jour cette section au fil de l'avancement.

@@ -4,7 +4,7 @@
 
 Projet personnel conçu **security by design** : chaque fonctionnalité est pensée, codée et testée avec la sécurité en tête, en s'appuyant sur l'OWASP Top 10 et l'OWASP API Security Top 10.
 
-> **Statut : en ligne sur [miam-alert.fr](https://miam-alert.fr) (v0.3.0)** : API sécurisée, application web installable (PWA) avec scan du code-barres, alerte quotidienne. Prochaines étapes : déploiement continu, puis recettes.
+> **Statut : en ligne sur [miam-alert.fr](https://miam-alert.fr) (v0.4.0)** : API sécurisée, application web installable (PWA) avec scan du code-barres, alerte quotidienne, suppression du compte et export des données (RGPD), sauvegardes chiffrées. Prochaines étapes : mot de passe oublié, déploiement continu, puis recettes.
 >
 > Le développement se fait sur GitLab (CI/CD, merge requests) ; ce dépôt GitHub en est un miroir en lecture seule.
 
@@ -184,9 +184,11 @@ Caddy obtient les certificats HTTPS au premier démarrage ; les migrations sont 
 - [x] Application web PWA : connexion, inventaire, ajout, scan caméra, installation sur téléphone
 - [x] Alertes quotidiennes groupées par foyer
 - [x] Mise en ligne : images Docker de production non-root, HTTPS et HSTS, serveur durci
+- [x] Sauvegardes quotidiennes chiffrées et immuables, mentions légales, suppression du compte et export des données
+- [ ] Mot de passe oublié et changement de mot de passe
 - [ ] Déploiement continu : images construites et analysées (Trivy) par la CI, puis déployées
 - [ ] Recettes suggérées selon les produits les plus urgents
-- [ ] Foyer partagé, statistiques de gaspillage, export et suppression des données (RGPD)
+- [ ] Foyer partagé, statistiques de gaspillage
 
 Toutes les évolutions envisagées, classées par priorité : [docs/EVOLUTIONS.md](docs/EVOLUTIONS.md).
 
