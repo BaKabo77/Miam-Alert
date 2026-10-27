@@ -13,6 +13,12 @@ export function ChangePasswordSection() {
     const form = event.currentTarget;
     const data = new FormData(form);
     setError(null);
+    // Saisie en double, vérifiée ici seulement : c'est une protection contre la faute de frappe
+    // (le mot de passe est masqué), pas une règle de sécurité. L'API n'a pas besoin des deux.
+    if (data.get('newPassword') !== data.get('confirmPassword')) {
+      setError('Les deux nouveaux mots de passe ne correspondent pas.');
+      return;
+    }
     setStatus('saving');
     try {
       await changePassword(String(data.get('currentPassword')), String(data.get('newPassword')));
@@ -60,6 +66,18 @@ export function ChangePasswordSection() {
             <span className="mt-2 block text-xs text-ink-600">
               12 caractères minimum. Vos autres appareils seront déconnectés.
             </span>
+          </label>
+          <label className="block">
+            <span className="label">Confirmer le nouveau mot de passe</span>
+            <input
+              name="confirmPassword"
+              type="password"
+              required
+              minLength={12}
+              maxLength={128}
+              autoComplete="new-password"
+              className="input"
+            />
           </label>
 
           {error && (
