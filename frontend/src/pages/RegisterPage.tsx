@@ -18,6 +18,12 @@ export function RegisterPage() {
     event.preventDefault();
     const form = new FormData(event.currentTarget);
     setError(null);
+    // Saisie en double contre la faute de frappe (le mot de passe est masqué) : une erreur ici
+    // rendrait le compte inaccessible dès sa création. Vérifiée côté navigateur seulement.
+    if (form.get('password') !== form.get('confirmPassword')) {
+      setError('Les deux mots de passe ne correspondent pas.');
+      return;
+    }
     setSubmitting(true);
     try {
       await register({
@@ -83,6 +89,19 @@ export function RegisterPage() {
             className="input"
           />
           <span className="mt-2 block text-xs text-ink-600">12 caractères minimum. Une phrase est idéale.</span>
+        </label>
+
+        <label className="block">
+          <span className="label">Confirmer le mot de passe</span>
+          <input
+            name="confirmPassword"
+            type="password"
+            required
+            minLength={12}
+            maxLength={128}
+            autoComplete="new-password"
+            className="input"
+          />
         </label>
 
         {error && (
