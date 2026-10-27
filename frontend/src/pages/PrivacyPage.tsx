@@ -123,9 +123,10 @@ export function PrivacyPage() {
             inventaire et vos alertes sont effacés immédiatement (et des sauvegardes sous 30 jours).
           </li>
           <li>
-            Export des données : par email à {contact}, envoyé depuis l'adresse de votre compte, en attendant que cette
-            fonction soit disponible dans l'application.
+            Accès et portabilité : depuis votre profil, « Télécharger mes données » fournit toutes vos données dans un
+            fichier JSON.
           </li>
+          <li>Pour toute autre demande : {contact}, depuis l'adresse de votre compte.</li>
         </ul>
         <p>
           Une réponse vous est apportée sous un mois. Si vous estimez que vos droits ne sont pas respectés, vous pouvez

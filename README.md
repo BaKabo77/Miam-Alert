@@ -51,6 +51,7 @@ Projet personnel conçu **security by design** : chaque fonctionnalité est pens
 | `POST /auth/logout` | Cookie de session, 10 req/min | Révoquer la session |
 | `GET /me` | Connecté | Profil (prénom et nom facultatifs) et foyers |
 | `PATCH /me` | Connecté | Modifier ou effacer son prénom et son nom |
+| `GET /me/export` | Connecté, 5 req/min | Télécharger toutes ses données (JSON) |
 | `DELETE /me` | Connecté + mot de passe, 10 req/min | Supprimer son compte et toutes ses données |
 | `POST /households/:householdId/pantry-items` | Membre du foyer | Ajouter un article |
 | `GET /households/:householdId/pantry-items` | Membre du foyer | Lister l'inventaire, trié par urgence, paginé |
@@ -91,6 +92,7 @@ Correspondance avec l'OWASP Top 10 et procédure de signalement d'une faille : v
 - En cas de panne : `503` sans détail, l'application reste utilisable en saisie manuelle.
 
 ### Données personnelles
+- **Export des données** (droit d'accès et portabilité) en un fichier JSON depuis le profil : champs choisis un par un, sans hash, empreinte de jeton ni identifiant interne, réponse `Cache-Control: no-store` ; testé contre la fuite des données d'un autre compte.
 - **Suppression réelle du compte** depuis le profil, confirmée par le mot de passe (une session volée ne suffit pas) : compte, sessions, foyer, inventaire et alertes effacés en une transaction ; un foyer partagé est conservé pour ses autres membres. Testé, y compris l'absence de foyer orphelin.
 - Minimisation (RGPD) : seuls l'email et le mot de passe sont obligatoires ; le prénom et le nom sont facultatifs, modifiables et effaçables à tout moment. Pas de téléphone ni de date de naissance, inutiles pour l'application.
 - Les noms ne peuvent contenir que des lettres, espaces, apostrophes, traits d'union et points, et n'apparaissent jamais dans les logs.
