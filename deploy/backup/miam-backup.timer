@@ -1,0 +1,13 @@
+# Chaque nuit à 3 h (heure de Paris). Persistent : si le serveur était éteint à 3 h,
+# la sauvegarde est lancée dès son redémarrage.
+# Installation : /etc/systemd/system/miam-backup.timer, puis systemctl enable --now miam-backup.timer
+[Unit]
+Description=Sauvegarde quotidienne de la base Miam'Alert
+
+[Timer]
+OnCalendar=*-*-* 03:00 Europe/Paris
+Persistent=true
+RandomizedDelaySec=10min
+
+[Install]
+WantedBy=timers.target

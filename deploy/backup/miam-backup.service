@@ -1,0 +1,21 @@
+# Sauvegarde de la base de Miam'Alert (déclenchée par miam-backup.timer).
+# Installation : /etc/systemd/system/miam-backup.service
+[Unit]
+Description=Sauvegarde chiffrée de la base Miam'Alert
+Wants=network-online.target
+After=network-online.target docker.service
+Requires=docker.service
+
+[Service]
+Type=oneshot
+ExecStart=/usr/local/sbin/miam-backup
+# Durcissement : le script ne peut écrire que dans le dossier des sauvegardes et /tmp (privé),
+# il voit le reste du système en lecture seule et ne peut pas gagner de privilèges.
+NoNewPrivileges=yes
+PrivateTmp=yes
+ProtectSystem=strict
+ProtectHome=read-only
+ReadWritePaths=/var/backups/miam-alert
+ProtectKernelTunables=yes
+ProtectKernelModules=yes
+ProtectControlGroups=yes
