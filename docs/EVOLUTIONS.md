@@ -181,7 +181,7 @@ Dans l'ordre, maintenant que de vrais utilisateurs peuvent créer un compte :
 | Tests du front (Vitest + Testing Library) | Le front n'a pas de tests automatisés | M | 🟠 | En priorité : client HTTP (refresh unique), session. |
 | Tests de bout en bout du parcours dans la CI (Playwright) | Le parcours vérifié à la main deviendrait automatique | M | 🟠 | Caméra simulée, comme lors des vérifications manuelles. |
 | Seuil de couverture de tests en CI | Empêcher la couverture de baisser | S | 🟢 | Seuil élevé sur `auth`, `pantry`, `households`. |
-| Documentation OpenAPI (Swagger) | API explorable, utile aux recruteurs | S | 🟢 | Activée en développement uniquement, jamais exposée en production. |
+| Documentation OpenAPI (Swagger) | API documentée, utile pour l'app mobile et les futurs développeurs | S | 🟢 | Activée en développement uniquement, jamais exposée en production. |
 | Détection de secrets avant commit (gitleaks) | Bloquer une fuite avant même le push | S | 🟢 | Complète la détection GitLab. |
 | Décisions d'architecture tracées (ADR) | Expliquer les choix : Caddy, argon2, foyer, refresh token | S | 🟠 | `docs/adr/` : un fichier court par décision. |
 | Journal des versions (CHANGELOG) | Lisibilité des versions | S | 🟢 | Généré à partir des messages de commit. |
@@ -190,12 +190,14 @@ Dans l'ordre, maintenant que de vrais utilisateurs peuvent créer un compte :
 
 ---
 
-## 6. Portfolio
+## 6. Lancement et modèle économique
 
-| Idée | Intérêt | Effort | Priorité |
-|---|---|---|---|
-| Schéma d'architecture dans le README | Comprendre le projet en dix secondes | S | 🟠 |
-| Compte de démonstration (données réinitialisées chaque nuit) | Essayer sans créer de compte | M | 🟢 |
-| Courte vidéo du parcours (scan → alerte) | Montrer plutôt que décrire | S | 🟢 |
-| Article « Security by design sur un projet perso » | Valoriser la démarche, support d'entretien | M | 🟢 |
-| Passage du dépôt en public | Indispensable pour les candidatures | S | 🟠 |
+| Idée | Intérêt | Effort | Priorité | Notes |
+|---|---|---|---|---|
+| Page d'accueil présentant l'application | Expliquer l'application avant l'inscription | S | 🟠 | Statique, mêmes en-têtes de sécurité. |
+| Compte de démonstration (données réinitialisées chaque nuit) | Essayer sans créer de compte (visiteurs, recruteurs) | M | 🟢 | Compte isolé, actions destructives désactivées. |
+| CGU et contact de support | Indispensables pour un lancement public | S | 🟠 | |
+| Mesure d'audience sans cookie (Plausible ou Matomo auto-hébergé) | Comprendre l'usage sans bandeau de consentement | S | 🟠 | Auto-hébergée : aucune donnée envoyée à un tiers. |
+| Statut (micro-entreprise), CGV, rétractation, médiateur | Prérequis légaux de l'offre payante | S | 🟠 | Avant le lancement du Premium. |
+| Abonnement Premium avec Stripe | Financer l'application et les coûts d'IA | L | 🟠 | Checkout et portail Stripe, webhooks signés et idempotents, statut vérifié côté serveur. |
+| Quotas d'IA par offre | Un utilisateur ne doit pas coûter plus qu'il ne rapporte | M | 🟠 | Vérifiés avant chaque appel au modèle. |
