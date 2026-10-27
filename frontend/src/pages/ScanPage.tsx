@@ -21,6 +21,7 @@ export function ScanPage() {
         name: product.name,
         brand: product.brand,
         imageUrl: product.imageUrl,
+        suggestedExpiry: product.suggestedExpiry,
       };
       navigate('/add', { state: { product: scanned } });
     },

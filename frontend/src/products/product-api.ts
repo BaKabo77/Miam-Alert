@@ -9,6 +9,8 @@ export interface Product {
   imageUrl: string | null;
   category: string | null;
   nutriscore: string | null;
+  // Durée de conservation habituelle pour ce type de produit (calculée par l'API).
+  suggestedExpiry: { days: number; expiryType: 'DLC' | 'DDM' } | null;
 }
 
 export function fetchProduct(barcode: string): Promise<Product> {

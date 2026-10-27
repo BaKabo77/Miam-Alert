@@ -24,6 +24,7 @@ export interface ScannedProduct {
   name: string;
   brand: string | null;
   imageUrl: string | null;
+  suggestedExpiry: { days: number; expiryType: PantryItem['expiryType'] } | null;
 }
 
 export function AddItemPage() {
@@ -36,8 +37,10 @@ export function AddItemPage() {
   const [name, setName] = useState(scanned?.name ?? '');
   const [quantity, setQuantity] = useState(1);
   const [unit, setUnit] = useState<PantryItem['unit']>('PIECE');
-  const [expiryType, setExpiryType] = useState<PantryItem['expiryType']>('DLC');
-  const [expiryDate, setExpiryDate] = useState(todayPlusDays(3));
+  // Produit scanné : date et type pré-remplis selon sa catégorie (suggestion de l'API).
+  const suggestion = scanned?.suggestedExpiry;
+  const [expiryType, setExpiryType] = useState<PantryItem['expiryType']>(suggestion?.expiryType ?? 'DLC');
+  const [expiryDate, setExpiryDate] = useState(todayPlusDays(suggestion?.days ?? 3));
 
   const create = useMutation({
     mutationFn: (item: NewPantryItem) => createPantryItem(householdId, item),
@@ -161,6 +164,12 @@ export function AddItemPage() {
               className="input"
             />
           </label>
+          {/* La suggestion ne remplace pas la date imprimée : elle évite seulement de partir de zéro. */}
+          {suggestion && (
+            <p className="mt-2 text-xs text-ink-600">
+              Date suggérée pour ce type de produit : vérifiez celle imprimée sur l'emballage.
+            </p>
+          )}
           <div className="mt-3 flex gap-2">
             {DATE_SHORTCUTS.map((shortcut) => (
               <button
