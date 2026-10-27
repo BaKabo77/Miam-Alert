@@ -1,27 +1,14 @@
 import { Body, Controller, HttpCode, HttpStatus, Ip, Post, Res } from '@nestjs/common';
 import { Throttle } from '@nestjs/throttler';
-import type { CookieOptions, Response } from 'express';
+import type { Response } from 'express';
 import { AUTH_THROTTLE } from '../common/throttling.js';
 import { AuthService } from './auth.service.js';
 import type { AccessTokenResponse, UserResponse } from './auth.types.js';
 import { LoginDto } from './dto/login.dto.js';
 import { RegisterDto } from './dto/register.dto.js';
 import { Public } from './public.decorator.js';
-import { REFRESH_TOKEN_COOKIE, REFRESH_TOKEN_TTL_MS } from './refresh-token.js';
+import { REFRESH_TOKEN_COOKIE, REFRESH_TOKEN_COOKIE_OPTIONS } from './refresh-token.js';
 import { RefreshTokenCookie } from './refresh-token.decorator.js';
-
-// Le refresh token ne transite que par ce cookie :
-// - httpOnly : illisible par JavaScript, donc hors de portée d'une faille XSS ;
-// - secure : envoyé uniquement en HTTPS (les navigateurs tolèrent localhost en dev) ;
-// - sameSite strict : jamais envoyé depuis un autre site (protection CSRF) ;
-// - path /auth : envoyé seulement aux routes d'authentification, pas à chaque requête.
-const REFRESH_TOKEN_COOKIE_OPTIONS: CookieOptions = {
-    httpOnly: true,
-    secure: true,
-    sameSite: 'strict',
-    path: '/auth',
-    maxAge: REFRESH_TOKEN_TTL_MS,
-};
 
 @Controller('auth')
 @Throttle(AUTH_THROTTLE)

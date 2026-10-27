@@ -1,9 +1,23 @@
+import type { CookieOptions } from 'express';
 import { createHash, randomBytes } from 'node:crypto';
 
 // Durée de vie d'une session sans activité : au-delà, il faut se reconnecter.
 export const REFRESH_TOKEN_TTL_MS = 7 * 24 * 60 * 60 * 1000;
 
 export const REFRESH_TOKEN_COOKIE = 'refresh_token';
+
+// Le refresh token ne transite que par ce cookie :
+// - httpOnly : illisible par JavaScript, donc hors de portée d'une faille XSS ;
+// - secure : envoyé uniquement en HTTPS (les navigateurs tolèrent localhost en dev) ;
+// - sameSite strict : jamais envoyé depuis un autre site (protection CSRF) ;
+// - path /auth : envoyé seulement aux routes d'authentification, pas à chaque requête.
+export const REFRESH_TOKEN_COOKIE_OPTIONS: CookieOptions = {
+  httpOnly: true,
+  secure: true,
+  sameSite: 'strict',
+  path: '/auth',
+  maxAge: REFRESH_TOKEN_TTL_MS,
+};
 
 // 32 octets aléatoires issus du générateur cryptographique du système (256 bits) :
 // impossible à deviner. Ce n'est pas un JWT : il ne contient rien, c'est une simple clé.

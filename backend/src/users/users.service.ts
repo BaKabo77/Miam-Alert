@@ -1,4 +1,6 @@
-import { Injectable, UnauthorizedException } from '@nestjs/common';
+import { ForbiddenException, Injectable, UnauthorizedException } from '@nestjs/common';
+import { verifyPassword } from '../auth/password.js';
+import { SecurityLogger } from '../common/security-logger.js';
 import { Prisma } from '../generated/prisma/client.js';
 import { PrismaService } from '../prisma/prisma.service.js';
 import { UpdateMeDto } from './dto/update-me.dto.js';
@@ -19,6 +21,8 @@ type MeRow = Prisma.UserGetPayload<{ select: typeof ME_SELECT }>;
 
 @Injectable()
 export class UsersService {
+  private readonly security = new SecurityLogger();
+
   constructor(private readonly prisma: PrismaService) {}
 
   async getMe(userId: string): Promise<MeResponse> {
@@ -47,6 +51,42 @@ export class UsersService {
       }
       throw error;
     }
+  }
+
+  // Suppression réelle du compte (RGPD, droit à l'effacement) : compte, sessions, appartenances,
+  // et les foyers dont il est le seul membre, avec leur inventaire et leurs alertes.
+  async deleteMe(userId: string, password: string): Promise<void> {
+    // Lecture explicite du hash : il est exclu par défaut de toutes les requêtes.
+    const user = await this.prisma.user.findUnique({
+      where: { id: userId },
+      select: { passwordHash: true },
+    });
+    if (!user) {
+      throw new UnauthorizedException();
+    }
+
+    // 403 et non 401 : la session est valide, c'est la confirmation qui est refusée. Un 401
+    // ferait croire au front que la session a expiré et le déconnecterait.
+    if (!(await verifyPassword(user.passwordHash, password))) {
+      this.security.warn('account.delete.denied', { userId });
+      throw new ForbiddenException('Invalid password');
+    }
+
+    await this.prisma.$transaction(async (tx) => {
+      // Supprimer l'utilisateur ne supprime que ses appartenances (cascade), pas les foyers :
+      // sans cette étape, l'inventaire resterait en base, orphelin. Un foyer partagé (V2) est
+      // conservé pour ses autres membres.
+      const soleHouseholds = await tx.household.findMany({
+        where: { members: { some: { userId }, every: { userId } } },
+        select: { id: true },
+      });
+      // Cascade : articles et alertes de ces foyers.
+      await tx.household.deleteMany({ where: { id: { in: soleHouseholds.map(({ id }) => id) } } });
+      // Cascade : sessions (refresh tokens) et appartenances restantes.
+      await tx.user.delete({ where: { id: userId } });
+    });
+
+    this.security.log('account.deleted', { userId });
   }
 }
 
