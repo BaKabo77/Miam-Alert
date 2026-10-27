@@ -2,7 +2,7 @@
 
 Application full-stack de suivi des produits alimentaires du foyer : l'utilisateur scanne ses courses, l'appli suit les dates de péremption, alerte avant qu'un produit périme et suggère des recettes avec les produits les plus urgents.
 
-Projet portfolio personnel (développeur full-stack orienté backend, recherche d'alternance). Le code doit être propre, lisible et bien structuré : il sera montré à des recruteurs.
+**Un vrai produit, destiné à être exploité** : lancement public gratuit (v1.0), puis une offre Premium par abonnement (recettes par IA, etc.), puis une application mobile sur les stores. Développé par un développeur full-stack orienté backend, seul pour l'instant ; l'application en ligne figure aussi dans son CV, mais c'est un bonus, pas l'objectif. Le code doit rester propre, lisible et bien structuré : il sera maintenu et enrichi pendant longtemps.
 
 **La sécurité est l'axe principal du projet (security by design).** Elle n'est pas ajoutée à la fin : chaque fonctionnalité est conçue, codée et testée avec la sécurité en tête, en s'appuyant sur l'OWASP Top 10 et l'OWASP API Security Top 10. Le développeur a travaillé dans un environnement normé (HDS, ISO 27001) et veut que ce projet le démontre.
 
@@ -10,7 +10,7 @@ Règles pour Claude Code :
 - Entre rapidité et sécurité, choisir la sécurité et expliquer brièvement pourquoi.
 - Signaler toute faille repérée, même hors de la tâche en cours, sans la corriger en silence.
 - Pour chaque nouvelle route : préciser qui a le droit d'y accéder et comment c'est vérifié.
-- Expliquer les choix de sécurité au fil du code (commentaires courts sur le « pourquoi »), pour que le développeur puisse les justifier en entretien.
+- Expliquer les choix de sécurité au fil du code (commentaires courts sur le « pourquoi »), pour que le développeur puisse les justifier (audit, entretien, futur contributeur).
 - Appliquer la checklist « Définition de terminé » (section Sécurité) avant de déclarer une fonctionnalité finie.
 
 ## Langue
@@ -37,12 +37,20 @@ Règles pour Claude Code :
 
 - **Pas de LLM local** (pas d'Ollama) : impossible à héberger pour ce projet.
 - **Recettes, V1 sans IA** : base de recettes en BDD, ingrédients liés à des catégories, score par recette = ingrédients possédés pondérés par l'urgence de péremption.
-- **Recettes, V2** : bonus IA via une API hébergée (Mistral ou Gemini), en complément.
+- **Recettes par IA** (offre Premium) : API hébergée, **Mistral** de préférence (société française, traitement dans l'UE), en complément des recettes locales gratuites.
 - Prévoir une interface `RecipeProvider` avec deux implémentations (`LocalRecipeProvider`, `AiRecipeProvider`) pour changer de source sans toucher au reste.
 - **Un code-barres ne contient pas la date de péremption** : l'utilisateur la saisit. Rendre cette étape rapide (date suggérée selon la catégorie, raccourcis +3 j / +1 sem / +1 mois). OCR de la date en V2.
 - **Distinguer DLC et DDM** (`expiryType`) : DLC = à respecter strictement, DDM = consommable après la date.
 - **Cache des produits** : les infos Open Food Facts sont stockées dans la table `Product` (clé : `barcode` unique) au lieu d'appeler l'API à chaque fois.
 - **`Household` dès le départ** : l'inventaire appartient à un foyer, pas à un utilisateur, même si la V1 n'a qu'un membre. Le partage en V2 sera ainsi simple.
+
+### Produit et modèle économique
+- **Lancer d'abord en gratuit** (v1.0) pour valider l'usage, puis ouvrir une **offre Premium** par abonnement. Contenu exact du Premium à définir (recettes par IA au minimum).
+- **Paiement par Stripe** (Checkout et portail client) : aucune donnée de carte ne passe par nos serveurs (PCI-DSS porté par Stripe). Webhooks à signature vérifiée et traités de façon idempotente ; le statut d'abonnement est déterminé côté serveur, jamais par le front.
+- **Coûts d'IA maîtrisés** : quotas par utilisateur et par offre, avant tout appel au modèle.
+- **Cadre légal avant le payant** : statut (micro-entreprise envisagée, SIRET dans les mentions légales, qui disent aujourd'hui « sans but commercial »), CGU et CGV, droit de rétractation, médiateur de la consommation, factures.
+- **Stores** : un abonnement vendu dans l'app mobile passe obligatoirement par l'achat intégré d'Apple et de Google (commission de 15 à 30 %), à prendre en compte dans les prix. L'auth par cookie devra avoir un mode « client mobile » (refresh token dans le stockage sécurisé du téléphone) ; référentiel de sécurité mobile : OWASP MASVS.
+- **Mesure d'audience** uniquement sans cookie et respectueuse de la vie privée (Plausible ou Matomo auto-hébergés), pour éviter tout bandeau de consentement.
 
 ## Modèle de données (cible, à construire progressivement)
 
@@ -131,7 +139,7 @@ Points d'environnement à connaître :
 
 ### Secrets et dépôt
 - Ne jamais commiter `.env` ni aucun secret. Vérifier `git status` avant chaque commit.
-- Le dépôt est privé pour l'instant mais passera en public : tout l'historique doit rester propre. Si un secret fuit, le changer (rotation) plutôt que de réécrire l'historique.
+- Le dépôt est privé (produit commercial) et n'a pas vocation à devenir public. L'historique doit quand même rester propre : si un secret fuit, le changer (rotation) plutôt que de réécrire l'historique.
 - Toutes les variables d'environnement sont validées au démarrage (schéma de validation dans `ConfigModule`) : l'appli refuse de démarrer si une variable manque ou si `JWT_SECRET` est trop court.
 - Secrets de dev et de prod distincts ; aucun secret en dur, ni dans le code, ni dans les Dockerfile, ni dans les logs.
 - les commits doivent toujours commencer par [ADD,EDIT,DELETE,UPDATE] en fonction de ce qui est commit
@@ -207,23 +215,23 @@ Avant de considérer une fonctionnalité terminée :
 
 ### Documentation
 - Un fichier `SECURITY.md` à la racine décrit les mesures de sécurité en place et comment signaler une vulnérabilité.
-- Le README contient une section « Sécurité » résumant les choix (utile pour les recruteurs).
+- Le README contient une section « Sécurité » résumant les choix ; `docs/EVOLUTIONS.md` liste les évolutions possibles par priorité.
 
 ## Feuille de route
 
-1. ✅ **Environnement** : Docker Compose (PostgreSQL, Adminer, backend NestJS), Prisma initialisé.
-2. ✅ **Socle de sécurité** (avant toute fonctionnalité) : validation des variables d'environnement, `helmet`, CORS restreint, `ValidationPipe` global strict, throttler global, filtre d'exception global, guard JWT global avec décorateur `@Public()`.
-3. ✅ **Schéma Prisma de départ** (UUID partout) + `PrismaService` branché dans NestJS + première migration.
-4. ✅ **Module `auth`** : inscription, connexion, argon2, access token court + refresh token en cookie `httpOnly` avec rotation, déconnexion, rate limiting renforcé, tests e2e.
-5. ✅ **Module `pantry`** : CRUD des produits en saisie manuelle, tri par date de péremption, contrôle d'appartenance au foyer, tests IDOR.
-6. ✅ **Module `products`** : récupération Open Food Facts par code-barres (validation EAN, timeout, nettoyage des données) + cache.
-7. ✅ **Alertes** : job quotidien, une alerte groupée par foyer (pas une par produit), bandeau dans le front. Notifications push reportées.
-8. **Recettes V1** : base locale + algorithme de score.
-9. ✅ **CI de sécurité** (avancée juste après l'étape 5) : pipeline GitLab CI (lint, tests, `npm audit`, détection de secrets, SAST), `SECURITY.md`. Reste : Renovate.
-10. ✅ **Front PWA** minimal : connexion, inventaire, ajout manuel, puis scan caméra (cookies `httpOnly`, pas de token dans le `localStorage`).
-11. ✅ **Déploiement** : Dockerfiles de production multi-stage non-root, HTTPS + HSTS derrière Caddy, BDD non exposée, serveur durci (`v0.3.0`).
-    - **11 bis. Déploiement continu** : images construites par GitLab CI, analysées par Trivy, poussées dans le registre GitLab ; déploiement d'un tag par bouton, via un utilisateur `deploy` dont la clé ne peut lancer que le script de déploiement.
-12. **V2** : foyer partagé avec rôles, statistiques de gaspillage, liste de courses, OCR de la date, recettes par IA, mode don, export et suppression des données (RGPD), vérification d'email, notifications push.
+### Fait
+Environnement Docker, socle de sécurité, schéma Prisma, authentification, inventaire (IDOR testés), produits Open Food Facts, CI de sécurité, front PWA avec scan, alertes quotidiennes, mise en production durcie, sauvegardes chiffrées et immuables, pages légales, suppression du compte, export des données. Versions `v0.1.0` à `v0.4.0`.
+
+### À venir
+| Version | Contenu |
+|---|---|
+| `v0.4.1` | Changement de mot de passe (prêt, branche `feat/change-password`) |
+| `v0.5` | Emails (Brevo, SPF/DKIM/DMARC) : mot de passe oublié (jeton à usage unique, haché, 30 min), vérification de l'email ; purge automatique des sessions expirées et des vieilles alertes |
+| `v0.6` | Déploiement continu (images construites par GitLab CI, Trivy, registre GitLab, déploiement d'un tag par bouton via un utilisateur `deploy` limité au script), retour arrière ; supervision (disponibilité, sauvegardes, logs JSON) ; Renovate ; durcissement du serveur (redémarrage automatique après mise à jour du noyau, Lynis, sysctl, auditd) |
+| `v0.7` | Recettes locales (base de recettes, ingrédients liés à des catégories, score selon l'urgence, interface `RecipeProvider`) ; date suggérée selon la catégorie |
+| `v1.0` | **Lancement public gratuit** : CGU, contact de support, mesure d'audience sans cookie, tests du front (client HTTP, session, parcours Playwright en CI), vérification finale complète |
+| `v1.x` | **Offre Premium** : statut et CGV, Stripe, recettes par IA avec quotas ; puis foyer partagé avec rôles, notifications push, statistiques de gaspillage, liste de courses, emplacements de stockage, OCR de la date |
+| Ensuite | Application mobile (React Native) sur les stores |
 
 Tester chaque module via l'API (Postman ou Bruno) avant de passer au suivant ; le front ne vient qu'après une API fonctionnelle de bout en bout.
 
@@ -245,6 +253,6 @@ Version `v0.4.0` en ligne sur https://miam-alert.fr (API sur api.miam-alert.fr).
   - Après un test de mutation (fichier modifié puis restauré), redémarrer le backend de dev : le compilateur en mode watch peut garder la version modifiée dans `dist/`.
   - Si SSH reste bloqué après « Server accepts key », l'agent GNOME attend le déverrouillage de la clé : `ssh-add ~/.ssh/miam-alert-vps` ou `-o IdentityAgent=none`.
 
-Prochaine étape : mot de passe oublié et changement de mot de passe (service d'envoi d'emails à choisir, puis SPF/DKIM/DMARC), purge automatique des sessions expirées et des vieilles alertes (annoncée dans la politique de confidentialité). Ensuite : déploiement continu (11 bis), supervision, recettes V1 (étape 8), Renovate.
+Prochaine étape : sortir `v0.4.1` (changement de mot de passe : `POST /auth/change-password`, ancien mot de passe exigé, toutes les sessions révoquées puis une nouvelle ouverte pour l'appareil courant, 150 tests e2e), puis `v0.5` (voir la feuille de route).
 
 Mettre à jour cette section au fil de l'avancement.
