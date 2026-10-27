@@ -1,3 +1,4 @@
+import { ConsoleLogger } from '@nestjs/common';
 import { ConfigService } from '@nestjs/config';
 import { NestFactory } from '@nestjs/core';
 import { NestExpressApplication } from '@nestjs/platform-express';
@@ -10,6 +11,10 @@ async function bootstrap() {
   // On désactive les parseurs par défaut pour déclarer nous-mêmes ceux qu'on accepte (voir plus bas).
   const app = await NestFactory.create<NestExpressApplication>(AppModule, {
     bodyParser: false,
+    // En production : une ligne JSON par message (niveau, date, contexte), exploitable par un outil
+    // de supervision et sans codes de couleur. En développement : affichage lisible et coloré.
+    // Lu directement dans l'environnement car le logger doit exister avant la configuration.
+    logger: new ConsoleLogger({ json: process.env.NODE_ENV === 'production' }),
   });
   const config = app.get(ConfigService<EnvironmentVariables, true>);
 

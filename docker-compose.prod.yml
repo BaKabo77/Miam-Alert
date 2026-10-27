@@ -68,6 +68,8 @@ services:
       CORS_ORIGINS: https://${DOMAIN:?DOMAIN manquant}
       # Un seul proxy devant l'API : Caddy (voir src/common/trust-proxy.ts).
       TRUST_PROXY: 1
+      # Facultatif : surveillance de la tâche des alertes de 9 h (vide = désactivée).
+      ALERTS_HEALTHCHECK_URL: ${ALERTS_HEALTHCHECK_URL:-}
     depends_on:
       migrate:
         condition: service_completed_successfully

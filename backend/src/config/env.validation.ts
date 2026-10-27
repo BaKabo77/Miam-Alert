@@ -2,6 +2,7 @@ import { plainToInstance, Transform } from 'class-transformer';
 import {
   IsEnum,
   IsInt,
+  IsOptional,
   IsString,
   IsUrl,
   Matches,
@@ -51,6 +52,13 @@ export class EnvironmentVariables {
   @Min(0)
   @Max(3)
   TRUST_PROXY: number = 0;
+
+  // Facultatif : adresse de surveillance prévenue après la tâche des alertes de 9 h (healthchecks.io).
+  // HTTPS uniquement. Une valeur vide (variable présente mais non renseignée) équivaut à l'absence.
+  @Transform(({ value }: { value: unknown }) => (value === '' ? undefined : value))
+  @IsOptional()
+  @IsUrl({ require_protocol: true, protocols: ['https'] })
+  ALERTS_HEALTHCHECK_URL?: string;
 }
 
 export function validateEnv(config: Record<string, unknown>): EnvironmentVariables {
