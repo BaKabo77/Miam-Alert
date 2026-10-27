@@ -43,6 +43,12 @@ export function LoginPage() {
         </>
       }
     >
+      {session.status === 'anonymous' && session.accountDeleted && (
+        <p role="status" className="alert-success mb-4">
+          Votre compte et toutes vos données ont été supprimés.
+        </p>
+      )}
+
       {/* Hors ligne, l'application s'ouvre (PWA) mais la session ne peut pas être vérifiée. */}
       {!navigator.onLine && (
         <p className="alert-warning mb-4">Vous êtes hors ligne. La connexion nécessite un accès au réseau.</p>

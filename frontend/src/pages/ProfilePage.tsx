@@ -4,6 +4,7 @@ import { LogoutIcon, UserIcon } from '../components/icons';
 import { initials } from '../components/initials';
 import { LegalLinks } from '../legal/LegalLayout';
 import { ApiError } from '../lib/api';
+import { DeleteAccountSection } from '../profile/DeleteAccountSection';
 
 export function ProfilePage() {
   const { session, updateProfile, logout } = useAuth();
@@ -116,6 +117,10 @@ export function ProfilePage() {
         <button type="button" onClick={() => void logout()} className="btn-secondary w-full">
           <LogoutIcon className="h-4 w-4" /> Se déconnecter
         </button>
+      </div>
+
+      <div className="mt-8 border-t border-line pt-6">
+        <DeleteAccountSection />
       </div>
 
       <LegalLinks className="mt-10" />

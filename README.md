@@ -51,6 +51,7 @@ Projet personnel conçu **security by design** : chaque fonctionnalité est pens
 | `POST /auth/logout` | Cookie de session, 10 req/min | Révoquer la session |
 | `GET /me` | Connecté | Profil (prénom et nom facultatifs) et foyers |
 | `PATCH /me` | Connecté | Modifier ou effacer son prénom et son nom |
+| `DELETE /me` | Connecté + mot de passe, 10 req/min | Supprimer son compte et toutes ses données |
 | `POST /households/:householdId/pantry-items` | Membre du foyer | Ajouter un article |
 | `GET /households/:householdId/pantry-items` | Membre du foyer | Lister l'inventaire, trié par urgence, paginé |
 | `GET` / `PATCH` / `DELETE /pantry-items/:itemId` | Membre du foyer de l'article | Lire, modifier, supprimer un article |
@@ -90,6 +91,7 @@ Correspondance avec l'OWASP Top 10 et procédure de signalement d'une faille : v
 - En cas de panne : `503` sans détail, l'application reste utilisable en saisie manuelle.
 
 ### Données personnelles
+- **Suppression réelle du compte** depuis le profil, confirmée par le mot de passe (une session volée ne suffit pas) : compte, sessions, foyer, inventaire et alertes effacés en une transaction ; un foyer partagé est conservé pour ses autres membres. Testé, y compris l'absence de foyer orphelin.
 - Minimisation (RGPD) : seuls l'email et le mot de passe sont obligatoires ; le prénom et le nom sont facultatifs, modifiables et effaçables à tout moment. Pas de téléphone ni de date de naissance, inutiles pour l'application.
 - Les noms ne peuvent contenir que des lettres, espaces, apostrophes, traits d'union et points, et n'apparaissent jamais dans les logs.
 - **Mentions légales et politique de confidentialité** consultables sans compte : données collectées, bases légales, durées de conservation, prestataires (dont la transmission de l'adresse IP à Open Food Facts lors de l'affichage des photos), droits et recours. Un seul cookie, strictement nécessaire : pas de bandeau de consentement.

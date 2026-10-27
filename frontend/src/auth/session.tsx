@@ -2,6 +2,7 @@
 // qui est connecté, comment se connecter / s'inscrire / se déconnecter,
 // et la protection des pages réservées aux utilisateurs connectés.
 
+import { useQueryClient } from '@tanstack/react-query';
 import { createContext, useContext, useEffect, useState, type ReactNode } from 'react';
 import { Navigate, Outlet } from 'react-router';
 import { apiRequest, refreshSession, setAccessToken, setSessionExpiredHandler } from '../lib/api';
@@ -17,7 +18,8 @@ export interface User {
 // Les 3 états possibles de la session.
 type Session =
   | { status: 'loading' } // on ne sait pas encore (vérification en cours)
-  | { status: 'anonymous' } // personne n'est connecté
+  // personne n'est connecté ; accountDeleted : juste après une suppression de compte (message de confirmation)
+  | { status: 'anonymous'; accountDeleted?: boolean }
   | { status: 'authenticated'; user: User }; // connecté, et voici qui
 
 interface AuthContextValue {
@@ -26,6 +28,7 @@ interface AuthContextValue {
   register: (data: RegisterData) => Promise<void>;
   logout: () => Promise<void>;
   updateProfile: (names: ProfileNames) => Promise<User>;
+  deleteAccount: (password: string) => Promise<void>;
 }
 
 // Prénom et nom facultatifs : un champ vide est ignoré par l'API.
@@ -48,6 +51,7 @@ const AuthContext = createContext<AuthContextValue | null>(null);
 // et la met à disposition de toutes les pages.
 export function AuthProvider({ children }: { children: ReactNode }) {
   const [session, setSession] = useState<Session>({ status: 'loading' });
+  const queryClient = useQueryClient();
 
   // Au chargement de la page : l'access token n'existe plus (il était en mémoire),
   // on tente de restaurer la session grâce au cookie du refresh token.
@@ -96,18 +100,32 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     return user;
   }
 
+  // Fin de session côté navigateur : token oublié ET données en cache effacées. Sans clear(),
+  // l'inventaire du compte précédent resterait en mémoire pour la personne qui se connecte ensuite.
+  function endSession(accountDeleted = false) {
+    setAccessToken(null);
+    queryClient.clear();
+    setSession({ status: 'anonymous', accountDeleted });
+  }
+
   async function logout() {
     try {
       // Révocation de la session côté serveur, pas seulement l'oubli du token côté navigateur.
       await apiRequest('/auth/logout', { method: 'POST', retryOnUnauthorized: false });
     } finally {
-      setAccessToken(null);
-      setSession({ status: 'anonymous' });
+      endSession();
     }
   }
 
+  // Suppression définitive du compte. En cas d'erreur (mauvais mot de passe : 403), rien ne change.
+  async function deleteAccount(password: string) {
+    await apiRequest('/me', { method: 'DELETE', body: { password } });
+    // La page protégée redirige alors vers la connexion, qui lit accountDeleted pour confirmer.
+    endSession(true);
+  }
+
   return (
-    <AuthContext.Provider value={{ session, login, register, logout, updateProfile }}>
+    <AuthContext.Provider value={{ session, login, register, logout, updateProfile, deleteAccount }}>
       {children}
     </AuthContext.Provider>
   );

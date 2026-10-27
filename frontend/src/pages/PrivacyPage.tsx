@@ -119,8 +119,12 @@ export function PrivacyPage() {
         <ul className="list-disc space-y-1.5 pl-5">
           <li>Prénom et nom : modifiables et effaçables directement depuis votre profil.</li>
           <li>
-            Suppression du compte et export des données : par email à {contact}, envoyé depuis l'adresse de votre
-            compte, en attendant que ces fonctions soient disponibles dans l'application.
+            Suppression du compte : depuis votre profil, après confirmation par votre mot de passe. Votre compte, votre
+            inventaire et vos alertes sont effacés immédiatement (et des sauvegardes sous 30 jours).
+          </li>
+          <li>
+            Export des données : par email à {contact}, envoyé depuis l'adresse de votre compte, en attendant que cette
+            fonction soit disponible dans l'application.
           </li>
         </ul>
         <p>
