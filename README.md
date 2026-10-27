@@ -49,6 +49,7 @@ Projet personnel conçu **security by design** : chaque fonctionnalité est pens
 | `POST /auth/login` | Public, 10 req/min | Obtenir un access token (et le refresh token en cookie) |
 | `POST /auth/refresh` | Cookie de session, 10 req/min | Renouveler les tokens |
 | `POST /auth/logout` | Cookie de session, 10 req/min | Révoquer la session |
+| `POST /auth/change-password` | Connecté + ancien mot de passe, 10 req/min | Changer son mot de passe (autres sessions révoquées) |
 | `GET /me` | Connecté | Profil (prénom et nom facultatifs) et foyers |
 | `PATCH /me` | Connecté | Modifier ou effacer son prénom et son nom |
 | `GET /me/export` | Connecté, 5 req/min | Télécharger toutes ses données (JSON) |
@@ -71,6 +72,7 @@ Correspondance avec l'OWASP Top 10 et procédure de signalement d'une faille : v
 - **Access token court** (JWT de 15 min, algorithme imposé à la vérification) gardé en mémoire par le client.
 - **Refresh token** aléatoire (256 bits) dans un cookie `HttpOnly`, `Secure`, `SameSite=Strict`, limité au chemin `/auth`. Seule son empreinte SHA-256 est stockée en base.
 - **Rotation** du refresh token à chaque usage ; la réutilisation d'un ancien token (signe de vol) révoque toute la session.
+- **Changement de mot de passe** avec l'ancien mot de passe : toutes les sessions sont révoquées (un appareil perdu ou une session volée est déconnecté), une nouvelle est ouverte pour l'appareil courant.
 - Message d'erreur générique et **temps de réponse constant** à la connexion : impossible de savoir si un email a un compte.
 
 ### Contrôle d'accès

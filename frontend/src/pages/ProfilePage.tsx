@@ -4,6 +4,7 @@ import { LogoutIcon, UserIcon } from '../components/icons';
 import { initials } from '../components/initials';
 import { LegalLinks } from '../legal/LegalLayout';
 import { ApiError } from '../lib/api';
+import { ChangePasswordSection } from '../profile/ChangePasswordSection';
 import { DataExportSection } from '../profile/DataExportSection';
 import { DeleteAccountSection } from '../profile/DeleteAccountSection';
 
@@ -118,6 +119,10 @@ export function ProfilePage() {
         <button type="button" onClick={() => void logout()} className="btn-secondary w-full">
           <LogoutIcon className="h-4 w-4" /> Se déconnecter
         </button>
+      </div>
+
+      <div className="mt-8 border-t border-line pt-6">
+        <ChangePasswordSection />
       </div>
 
       <div className="mt-8 border-t border-line pt-6">

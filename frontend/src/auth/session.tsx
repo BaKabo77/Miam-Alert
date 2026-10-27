@@ -29,6 +29,7 @@ interface AuthContextValue {
   logout: () => Promise<void>;
   updateProfile: (names: ProfileNames) => Promise<User>;
   deleteAccount: (password: string) => Promise<void>;
+  changePassword: (currentPassword: string, newPassword: string) => Promise<void>;
 }
 
 // Prénom et nom facultatifs : un champ vide est ignoré par l'API.
@@ -117,6 +118,16 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     }
   }
 
+  // Les autres sessions sont révoquées par l'API ; celle-ci reçoit un nouvel access token (et un
+  // nouveau cookie de refresh, posé par l'API) : l'utilisateur reste connecté sur cet appareil.
+  async function changePassword(currentPassword: string, newPassword: string) {
+    const { accessToken } = await apiRequest<{ accessToken: string }>('/auth/change-password', {
+      method: 'POST',
+      body: { currentPassword, newPassword },
+    });
+    setAccessToken(accessToken);
+  }
+
   // Suppression définitive du compte. En cas d'erreur (mauvais mot de passe : 403), rien ne change.
   async function deleteAccount(password: string) {
     await apiRequest('/me', { method: 'DELETE', body: { password } });
@@ -125,7 +136,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   }
 
   return (
-    <AuthContext.Provider value={{ session, login, register, logout, updateProfile, deleteAccount }}>
+    <AuthContext.Provider value={{ session, login, register, logout, updateProfile, deleteAccount, changePassword }}>
       {children}
     </AuthContext.Provider>
   );
