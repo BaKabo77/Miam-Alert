@@ -43,5 +43,6 @@ export interface DataExport {
     }[];
     alerts: { date: string; expiredCount: number; urgentCount: number; readAt: string | null }[];
   }[];
-  sessions: { createdAt: string; expiresAt: string; revokedAt: string | null }[];
+  // Une entrée par connexion (et non par jeton : chaque renouvellement en crée un nouveau).
+  sessions: { startedAt: string; lastRenewedAt: string; expiresAt: string; active: boolean }[];
 }

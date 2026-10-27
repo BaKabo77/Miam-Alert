@@ -68,7 +68,26 @@ describe('GET /me/export (e2e)', () => {
     expect(res.body.households[0].alerts).toEqual([
       { date: '2030-01-01', expiredCount: 1, urgentCount: 2, readAt: null },
     ]);
-    expect(res.body.sessions).toHaveLength(1);
+    expect(res.body.sessions).toEqual([
+      { startedAt: expect.any(String), lastRenewedAt: expect.any(String), expiresAt: expect.any(String), active: true },
+    ]);
+  });
+
+  it('counts one session per login, not one per token renewal', async () => {
+    const login = await request(app.getHttpServer())
+      .post('/auth/login')
+      .send({ email: OWNER, password: TEST_PASSWORD })
+      .expect(200);
+    const cookie = ([] as string[]).concat(login.headers['set-cookie'] ?? []).find((c) => c.startsWith('refresh_token='))!;
+    // Deux renouvellements de cette deuxième connexion : toujours une seule session pour elle.
+    const renewed = await request(app.getHttpServer()).post('/auth/refresh').set('Cookie', cookie).expect(200);
+    const cookie2 = ([] as string[]).concat(renewed.headers['set-cookie'] ?? []).find((c) => c.startsWith('refresh_token='))!;
+    await request(app.getHttpServer()).post('/auth/refresh').set('Cookie', cookie2).expect(200);
+
+    const res = await exportFor(owner.accessToken).expect(200);
+
+    expect(res.body.sessions).toHaveLength(2);
+    expect(res.body.sessions.every((session: { active: boolean }) => session.active)).toBe(true);
   });
 
   it("never contains another account's data", async () => {

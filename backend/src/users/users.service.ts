@@ -57,7 +57,7 @@ const EXPORT_SELECT = {
     },
   },
   refreshTokens: {
-    select: { createdAt: true, expiresAt: true, revokedAt: true },
+    select: { familyId: true, createdAt: true, expiresAt: true, revokedAt: true },
     orderBy: { createdAt: 'asc' },
   },
 } satisfies Prisma.UserSelect;
@@ -131,11 +131,7 @@ export class UsersService {
           readAt: alert.readAt?.toISOString() ?? null,
         })),
       })),
-      sessions: user.refreshTokens.map((session) => ({
-        createdAt: session.createdAt.toISOString(),
-        expiresAt: session.expiresAt.toISOString(),
-        revokedAt: session.revokedAt?.toISOString() ?? null,
-      })),
+      sessions: toSessions(user.refreshTokens),
     };
   }
 
@@ -189,4 +185,25 @@ function toMeResponse(user: MeRow): MeResponse {
 // Dates sans heure (péremption, jour d'une alerte) : "2026-10-27" plutôt qu'un horodatage à minuit UTC.
 function toDay(date: Date): string {
   return date.toISOString().slice(0, 10);
+}
+
+// Regroupe les jetons par connexion (famille) : les jetons arrivent triés par date, le dernier de
+// chaque famille dit si la session est encore utilisable. familyId reste interne, il n'est pas exporté.
+function toSessions(
+  tokens: { familyId: string; createdAt: Date; expiresAt: Date; revokedAt: Date | null }[],
+): DataExport['sessions'] {
+  const families = new Map<string, typeof tokens>();
+  for (const token of tokens) {
+    families.set(token.familyId, [...(families.get(token.familyId) ?? []), token]);
+  }
+  const now = new Date();
+  return [...families.values()].map((family) => {
+    const latest = family[family.length - 1];
+    return {
+      startedAt: family[0].createdAt.toISOString(),
+      lastRenewedAt: latest.createdAt.toISOString(),
+      expiresAt: latest.expiresAt.toISOString(),
+      active: latest.revokedAt === null && latest.expiresAt > now,
+    };
+  });
 }
