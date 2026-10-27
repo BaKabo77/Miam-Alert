@@ -4,7 +4,7 @@ import { SecurityLogger } from '../common/security-logger.js';
 import { Prisma } from '../generated/prisma/client.js';
 import { PrismaService } from '../prisma/prisma.service.js';
 import { UpdateMeDto } from './dto/update-me.dto.js';
-import type { MeResponse } from './users.types.js';
+import type { DataExport, MeResponse } from './users.types.js';
 
 // Champs choisis un par un : rien d'autre ne peut sortir, même si le modèle s'enrichit.
 const ME_SELECT = {
@@ -18,6 +18,49 @@ const ME_SELECT = {
 } satisfies Prisma.UserSelect;
 
 type MeRow = Prisma.UserGetPayload<{ select: typeof ME_SELECT }>;
+
+// Tout ce qui est rattaché au compte, champ par champ : un champ ajouté plus tard au modèle
+// n'apparaîtra dans l'export que si on l'ajoute ici, en connaissance de cause.
+const EXPORT_SELECT = {
+  email: true,
+  firstName: true,
+  lastName: true,
+  createdAt: true,
+  updatedAt: true,
+  memberships: {
+    select: {
+      role: true,
+      joinedAt: true,
+      household: {
+        select: {
+          name: true,
+          pantryItems: {
+            select: {
+              name: true,
+              quantity: true,
+              unit: true,
+              expiryDate: true,
+              expiryType: true,
+              status: true,
+              createdAt: true,
+              updatedAt: true,
+              product: { select: { barcode: true, name: true, brand: true } },
+            },
+            orderBy: { createdAt: 'asc' },
+          },
+          alerts: {
+            select: { date: true, expiredCount: true, urgentCount: true, readAt: true },
+            orderBy: { date: 'asc' },
+          },
+        },
+      },
+    },
+  },
+  refreshTokens: {
+    select: { createdAt: true, expiresAt: true, revokedAt: true },
+    orderBy: { createdAt: 'asc' },
+  },
+} satisfies Prisma.UserSelect;
 
 @Injectable()
 export class UsersService {
@@ -51,6 +94,49 @@ export class UsersService {
       }
       throw error;
     }
+  }
+
+  // Export complet, sans pagination : c'est l'exception assumée à la règle des listes paginées
+  // (le droit d'accès porte sur TOUTES les données). Le volume reste celui d'un seul foyer, et la
+  // route est limitée en fréquence.
+  async exportData(userId: string): Promise<DataExport> {
+    const user = await this.prisma.user.findUnique({ where: { id: userId }, select: EXPORT_SELECT });
+    if (!user) {
+      throw new UnauthorizedException();
+    }
+    this.security.log('account.exported', { userId });
+
+    return {
+      exportedAt: new Date().toISOString(),
+      account: {
+        email: user.email,
+        firstName: user.firstName,
+        lastName: user.lastName,
+        createdAt: user.createdAt.toISOString(),
+        updatedAt: user.updatedAt.toISOString(),
+      },
+      households: user.memberships.map(({ role, joinedAt, household }) => ({
+        name: household.name,
+        role,
+        joinedAt: joinedAt.toISOString(),
+        pantryItems: household.pantryItems.map((item) => ({
+          ...item,
+          expiryDate: toDay(item.expiryDate),
+          createdAt: item.createdAt.toISOString(),
+          updatedAt: item.updatedAt.toISOString(),
+        })),
+        alerts: household.alerts.map((alert) => ({
+          ...alert,
+          date: toDay(alert.date),
+          readAt: alert.readAt?.toISOString() ?? null,
+        })),
+      })),
+      sessions: user.refreshTokens.map((session) => ({
+        createdAt: session.createdAt.toISOString(),
+        expiresAt: session.expiresAt.toISOString(),
+        revokedAt: session.revokedAt?.toISOString() ?? null,
+      })),
+    };
   }
 
   // Suppression réelle du compte (RGPD, droit à l'effacement) : compte, sessions, appartenances,
@@ -98,4 +184,9 @@ function toMeResponse(user: MeRow): MeResponse {
     lastName: user.lastName,
     households: user.memberships.map(({ role, household }) => ({ ...household, role })),
   };
+}
+
+// Dates sans heure (péremption, jour d'une alerte) : "2026-10-27" plutôt qu'un horodatage à minuit UTC.
+function toDay(date: Date): string {
+  return date.toISOString().slice(0, 10);
 }

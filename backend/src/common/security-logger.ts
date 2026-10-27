@@ -10,6 +10,7 @@ export type SecurityEvent =
   | 'rate_limit.exceeded'
   | 'household.access_denied'
   | 'account.deleted'
+  | 'account.exported'
   | 'account.delete.denied';
 
 // Seuls champs autorisés dans un événement de sécurité. Le type rend impossible d'y glisser

@@ -4,11 +4,11 @@ import type { Response } from 'express';
 import type { AuthenticatedUser } from '../auth/auth.types.js';
 import { CurrentUser } from '../auth/current-user.decorator.js';
 import { REFRESH_TOKEN_COOKIE, REFRESH_TOKEN_COOKIE_OPTIONS } from '../auth/refresh-token.js';
-import { AUTH_THROTTLE } from '../common/throttling.js';
+import { AUTH_THROTTLE, EXPORT_THROTTLE } from '../common/throttling.js';
 import { DeleteMeDto } from './dto/delete-me.dto.js';
 import { UpdateMeDto } from './dto/update-me.dto.js';
 import { UsersService } from './users.service.js';
-import type { MeResponse } from './users.types.js';
+import type { DataExport, MeResponse } from './users.types.js';
 
 @Controller('me')
 export class UsersController {
@@ -19,6 +19,24 @@ export class UsersController {
   @Get()
   getMe(@CurrentUser() user: AuthenticatedUser): Promise<MeResponse> {
     return this.users.getMe(user.id);
+  }
+
+  // Protégée : chacun ne peut exporter que SES données (identité lue dans le token, aucun id en
+  // paramètre). Téléchargement d'un fichier JSON.
+  @Get('export')
+  @Throttle(EXPORT_THROTTLE)
+  async exportMe(
+    @CurrentUser() user: AuthenticatedUser,
+    @Res({ passthrough: true }) res: Response,
+  ): Promise<DataExport> {
+    const data = await this.users.exportData(user.id);
+    // no-store : des données personnelles ne doivent rester dans aucun cache (navigateur, proxy).
+    res.setHeader('Cache-Control', 'no-store');
+    res.setHeader(
+      'Content-Disposition',
+      `attachment; filename="miam-alert-export-${data.exportedAt.slice(0, 10)}.json"`,
+    );
+    return data;
   }
 
   // Protégée : l'utilisateur ne peut modifier que SON profil (identité lue dans le token).
