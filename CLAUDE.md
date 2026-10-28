@@ -259,6 +259,13 @@ En cours (branche `feat/password-reset`) : mot de passe oublié (`POST /auth/for
 
 Purge automatique (branche `feat/data-purge`, empilée sur `feat/password-reset`) : `src/maintenance/`, chaque nuit à 4 h (après la sauvegarde de 3 h), délais dans `RETENTION` (sessions 30 j après expiration, liens d'email 30 j après usage ou expiration, alertes 90 j), annoncés dans la politique de confidentialité.
 
-Prochaine étape : sortir la `v0.5.1` (mot de passe oublié et purge), puis passer DMARC en `p=quarantine` une fois les rapports propres. Ensuite : déploiement continu, Renovate, durcissement du serveur (`v0.6`).
+Version `v0.5.1` en production (mot de passe oublié, purge nocturne).
+
+En cours (branche `feat/continuous-deployment`) :
+- Images de base mises à jour après une analyse Trivy de la production : le front (Nginx 1.28) et le proxy (Caddy 2.10) avaient 72 et ~100 failles hautes ou critiques corrigibles. Nginx 1.30 + `apk upgrade`, Caddy 2.11.7 **recompilé avec xcaddy** (Go 1.27.3, golang.org/x/net et go-jose à jour) : 0 faille sur les 4 images.
+- Job `frontend` (lint, compilation, build) ajouté à la CI : il n'avait jamais existé, contrairement à ce qu'annonçait le README.
+- Déploiement continu : sur tag `vX.Y.Z`, `build-images` (registre GitLab), `scan-images` (Trivy 0.75.0, bloquant), `deploy-production` (manuel, SSH vers l'utilisateur `deploy` limité au script `miam-deploy` par authorized_keys et par une règle sudo à expression régulière). `docker-compose.prod.yml` : images nommées `${MIAM_REGISTRY}/…:${MIAM_VERSION}` (défaut : construction locale). Installation : `deploy/server/README.md`.
+
+Ensuite : Renovate, durcissement du serveur (redémarrage après mise à jour du noyau, Lynis, sysctl, auditd), puis passer DMARC en `p=quarantine` une fois les rapports propres. Ensuite : déploiement continu, Renovate, durcissement du serveur (`v0.6`).
 
 Mettre à jour cette section au fil de l'avancement.

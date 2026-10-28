@@ -1,5 +1,7 @@
 # Environnement de PRODUCTION.
-# Lancement (sur le serveur) : docker compose -f docker-compose.prod.yml --env-file .env.prod up -d --build
+# Déploiement normal : images construites et analysées par GitLab CI, téléchargées par le script
+# deploy/server/miam-deploy.sh (MIAM_REGISTRY et MIAM_VERSION désignent la version à lancer).
+# Construction locale (test ou secours) : docker compose -f docker-compose.prod.yml --env-file .env.prod up -d --build
 #
 # Seul Caddy est joignable depuis Internet (ports 80 et 443). La base de données n'a aucun port
 # publié et vit sur un réseau interne sans accès à Internet. Pas d'Adminer en production.
@@ -44,6 +46,7 @@ services:
   migrate:
     <<: *hardened
     restart: 'no'
+    image: ${MIAM_REGISTRY:-miam-alert}/migrate:${MIAM_VERSION:-local}
     build:
       context: ./backend
       target: migrate
@@ -57,6 +60,7 @@ services:
 
   api:
     <<: *hardened
+    image: ${MIAM_REGISTRY:-miam-alert}/api:${MIAM_VERSION:-local}
     build:
       context: ./backend
       target: runtime
@@ -95,6 +99,7 @@ services:
 
   web:
     <<: *hardened
+    image: ${MIAM_REGISTRY:-miam-alert}/web:${MIAM_VERSION:-local}
     build:
       context: ./frontend
       args:
@@ -109,6 +114,7 @@ services:
 
   proxy:
     <<: *hardened
+    image: ${MIAM_REGISTRY:-miam-alert}/proxy:${MIAM_VERSION:-local}
     build: ./deploy/caddy
     environment:
       DOMAIN: ${DOMAIN:?DOMAIN manquant}

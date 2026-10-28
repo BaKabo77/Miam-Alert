@@ -1,0 +1,4 @@
+# /etc/sudoers.d/miam-deploy (root:root, 440) — à installer avec visudo -cf pour vérifier la syntaxe.
+# L'utilisateur deploy peut lancer UNIQUEMENT le script de déploiement, et uniquement avec une
+# version au format vX.Y.Z (filtre par expression régulière, sudo 1.9.10+). Aucune autre commande.
+deploy ALL=(root) NOPASSWD: /usr/local/sbin/miam-deploy ^v[0-9]+\.[0-9]+\.[0-9]+$

@@ -147,15 +147,18 @@ Correspondance avec l'OWASP Top 10 et procédure de signalement d'une faille : v
 - Aucun test ne dépend d'un service extérieur.
 - Le parcours de l'application (connexion, inventaire, ajout, scan d'un code-barres filmé) a été vérifié dans Chrome avec une caméra simulée, puis avec les images de production derrière le reverse proxy en HTTPS.
 
-## Intégration continue
+## Intégration et déploiement continus
 
-Chaque merge request déclenche un pipeline GitLab CI :
+Chaque merge request déclenche un pipeline GitLab CI ; un tag de version `vX.Y.Z` déclenche en plus la livraison :
 
 | Étape | Contenu |
 |---|---|
 | Qualité | API : lint, compilation TypeScript, build, tests unitaires ; front : lint, compilation, build |
-| Tests | Tests e2e sur un PostgreSQL éphémère |
+| Tests | Tests e2e sur un PostgreSQL éphémère (et un faux serveur d'emails) |
 | Sécurité | `npm audit` de l'API et du front (échec si vulnérabilité haute), détection de secrets, analyse statique (SAST) |
+| Images (tags) | Construction des 4 images de production, envoi dans le registre du projet |
+| Analyse (tags) | Trivy : aucune faille haute ou critique corrigible tolérée, dans le système comme dans les dépendances |
+| Déploiement (tags) | Bouton manuel : le serveur télécharge les images analysées et les lance, via un utilisateur dont la clé ne peut lancer que le script de déploiement (détails : `deploy/server/README.md`) |
 
 ## Lancer le projet
 
@@ -197,7 +200,7 @@ Caddy obtient les certificats HTTPS au premier démarrage ; les migrations sont 
 - [x] Mise en ligne : images Docker de production non-root, HTTPS et HSTS, serveur durci
 - [x] Sauvegardes quotidiennes chiffrées et immuables, mentions légales, suppression du compte et export des données
 - [x] Changement de mot de passe, vérification de l'email, mot de passe oublié
-- [ ] Déploiement continu : images construites et analysées (Trivy) par la CI, puis déployées
+- [x] Déploiement continu : images construites et analysées (Trivy) par la CI, puis déployées
 - [ ] Recettes suggérées selon les produits les plus urgents
 - [ ] Foyer partagé, statistiques de gaspillage
 
