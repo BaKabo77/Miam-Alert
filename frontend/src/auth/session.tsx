@@ -12,6 +12,7 @@ export interface User {
   email: string;
   firstName: string | null;
   lastName: string | null;
+  emailVerified: boolean;
   households: { id: string; name: string; role: 'OWNER' | 'MEMBER' }[];
 }
 
@@ -30,6 +31,7 @@ interface AuthContextValue {
   updateProfile: (names: ProfileNames) => Promise<User>;
   deleteAccount: (password: string) => Promise<void>;
   changePassword: (currentPassword: string, newPassword: string) => Promise<void>;
+  reloadUser: () => Promise<void>;
 }
 
 // Prénom et nom facultatifs : un champ vide est ignoré par l'API.
@@ -118,6 +120,15 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     }
   }
 
+  // Relit le profil (après la vérification de l'email, par exemple) si une session est ouverte.
+  async function reloadUser() {
+    if (session.status !== 'authenticated') {
+      return;
+    }
+    const user = await apiRequest<User>('/me');
+    setSession({ status: 'authenticated', user });
+  }
+
   // Les autres sessions sont révoquées par l'API ; celle-ci reçoit un nouvel access token (et un
   // nouveau cookie de refresh, posé par l'API) : l'utilisateur reste connecté sur cet appareil.
   async function changePassword(currentPassword: string, newPassword: string) {
@@ -136,7 +147,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   }
 
   return (
-    <AuthContext.Provider value={{ session, login, register, logout, updateProfile, deleteAccount, changePassword }}>
+    <AuthContext.Provider value={{ session, login, register, logout, updateProfile, deleteAccount, changePassword, reloadUser }}>
       {children}
     </AuthContext.Provider>
   );

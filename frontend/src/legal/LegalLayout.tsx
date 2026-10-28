@@ -6,10 +6,12 @@ import { LEGAL_LAST_UPDATED } from './publisher';
 interface LegalLayoutProps {
   title: string;
   children: ReactNode;
+  // Faux pour une page publique qui n'est pas un texte légal (vérification de l'email).
+  showLastUpdated?: boolean;
 }
 
 // Cadre des pages légales : accessibles sans être connecté (obligation légale), en texte simple.
-export function LegalLayout({ title, children }: LegalLayoutProps) {
+export function LegalLayout({ title, children, showLastUpdated = true }: LegalLayoutProps) {
   return (
     <div className="min-h-dvh bg-white">
       <div className="mx-auto max-w-2xl px-5 py-8">
@@ -23,7 +25,7 @@ export function LegalLayout({ title, children }: LegalLayoutProps) {
         </div>
 
         <h1 className="page-title mt-10">{title}</h1>
-        <p className="page-subtitle">Dernière mise à jour : {LEGAL_LAST_UPDATED}</p>
+        {showLastUpdated && <p className="page-subtitle">Dernière mise à jour : {LEGAL_LAST_UPDATED}</p>}
 
         <div className="mt-8 space-y-10 text-[15px] leading-relaxed text-ink-900">{children}</div>
 

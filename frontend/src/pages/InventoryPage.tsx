@@ -1,5 +1,6 @@
 import { useQuery } from '@tanstack/react-query';
 import { AlertBanner } from '../alerts/AlertBanner';
+import { EmailVerificationBanner } from '../profile/EmailVerificationBanner';
 import { Link } from 'react-router';
 import { useAuth, useHouseholdId } from '../auth/session';
 import { BasketIcon, PlusIcon, ScanIcon } from '../components/icons';
@@ -27,6 +28,7 @@ export function InventoryPage() {
         </p>
       </div>
 
+      <EmailVerificationBanner />
       <AlertBanner householdId={householdId} />
 
       {isPending && <LoadingSkeleton />}

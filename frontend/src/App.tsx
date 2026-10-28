@@ -9,6 +9,7 @@ import { LoginPage } from './pages/LoginPage';
 import { PrivacyPage } from './pages/PrivacyPage';
 import { ProfilePage } from './pages/ProfilePage';
 import { RegisterPage } from './pages/RegisterPage';
+import { VerifyEmailPage } from './pages/VerifyEmailPage';
 
 // Page de scan chargée à la demande : la bibliothèque de lecture de codes-barres est lourde,
 // inutile de la faire télécharger à ceux qui ne scannent pas (connexion, inventaire...).
@@ -22,6 +23,8 @@ export default function App() {
       {/* Pages légales : publiques, car elles doivent être consultables avant de créer un compte. */}
       <Route path="/legal" element={<LegalNoticePage />} />
       <Route path="/privacy" element={<PrivacyPage />} />
+      {/* Publique : le lien de l'email peut être ouvert sur un appareil où l'on n'est pas connecté. */}
+      <Route path="/verify-email" element={<VerifyEmailPage />} />
       {/* Toutes les routes placées ici exigent d'être connecté, et partagent la même barre de navigation. */}
       <Route element={<RequireAuth />}>
         <Route element={<AppLayout />}>
