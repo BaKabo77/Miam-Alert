@@ -10,6 +10,7 @@ export interface MeResponse {
   email: string;
   firstName: string | null;
   lastName: string | null;
+  emailVerified: boolean;
   households: { id: string; name: string; role: HouseholdRole }[];
 }
 
@@ -23,6 +24,7 @@ export interface DataExport {
     email: string;
     firstName: string | null;
     lastName: string | null;
+    emailVerifiedAt: string | null;
     createdAt: string;
     updatedAt: string;
   };

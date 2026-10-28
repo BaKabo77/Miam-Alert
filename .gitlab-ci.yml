@@ -61,10 +61,17 @@ e2e:
   services:
     - name: postgres:16-alpine
       alias: db
+    # Faux serveur d'emails : les emails envoyés pendant les tests sont capturés, aucun ne sort.
+    - name: axllent/mailpit:v1.27.11
+      alias: mailpit
   variables:
     NODE_ENV: test
     PORT: '3000'
     CORS_ORIGINS: http://localhost:5173
+    APP_URL: http://localhost:5173
+    SMTP_HOST: mailpit
+    SMTP_PORT: '1025'
+    MAIL_FROM: no-reply@miam-alert.fr
   script:
     # Secret JWT généré à chaque exécution : aucune valeur, même factice, n'est écrite dans le dépôt.
     - export JWT_SECRET="$(head -c 48 /dev/urandom | base64 | tr -d '\n')"

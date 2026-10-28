@@ -8,6 +8,10 @@ const VALID = {
   DATABASE_URL: 'postgresql://user:pass@db:5432/app',
   JWT_SECRET: 'x'.repeat(48),
   CORS_ORIGINS: 'https://miam-alert.fr',
+  APP_URL: 'https://miam-alert.fr',
+  SMTP_HOST: 'smtp-relay.brevo.com',
+  SMTP_PORT: '587',
+  MAIL_FROM: 'no-reply@miam-alert.fr',
 };
 
 describe('validateEnv', () => {
@@ -25,6 +29,8 @@ describe('validateEnv', () => {
     ['a non-HTTPS monitoring URL', { ALERTS_HEALTHCHECK_URL: 'http://hc-ping.com/abc' }],
     ['a JWT secret shorter than 32 characters', { JWT_SECRET: 'too-short' }],
     ['a wildcard CORS origin', { CORS_ORIGINS: '*' }],
+    ['no mail server', { SMTP_HOST: undefined }],
+    ['an invalid sender address', { MAIL_FROM: 'not-an-email' }],
   ])('refuses to start with %s', (_case, override) => {
     expect(() => validateEnv({ ...VALID, ...override })).toThrow(/Invalid environment variables/);
   });

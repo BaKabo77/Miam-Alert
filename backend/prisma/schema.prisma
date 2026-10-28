@@ -42,20 +42,23 @@ enum QuantityUnit {
 // contrairement à un id auto-incrémenté (1, 2, 3...) qu'un attaquant pourrait parcourir.
 
 model User {
-  id           String   @id @default(uuid()) @db.Uuid
+  id              String    @id @default(uuid()) @db.Uuid
   // 254 = longueur maximale d'une adresse email valide. Stockée en minuscules (fait par le service).
-  email        String   @unique @db.VarChar(254)
+  email           String    @unique @db.VarChar(254)
   // Le hash argon2, jamais le mot de passe. Ce champ ne doit jamais sortir de l'API.
-  passwordHash String
+  passwordHash    String
   // Facultatifs (minimisation RGPD) : servent seulement à saluer l'utilisateur et, plus tard,
   // à identifier les membres d'un foyer partagé. Modifiables et effaçables par l'utilisateur.
-  firstName    String?  @db.VarChar(100)
-  lastName     String?  @db.VarChar(100)
-  createdAt    DateTime @default(now())
-  updatedAt    DateTime @updatedAt
+  firstName       String?   @db.VarChar(100)
+  lastName        String?   @db.VarChar(100)
+  // Rempli quand l'utilisateur a cliqué sur le lien reçu par email : l'adresse lui appartient.
+  emailVerifiedAt DateTime?
+  createdAt       DateTime  @default(now())
+  updatedAt       DateTime  @updatedAt
 
   memberships   HouseholdMember[]
   refreshTokens RefreshToken[]
+  emailTokens   EmailToken[]
 }
 
 model Household {
@@ -170,4 +173,29 @@ model Alert {
   // Idempotence : la base refuse une deuxième alerte pour le même foyer le même jour,
   // même si la tâche planifiée s'exécute plusieurs fois.
   @@unique([householdId, date])
+}
+
+enum EmailTokenPurpose {
+  EMAIL_VERIFICATION
+  // Réservé au futur « mot de passe oublié » : même mécanisme, autre usage.
+  PASSWORD_RESET
+}
+
+// Jeton envoyé par email (lien de vérification, plus tard de réinitialisation du mot de passe).
+// Comme pour les sessions, seule l'empreinte SHA-256 est stockée : une fuite de la base ne donne
+// aucun lien utilisable.
+model EmailToken {
+  id        String            @id @default(uuid()) @db.Uuid
+  userId    String            @db.Uuid
+  purpose   EmailTokenPurpose
+  tokenHash String            @unique @db.Char(64)
+  expiresAt DateTime
+  // Usage unique : rempli dès que le lien a servi.
+  usedAt    DateTime?
+  createdAt DateTime          @default(now())
+
+  // Cascade : supprimer un compte supprime ses jetons.
+  user User @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@index([userId, purpose])
 }

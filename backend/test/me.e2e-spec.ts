@@ -57,6 +57,7 @@ describe('GET /me (e2e)', () => {
       email: EMAIL,
       firstName: null,
       lastName: null,
+      emailVerified: false,
       households: [{ id: expect.any(String), name: 'Mon foyer', role: 'OWNER' }],
     });
     expect(JSON.stringify(res.body)).not.toContain('passwordHash');

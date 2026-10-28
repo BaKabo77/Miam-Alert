@@ -31,6 +31,15 @@ services:
     ports:
       - '127.0.0.1:8080:8080'
 
+  # Faux serveur d'emails : capture tous les emails envoyés par l'API (aucun ne part vraiment)
+  # et les affiche sur http://localhost:8025. Développement uniquement.
+  mailpit:
+    image: axllent/mailpit:v1.27.11
+    restart: unless-stopped
+    # Interface web limitée à ce poste ; le port SMTP (1025) n'est joignable que depuis le réseau Docker.
+    ports:
+      - '127.0.0.1:8025:8025'
+
   backend:
     build:
       context: ./backend
@@ -40,6 +49,8 @@ services:
     depends_on:
       db:
         condition: service_healthy
+      mailpit:
+        condition: service_started
     ports:
       - '127.0.0.1:3000:3000'
     volumes:

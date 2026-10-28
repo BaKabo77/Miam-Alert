@@ -11,6 +11,7 @@ import { throttlerOptions } from './common/throttling.js';
 import { createValidationPipe } from './common/validation.js';
 import { validateEnv } from './config/env.validation.js';
 import { HealthController } from './health/health.controller.js';
+import { MailModule } from './mail/mail.module.js';
 import { PrismaModule } from './prisma/prisma.module.js';
 import { LoggingThrottlerGuard } from './common/logging-throttler.guard.js';
 import { UsersModule } from './users/users.module.js';
@@ -30,6 +31,7 @@ import { ProductsModule } from './products/products.module.js';
     // Active les tâches planifiées (@Cron) de l'application.
     ScheduleModule.forRoot(),
     PrismaModule,
+    MailModule,
     UsersModule,
     AuthModule,
     ProductsModule,

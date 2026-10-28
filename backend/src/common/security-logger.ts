@@ -9,6 +9,8 @@ export type SecurityEvent =
   | 'auth.logout'
   | 'auth.password_changed'
   | 'auth.password_change.denied'
+  | 'auth.email_verified'
+  | 'auth.email_verification.invalid'
   | 'rate_limit.exceeded'
   | 'household.access_denied'
   | 'account.deleted'

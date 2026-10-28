@@ -70,6 +70,13 @@ services:
       TRUST_PROXY: 1
       # Facultatif : surveillance de la tâche des alertes de 9 h (vide = désactivée).
       ALERTS_HEALTHCHECK_URL: ${ALERTS_HEALTHCHECK_URL:-}
+      # Emails (Brevo) : liens construits sur l'adresse publique du front.
+      APP_URL: https://${DOMAIN}
+      SMTP_HOST: ${SMTP_HOST:?SMTP_HOST manquant}
+      SMTP_PORT: ${SMTP_PORT:-587}
+      SMTP_USER: ${SMTP_USER:?SMTP_USER manquant}
+      SMTP_PASSWORD: ${SMTP_PASSWORD:?SMTP_PASSWORD manquant}
+      MAIL_FROM: ${MAIL_FROM:-no-reply@${DOMAIN}}
     depends_on:
       migrate:
         condition: service_completed_successfully

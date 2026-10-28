@@ -6,6 +6,8 @@ import { AuthService } from './auth.service.js';
 import type { AccessTokenResponse, AuthenticatedUser, UserResponse } from './auth.types.js';
 import { CurrentUser } from './current-user.decorator.js';
 import { ChangePasswordDto } from './dto/change-password.dto.js';
+import { VerifyEmailDto } from './dto/verify-email.dto.js';
+import { EmailVerificationService } from './email-verification.service.js';
 import { LoginDto } from './dto/login.dto.js';
 import { RegisterDto } from './dto/register.dto.js';
 import { Public } from './public.decorator.js';
@@ -15,7 +17,10 @@ import { RefreshTokenCookie } from './refresh-token.decorator.js';
 @Controller('auth')
 @Throttle(AUTH_THROTTLE)
 export class AuthController {
-    constructor(private readonly auth: AuthService) { }
+    constructor(
+        private readonly auth: AuthService,
+        private readonly emailVerification: EmailVerificationService,
+    ) { }
 
     // Public : on ne peut pas exiger d'être connecté pour créer son compte.
     @Public()
@@ -82,5 +87,23 @@ export class AuthController {
         const { accessToken, refreshToken } = await this.auth.changePassword(user.id, dto);
         res.cookie(REFRESH_TOKEN_COOKIE, refreshToken, REFRESH_TOKEN_COOKIE_OPTIONS);
         return { accessToken };
+    }
+
+    // Public : le lien est ouvert depuis la boîte mail, éventuellement sur un autre appareil où
+    // l'on n'est pas connecté. C'est le jeton (aléatoire, à usage unique, 24 h) qui prouve que
+    // l'on a accès à la boîte mail. Limitée à 10/min comme le reste de /auth.
+    @Public()
+    @Post('verify-email')
+    @HttpCode(HttpStatus.NO_CONTENT)
+    verifyEmail(@Body() dto: VerifyEmailDto, @Ip() ip: string): Promise<void> {
+        return this.emailVerification.verify(dto.token, ip);
+    }
+
+    // Protégée : renvoie le lien à l'adresse du compte connecté, et à aucune autre (aucune
+    // adresse n'est acceptée en paramètre). Un email par minute au plus.
+    @Post('verify-email/resend')
+    @HttpCode(HttpStatus.NO_CONTENT)
+    resendVerification(@CurrentUser() user: AuthenticatedUser): Promise<void> {
+        return this.emailVerification.resend(user.id);
     }
 }

@@ -13,6 +13,7 @@ import { PrismaService } from '../prisma/prisma.service.js';
 import type { AccessTokenPayload, AuthTokens, UserResponse } from './auth.types.js';
 import { ChangePasswordDto } from './dto/change-password.dto.js';
 import { LoginDto } from './dto/login.dto.js';
+import { EmailVerificationService } from './email-verification.service.js';
 import { RegisterDto } from './dto/register.dto.js';
 import { hashPassword, verifyPassword } from './password.js';
 import {
@@ -35,6 +36,7 @@ export class AuthService {
   constructor(
     private readonly prisma: PrismaService,
     private readonly jwt: JwtService,
+    private readonly emailVerification: EmailVerificationService,
   ) { }
 
   async register(dto: RegisterDto): Promise<UserResponse> {
@@ -59,6 +61,8 @@ export class AuthService {
         select: { id: true, email: true },
       });
       this.security.log('auth.register', { userId: user.id });
+      // Lien de vérification envoyé sans attendre : la réponse ne dépend pas du serveur d'emails.
+      this.emailVerification.sendVerificationInBackground(user.id, user.email);
       return user;
     } catch (error) {
       // P2002 = violation de la contrainte d'unicité sur l'email. On s'appuie sur la base

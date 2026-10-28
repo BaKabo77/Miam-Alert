@@ -1,5 +1,6 @@
 import { plainToInstance, Transform } from 'class-transformer';
 import {
+  IsEmail,
   IsEnum,
   IsInt,
   IsOptional,
@@ -59,6 +60,34 @@ export class EnvironmentVariables {
   @IsOptional()
   @IsUrl({ require_protocol: true, protocols: ['https'] })
   ALERTS_HEALTHCHECK_URL?: string;
+
+  // Adresse publique du front : sert à construire les liens envoyés par email.
+  @IsUrl({ require_tld: false, require_protocol: true, protocols: ['http', 'https'] })
+  APP_URL: string;
+
+  // Serveur d'envoi d'emails (Mailpit en développement, Brevo en production).
+  @IsString()
+  SMTP_HOST: string;
+
+  @IsInt()
+  @Min(1)
+  @Max(65535)
+  SMTP_PORT: number;
+
+  // Facultatifs : Mailpit n'exige pas d'identifiants, Brevo si.
+  @Transform(({ value }: { value: unknown }) => (value === '' ? undefined : value))
+  @IsOptional()
+  @IsString()
+  SMTP_USER?: string;
+
+  @Transform(({ value }: { value: unknown }) => (value === '' ? undefined : value))
+  @IsOptional()
+  @IsString()
+  SMTP_PASSWORD?: string;
+
+  // Adresse d'expédition (domaine dont les enregistrements SPF/DKIM autorisent l'envoi).
+  @IsEmail()
+  MAIL_FROM: string;
 }
 
 export function validateEnv(config: Record<string, unknown>): EnvironmentVariables {

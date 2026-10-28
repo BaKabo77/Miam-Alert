@@ -5,10 +5,11 @@ import { EnvironmentVariables } from '../config/env.validation.js';
 import { buildJwtOptions } from './jwt.config.js';
 import { AuthController } from './auth.controller.js';
 import { AuthService } from './auth.service.js';
+import { EmailVerificationService } from './email-verification.service.js';
 
 @Module({
   controllers: [AuthController],
-  providers: [AuthService],
+  providers: [AuthService, EmailVerificationService],
   imports: [
     JwtModule.registerAsync({
       inject: [ConfigService],

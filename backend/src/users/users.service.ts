@@ -12,6 +12,7 @@ const ME_SELECT = {
   email: true,
   firstName: true,
   lastName: true,
+  emailVerifiedAt: true,
   memberships: {
     select: { role: true, household: { select: { id: true, name: true } } },
   },
@@ -25,6 +26,7 @@ const EXPORT_SELECT = {
   email: true,
   firstName: true,
   lastName: true,
+  emailVerifiedAt: true,
   createdAt: true,
   updatedAt: true,
   memberships: {
@@ -112,6 +114,7 @@ export class UsersService {
         email: user.email,
         firstName: user.firstName,
         lastName: user.lastName,
+        emailVerifiedAt: user.emailVerifiedAt?.toISOString() ?? null,
         createdAt: user.createdAt.toISOString(),
         updatedAt: user.updatedAt.toISOString(),
       },
@@ -178,6 +181,7 @@ function toMeResponse(user: MeRow): MeResponse {
     email: user.email,
     firstName: user.firstName,
     lastName: user.lastName,
+    emailVerified: user.emailVerifiedAt !== null,
     households: user.memberships.map(({ role, household }) => ({ ...household, role })),
   };
 }
