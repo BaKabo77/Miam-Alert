@@ -52,6 +52,8 @@ Projet personnel conçu **security by design** : chaque fonctionnalité est pens
 | `POST /auth/change-password` | Connecté + ancien mot de passe, 10 req/min | Changer son mot de passe (autres sessions révoquées) |
 | `POST /auth/verify-email` | Public (jeton de l'email), 10 req/min | Confirmer son adresse email |
 | `POST /auth/verify-email/resend` | Connecté, 10 req/min, 1 email/min | Renvoyer le lien de confirmation |
+| `POST /auth/forgot-password` | Public, 10 req/min, 1 email/min par adresse | Recevoir un lien de réinitialisation (réponse identique que l'adresse ait un compte ou non) |
+| `POST /auth/reset-password` | Public (jeton de l'email), 10 req/min | Choisir un nouveau mot de passe |
 | `GET /me` | Connecté | Profil (prénom et nom facultatifs) et foyers |
 | `PATCH /me` | Connecté | Modifier ou effacer son prénom et son nom |
 | `GET /me/export` | Connecté, 5 req/min | Télécharger toutes ses données (JSON) |
@@ -75,6 +77,7 @@ Correspondance avec l'OWASP Top 10 et procédure de signalement d'une faille : v
 - **Refresh token** aléatoire (256 bits) dans un cookie `HttpOnly`, `Secure`, `SameSite=Strict`, limité au chemin `/auth`. Seule son empreinte SHA-256 est stockée en base.
 - **Rotation** du refresh token à chaque usage ; la réutilisation d'un ancien token (signe de vol) révoque toute la session.
 - **Vérification de l'adresse email** par un lien à usage unique, valable 24 h, dont seule l'empreinte est stockée ; jeton placé dans le fragment de l'URL (`#`), donc absent des journaux des serveurs ; renvoi limité à un email par minute.
+- **Mot de passe oublié** : réponse identique et immédiate que l'adresse ait un compte ou non (pas d'énumération des comptes, ni par le contenu ni par le temps de réponse) ; lien à usage unique valable 30 min ; toutes les sessions révoquées après la réinitialisation. Les limites d'envoi (un email par minute) sont atomiques : un verrou en base empêche de les contourner par des requêtes simultanées (testé).
 - **Changement de mot de passe** avec l'ancien mot de passe : toutes les sessions sont révoquées (un appareil perdu ou une session volée est déconnecté), une nouvelle est ouverte pour l'appareil courant.
 - Message d'erreur générique et **temps de réponse constant** à la connexion : impossible de savoir si un email a un compte.
 
@@ -192,7 +195,7 @@ Caddy obtient les certificats HTTPS au premier démarrage ; les migrations sont 
 - [x] Alertes quotidiennes groupées par foyer
 - [x] Mise en ligne : images Docker de production non-root, HTTPS et HSTS, serveur durci
 - [x] Sauvegardes quotidiennes chiffrées et immuables, mentions légales, suppression du compte et export des données
-- [ ] Mot de passe oublié et changement de mot de passe
+- [x] Changement de mot de passe, vérification de l'email, mot de passe oublié
 - [ ] Déploiement continu : images construites et analysées (Trivy) par la CI, puis déployées
 - [ ] Recettes suggérées selon les produits les plus urgents
 - [ ] Foyer partagé, statistiques de gaspillage

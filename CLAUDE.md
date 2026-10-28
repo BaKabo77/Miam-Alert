@@ -253,13 +253,10 @@ Version `v0.4.0` en ligne sur https://miam-alert.fr (API sur api.miam-alert.fr).
   - Après un test de mutation (fichier modifié puis restauré), redémarrer le backend de dev : le compilateur en mode watch peut garder la version modifiée dans `dist/`.
   - Si SSH reste bloqué après « Server accepts key », l'agent GNOME attend le déverrouillage de la clé : `ssh-add ~/.ssh/miam-alert-vps` ou `-o IdentityAgent=none`.
 
-En cours (chaîne de branches à fusionner dans l'ordre : `feat/change-password` → `docs/v0.4.0` → `feat/expiry-suggestion` → `feat/monitoring` → `feat/email-verification`, la dernière contient tout) :
-- Changement de mot de passe (`POST /auth/change-password`), double saisie du mot de passe à l'inscription et au changement.
-- Date suggérée selon la catégorie : colonne `Product.categories` (tags OFF nettoyés, 30 max), table de durées `src/products/shelf-life.ts`, `suggestedExpiry` dans la réponse produit. Les produits déjà en cache n'ont que leur premier tag (souvent trop général).
-- Supervision : logs JSON en production, `ALERTS_HEALTHCHECK_URL` (facultatif) pingué après la tâche de 9 h.
-- Vérification de l'email : `User.emailVerifiedAt`, table `EmailToken` (purpose, hash, 24 h, usage unique, réutilisable pour le mot de passe oublié), `Mailer` abstrait + `SmtpMailer` (nodemailer 10.1.7, TLS obligatoire en prod), Mailpit en dev (http://localhost:8025) et en CI. Variables obligatoires : `APP_URL`, `SMTP_HOST`, `SMTP_PORT`, `MAIL_FROM` (+ `SMTP_USER`/`SMTP_PASSWORD` en prod) : **ne pas déployer avant d'avoir configuré Brevo** (l'API refuserait de démarrer).
-- Tests : 59 unitaires, 162 e2e.
+Version `v0.5.0` en production : changement de mot de passe, date suggérée selon la catégorie, supervision (logs JSON, signal de vie des tâches), vérification de l'email (Brevo, domaine authentifié par DKIM, DMARC `p=none` pour commencer).
 
-Prochaine étape : compte Brevo + DNS (SPF, DKIM, DMARC), puis mot de passe oublié (même table `EmailToken`, `PASSWORD_RESET`) et purge automatique, pour sortir la `v0.5.0`.
+En cours (branche `feat/password-reset`) : mot de passe oublié (`POST /auth/forgot-password`, `POST /auth/reset-password`, pages `/forgot-password` et `/reset-password`). Jetons d'email factorisés dans `src/auth/email-tokens.ts` : émission atomique avec verrou `FOR UPDATE` sur le compte (la limite d'un email par minute n'est plus contournable par des requêtes simultanées), consommation à usage unique. 59 tests unitaires, 176 e2e.
+
+Prochaine étape : purge automatique (sessions expirées, jetons d'email usés ou expirés, vieilles alertes) pour sortir la `v0.5.1`, puis passer DMARC en `p=quarantine` une fois les rapports propres. Ensuite : déploiement continu, Renovate, durcissement du serveur (`v0.6`).
 
 Mettre à jour cette section au fil de l'avancement.

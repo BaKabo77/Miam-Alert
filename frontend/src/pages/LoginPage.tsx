@@ -70,6 +70,9 @@ export function LoginPage() {
             autoComplete="current-password"
             className="input"
           />
+          <Link to="/forgot-password" className="mt-2 inline-block text-sm font-semibold underline underline-offset-4">
+            Mot de passe oublié ?
+          </Link>
         </label>
 
         {/* Le message n'apparaît que s'il y a une erreur. role="alert" : lu par les lecteurs d'écran. */}
