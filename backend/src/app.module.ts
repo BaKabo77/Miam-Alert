@@ -4,6 +4,7 @@ import { APP_FILTER, APP_GUARD, APP_PIPE } from '@nestjs/core';
 import { ScheduleModule } from '@nestjs/schedule';
 import { ThrottlerModule } from '@nestjs/throttler';
 import { AlertsModule } from './alerts/alerts.module.js';
+import { MaintenanceModule } from './maintenance/maintenance.module.js';
 import { AuthModule } from './auth/auth.module.js';
 import { JwtAuthGuard } from './auth/jwt-auth.guard.js';
 import { AllExceptionsFilter } from './common/all-exceptions.filter.js';
@@ -36,6 +37,7 @@ import { ProductsModule } from './products/products.module.js';
     AuthModule,
     ProductsModule,
     AlertsModule,
+    MaintenanceModule,
     PantryModule
   ],
   controllers: [HealthController],

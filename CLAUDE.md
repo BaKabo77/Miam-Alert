@@ -257,6 +257,8 @@ Version `v0.5.0` en production : changement de mot de passe, date suggérée sel
 
 En cours (branche `feat/password-reset`) : mot de passe oublié (`POST /auth/forgot-password`, `POST /auth/reset-password`, pages `/forgot-password` et `/reset-password`). Jetons d'email factorisés dans `src/auth/email-tokens.ts` : émission atomique avec verrou `FOR UPDATE` sur le compte (la limite d'un email par minute n'est plus contournable par des requêtes simultanées), consommation à usage unique. 59 tests unitaires, 176 e2e.
 
-Prochaine étape : purge automatique (sessions expirées, jetons d'email usés ou expirés, vieilles alertes) pour sortir la `v0.5.1`, puis passer DMARC en `p=quarantine` une fois les rapports propres. Ensuite : déploiement continu, Renovate, durcissement du serveur (`v0.6`).
+Purge automatique (branche `feat/data-purge`, empilée sur `feat/password-reset`) : `src/maintenance/`, chaque nuit à 4 h (après la sauvegarde de 3 h), délais dans `RETENTION` (sessions 30 j après expiration, liens d'email 30 j après usage ou expiration, alertes 90 j), annoncés dans la politique de confidentialité.
+
+Prochaine étape : sortir la `v0.5.1` (mot de passe oublié et purge), puis passer DMARC en `p=quarantine` une fois les rapports propres. Ensuite : déploiement continu, Renovate, durcissement du serveur (`v0.6`).
 
 Mettre à jour cette section au fil de l'avancement.

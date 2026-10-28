@@ -63,10 +63,15 @@ export function PrivacyPage() {
 
       <LegalSection title="Durées de conservation">
         <ul className="list-disc space-y-1.5 pl-5">
-          <li>Compte, inventaire et alertes : tant que le compte existe.</li>
+          <li>Compte et inventaire : tant que le compte existe.</li>
+          <li>Alertes du jour : 90 jours, puis supprimées automatiquement.</li>
           <li>
-            Sessions : le jeton de connexion est valable 7 jours. Les empreintes des sessions expirées restent liées au
-            compte jusqu'à sa suppression (une suppression automatique est prévue).
+            Sessions : le jeton de connexion est valable 7 jours. Les traces d'une session expirée sont conservées 30
+            jours (pour pouvoir enquêter en cas d'incident de sécurité), puis supprimées automatiquement.
+          </li>
+          <li>
+            Liens envoyés par email (confirmation de l'adresse, mot de passe oublié) : valables 24 heures ou 30
+            minutes, puis supprimés 30 jours après avoir servi ou expiré.
           </li>
           <li>Journal de sécurité : effacé automatiquement au-delà d'un volume limité.</li>
           <li>
