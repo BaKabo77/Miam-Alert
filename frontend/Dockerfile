@@ -26,7 +26,13 @@ RUN npm run build \
 # ---------- 2. Image finale ----------
 # Variante "unprivileged" de l'image officielle : Nginx tourne sous l'utilisateur nginx (uid 101)
 # et écoute sur le port 8080, sans jamais passer par root.
-FROM nginxinc/nginx-unprivileged:1.28-alpine AS runtime
+FROM nginxinc/nginx-unprivileged:1.30-alpine AS runtime
+
+# Paquets du système mis à jour (correctifs publiés depuis la construction de l'image de base),
+# puis retour immédiat à l'utilisateur non privé de l'image (nginx, uid 101).
+USER root
+RUN apk upgrade --no-cache
+USER 101
 
 # Fichiers copiés sans --chown : ils appartiennent à root et Nginx ne peut que les lire.
 # Même en cas de faille, le processus ne pourrait pas modifier les pages servies.
