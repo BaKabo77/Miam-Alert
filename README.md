@@ -21,7 +21,7 @@ Projet personnel conçu **security by design** : chaque fonctionnalité est pens
 - **Compte et session** : inscription, connexion, session renouvelée en arrière-plan, déconnexion réelle côté serveur ; profil avec prénom et nom facultatifs.
 - **Inventaire du foyer** : ajout, modification, suppression d'articles ; statut consommé / jeté / congelé.
 - **Tri par urgence** : chaque article reçoit un niveau d'urgence calculé (périmé, à consommer sous 2 jours, cette semaine…), en distinguant la **DLC** (date limite, stricte) de la **DDM** (date de durabilité minimale, indicative).
-- **Scan du code-barres** avec la caméra (ou saisie du code) : fiche produit (nom, marque, photo, Nutri-Score) récupérée sur [Open Food Facts](https://world.openfoodfacts.org) puis mise en cache ; il ne reste qu'à saisir la date, avec des raccourcis (+3 j, +1 sem, +1 mois).
+- **Scan du code-barres** avec la caméra (ou saisie du code) : fiche produit (nom, marque, photo, Nutri-Score) récupérée sur [Open Food Facts](https://world.openfoodfacts.org) puis mise en cache ; la date est pré-remplie selon la catégorie du produit (yaourt, conserve, viande…) et reste modifiable, avec des raccourcis (+3 j, +1 sem, +1 mois).
 - **Alerte du jour** : chaque matin à 9 h, une alerte unique par foyer résume les produits périmés et à consommer d'urgence (pas une notification par produit), affichée en bandeau sur l'inventaire.
 - **Application installable** sur téléphone et ordinateur (PWA), pensée d'abord pour le mobile.
 
@@ -50,6 +50,8 @@ Projet personnel conçu **security by design** : chaque fonctionnalité est pens
 | `POST /auth/refresh` | Cookie de session, 10 req/min | Renouveler les tokens |
 | `POST /auth/logout` | Cookie de session, 10 req/min | Révoquer la session |
 | `POST /auth/change-password` | Connecté + ancien mot de passe, 10 req/min | Changer son mot de passe (autres sessions révoquées) |
+| `POST /auth/verify-email` | Public (jeton de l'email), 10 req/min | Confirmer son adresse email |
+| `POST /auth/verify-email/resend` | Connecté, 10 req/min, 1 email/min | Renvoyer le lien de confirmation |
 | `GET /me` | Connecté | Profil (prénom et nom facultatifs) et foyers |
 | `PATCH /me` | Connecté | Modifier ou effacer son prénom et son nom |
 | `GET /me/export` | Connecté, 5 req/min | Télécharger toutes ses données (JSON) |
@@ -72,6 +74,7 @@ Correspondance avec l'OWASP Top 10 et procédure de signalement d'une faille : v
 - **Access token court** (JWT de 15 min, algorithme imposé à la vérification) gardé en mémoire par le client.
 - **Refresh token** aléatoire (256 bits) dans un cookie `HttpOnly`, `Secure`, `SameSite=Strict`, limité au chemin `/auth`. Seule son empreinte SHA-256 est stockée en base.
 - **Rotation** du refresh token à chaque usage ; la réutilisation d'un ancien token (signe de vol) révoque toute la session.
+- **Vérification de l'adresse email** par un lien à usage unique, valable 24 h, dont seule l'empreinte est stockée ; jeton placé dans le fragment de l'URL (`#`), donc absent des journaux des serveurs ; renvoi limité à un email par minute.
 - **Changement de mot de passe** avec l'ancien mot de passe : toutes les sessions sont révoquées (un appareil perdu ou une session volée est déconnecté), une nouvelle est ouverte pour l'appareil courant.
 - Message d'erreur générique et **temps de réponse constant** à la connexion : impossible de savoir si un email a un compte.
 
@@ -99,6 +102,10 @@ Correspondance avec l'OWASP Top 10 et procédure de signalement d'une faille : v
 - Minimisation (RGPD) : seuls l'email et le mot de passe sont obligatoires ; le prénom et le nom sont facultatifs, modifiables et effaçables à tout moment. Pas de téléphone ni de date de naissance, inutiles pour l'application.
 - Les noms ne peuvent contenir que des lettres, espaces, apostrophes, traits d'union et points, et n'apparaissent jamais dans les logs.
 - **Mentions légales et politique de confidentialité** consultables sans compte : données collectées, bases légales, durées de conservation, prestataires (dont la transmission de l'adresse IP à Open Food Facts lors de l'affichage des photos), droits et recours. Un seul cookie, strictement nécessaire : pas de bandeau de consentement.
+
+### Supervision
+- Logs de production en JSON (une ligne par événement), exploitables par un outil de supervision.
+- Les tâches planifiées (alertes de 9 h, sauvegarde de 3 h) envoient un signal de vie à un service de surveillance : une tâche qui échoue ou ne tourne pas déclenche une alerte.
 
 ### Journalisation
 - Événements de sécurité en JSON (connexions, échecs, refresh, vol de session détecté, accès refusé à un foyer, rate limit).
