@@ -6,10 +6,11 @@ import { buildJwtOptions } from './jwt.config.js';
 import { AuthController } from './auth.controller.js';
 import { AuthService } from './auth.service.js';
 import { EmailVerificationService } from './email-verification.service.js';
+import { PasswordResetService } from './password-reset.service.js';
 
 @Module({
   controllers: [AuthController],
-  providers: [AuthService, EmailVerificationService],
+  providers: [AuthService, EmailVerificationService, PasswordResetService],
   imports: [
     JwtModule.registerAsync({
       inject: [ConfigService],

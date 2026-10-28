@@ -21,6 +21,25 @@ export function verificationEmail(to: string, link: string): MailMessage {
   };
 }
 
+export function passwordResetEmail(to: string, link: string): MailMessage {
+  return {
+    to,
+    subject: "Réinitialisez votre mot de passe – Miam'Alert",
+    text: [
+      'Bonjour,',
+      '',
+      "Pour choisir un nouveau mot de passe sur Miam'Alert, ouvrez ce lien (valable 30 minutes) :",
+      link,
+      '',
+      "Si vous n'avez rien demandé, ignorez cet email : votre mot de passe actuel reste valable.",
+    ].join('\n'),
+    html: `<p>Bonjour,</p>
+<p>Pour choisir un nouveau mot de passe sur Miam'Alert, cliquez sur ce lien (valable 30&nbsp;minutes)&nbsp;:</p>
+<p><a href="${escapeHtml(link)}">Choisir un nouveau mot de passe</a></p>
+<p>Si vous n'avez rien demandé, ignorez cet email&nbsp;: votre mot de passe actuel reste valable.</p>`,
+  };
+}
+
 function escapeHtml(value: string): string {
   return value.replace(/[&<>"']/g, (char) => `&#${char.charCodeAt(0)};`);
 }

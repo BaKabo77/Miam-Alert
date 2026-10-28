@@ -6,8 +6,11 @@ import { AuthService } from './auth.service.js';
 import type { AccessTokenResponse, AuthenticatedUser, UserResponse } from './auth.types.js';
 import { CurrentUser } from './current-user.decorator.js';
 import { ChangePasswordDto } from './dto/change-password.dto.js';
+import { ForgotPasswordDto } from './dto/forgot-password.dto.js';
+import { ResetPasswordDto } from './dto/reset-password.dto.js';
 import { VerifyEmailDto } from './dto/verify-email.dto.js';
 import { EmailVerificationService } from './email-verification.service.js';
+import { PasswordResetService } from './password-reset.service.js';
 import { LoginDto } from './dto/login.dto.js';
 import { RegisterDto } from './dto/register.dto.js';
 import { Public } from './public.decorator.js';
@@ -20,6 +23,7 @@ export class AuthController {
     constructor(
         private readonly auth: AuthService,
         private readonly emailVerification: EmailVerificationService,
+        private readonly passwordReset: PasswordResetService,
     ) { }
 
     // Public : on ne peut pas exiger d'être connecté pour créer son compte.
@@ -105,5 +109,24 @@ export class AuthController {
     @HttpCode(HttpStatus.NO_CONTENT)
     resendVerification(@CurrentUser() user: AuthenticatedUser): Promise<void> {
         return this.emailVerification.resend(user.id);
+    }
+
+    // Public : par définition, on a perdu son mot de passe. Toujours 204, que l'adresse ait un
+    // compte ou non (pas d'énumération des comptes). 10/min par IP, et un email par minute au
+    // plus pour une même adresse.
+    @Public()
+    @Post('forgot-password')
+    @HttpCode(HttpStatus.NO_CONTENT)
+    forgotPassword(@Body() dto: ForgotPasswordDto, @Ip() ip: string): void {
+        this.passwordReset.requestReset(dto.email, ip);
+    }
+
+    // Public : c'est le jeton reçu par email (aléatoire, à usage unique, 30 min) qui autorise le
+    // changement. Toutes les sessions du compte sont ensuite révoquées.
+    @Public()
+    @Post('reset-password')
+    @HttpCode(HttpStatus.NO_CONTENT)
+    resetPassword(@Body() dto: ResetPasswordDto, @Ip() ip: string): Promise<void> {
+        return this.passwordReset.resetPassword(dto.token, dto.newPassword, ip);
     }
 }
