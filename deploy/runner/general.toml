@@ -1,0 +1,11 @@
+# Modèle du runner « général » : tous les jobs sans tag (qualité, tests, sécurité, analyse
+# et déploiement). Fusionné par `gitlab-runner register --template-config` ; le jeton n'y figure pas.
+[[runners]]
+  # Deux demandes de job simultanées vers GitLab (une seule retarde le 2e job en parallèle).
+  request_concurrency = 2
+  [runners.docker]
+    # Aucun job n'a besoin de privilèges ni du Docker de la machine (le socket n'est jamais monté).
+    privileged = false
+    volumes = ["/cache"]
+    # Toujours vérifier la version publiée de l'image : un tag republié avec un correctif est pris.
+    pull_policy = ["always"]

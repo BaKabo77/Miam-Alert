@@ -81,6 +81,7 @@ miam-alert/             # nom technique (npm, Docker) ; nom affiché : Miam'Aler
 │   └── src/
 ├── frontend/           # React (Vite), PWA ; Dockerfile + nginx/ pour la production
 ├── deploy/caddy/       # reverse proxy de production (Caddyfile, image non-root)
+├── deploy/runner/      # runner GitLab du poste de développement (modèles sans jeton)
 ├── docs/screenshots/   # captures du README
 ├── .gitlab-ci.yml      # pipeline de CI (qualité, tests, sécurité)
 ├── docker-compose.yml       # développement
@@ -261,11 +262,13 @@ Purge automatique (branche `feat/data-purge`, empilée sur `feat/password-reset`
 
 Version `v0.5.1` en production (mot de passe oublié, purge nocturne).
 
-En cours (branche `feat/continuous-deployment`) :
+Tag `v0.6.0` posé (déploiement continu), mais son pipeline a échoué sur `build-images`, et il ne restait que 16 des 400 minutes mensuelles de CI de GitLab.com :
 - Images de base mises à jour après une analyse Trivy de la production : le front (Nginx 1.28) et le proxy (Caddy 2.10) avaient 72 et ~100 failles hautes ou critiques corrigibles. Nginx 1.30 + `apk upgrade`, Caddy 2.11.7 **recompilé avec xcaddy** (Go 1.27.3, golang.org/x/net et go-jose à jour) : 0 faille sur les 4 images.
 - Job `frontend` (lint, compilation, build) ajouté à la CI : il n'avait jamais existé, contrairement à ce qu'annonçait le README.
 - Déploiement continu : sur tag `vX.Y.Z`, `build-images` (registre GitLab), `scan-images` (Trivy 0.75.0, bloquant), `deploy-production` (manuel, SSH vers l'utilisateur `deploy` limité au script `miam-deploy` par authorized_keys et par une règle sudo à expression régulière). `docker-compose.prod.yml` : images nommées `${MIAM_REGISTRY}/…:${MIAM_VERSION}` (défaut : construction locale). Installation : `deploy/server/README.md`.
 
-Ensuite : Renovate, durcissement du serveur (redémarrage après mise à jour du noyau, Lynis, sysctl, auditd), puis passer DMARC en `p=quarantine` une fois les rapports propres. Ensuite : déploiement continu, Renovate, durcissement du serveur (`v0.6`).
+En cours (branche `chore/local-runner`) : runner GitLab sur le poste du développeur (Docker Desktop), deux runners dans un conteneur `gitlab-runner` : `miam-pc` (jobs sans tag, non privilégié) et `miam-pc-docker-build` (protégé, tag `docker-build`, images `docker:*` seulement, seul le service dind privilégié). Runners partagés désactivés. Voir `deploy/runner/README.md`. Publication prévue en `v0.6.1`.
+
+Ensuite : Renovate, durcissement du serveur (redémarrage après mise à jour du noyau, Lynis, sysctl, auditd), puis passer DMARC en `p=quarantine` une fois les rapports propres.
 
 Mettre à jour cette section au fil de l'avancement.

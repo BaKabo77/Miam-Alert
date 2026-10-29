@@ -1,0 +1,16 @@
+# Modèle du runner « docker-build » : uniquement le job build-images (tag `docker-build`),
+# uniquement sur les références protégées (tags v*). Le jeton n'y figure pas.
+[[runners]]
+  request_concurrency = 2
+  [runners.docker]
+    # Docker-in-Docker exige un service privilégié. Le conteneur du job, lui, ne l'est pas, et seul
+    # le service docker:*-dind obtient ce droit.
+    privileged = false
+    services_privileged = true
+    allowed_privileged_services = ["docker:*-dind", "docker.io/library/docker:*-dind"]
+    # Ce runner n'exécute que l'outil Docker officiel : toute autre image ou service est refusé.
+    allowed_images = ["docker:*", "docker.io/library/docker:*"]
+    allowed_services = ["docker:*-dind", "docker.io/library/docker:*-dind"]
+    # Certificats TLS partagés entre le service dind et le job (DOCKER_TLS_CERTDIR=/certs).
+    volumes = ["/certs/client", "/cache"]
+    pull_policy = ["always"]

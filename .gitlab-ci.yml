@@ -132,6 +132,9 @@ include:
 build-images:
   extends: .release
   stage: build
+  # Seul job à exiger Docker-in-Docker (service privilégié) : il tourne sur un runner dédié, réservé
+  # aux tags protégés et limité aux images Docker officielles (voir deploy/runner/README.md).
+  tags: [docker-build]
   image: docker:29.9.0
   services:
     - docker:29.9.0-dind
