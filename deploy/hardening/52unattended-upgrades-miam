@@ -1,0 +1,18 @@
+// Mises à jour automatiques de Miam'Alert : complète 50unattended-upgrades (lu avant, donc remplacé).
+// Installé dans /etc/apt/apt.conf.d/52unattended-upgrades-miam (root:root, 644).
+
+// Les correctifs du noyau et des bibliothèques de base (libc, systemd...) sont installés chaque jour,
+// mais ne s'appliquent qu'au redémarrage. Sans redémarrage, le serveur tournerait des semaines avec un
+// noyau vulnérable déjà corrigé sur le disque. Redémarrage uniquement quand il est nécessaire
+// (/var/run/reboot-required), même si quelqu'un est connecté.
+Unattended-Upgrade::Automatic-Reboot "true";
+Unattended-Upgrade::Automatic-Reboot-WithUsers "true";
+
+// Heure du serveur (UTC) : 03:30 UTC = 4 h 30 à Paris en hiver, 5 h 30 en été. Toujours après la
+// sauvegarde (3 h, Paris) et la purge de l'API (4 h, Paris), et loin de l'alerte de 9 h.
+// Interruption d'une à deux minutes : les conteneurs redémarrent seuls (restart: unless-stopped).
+Unattended-Upgrade::Automatic-Reboot-Time "03:30";
+
+// Les anciens noyaux sont retirés : /boot ne se remplit pas, et un noyau vulnérable ne peut pas être
+// choisi par erreur au démarrage.
+Unattended-Upgrade::Remove-Unused-Kernel-Packages "true";

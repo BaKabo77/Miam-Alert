@@ -1,0 +1,47 @@
+## Journal d'audit de Miam'Alert (auditd) : qui a fait quoi sur le serveur, et quand.
+## Installé dans /etc/audit/rules.d/50-miam.rules (root:root, 640), chargé par augenrules.
+## Lecture : sudo ausearch -k <clé> -i   (clés : voir les -k ci-dessous, et le README).
+##
+## Les processus des conteneurs et des tâches planifiées n'ont pas d'utilisateur de connexion
+## (auid non défini) : seuls les gestes des personnes connectées sont tracés, sans bruit.
+
+## ---------- Commandes lancées en root par une personne connectée (sudo) ----------
+-a always,exit -F arch=b64 -S execve -F euid=0 -F auid>=1000 -F auid!=unset -k root_commands
+-a always,exit -F arch=b32 -S execve -F euid=0 -F auid>=1000 -F auid!=unset -k root_commands
+
+## ---------- Comptes et droits ----------
+-w /etc/passwd -p wa -k identity
+-w /etc/group -p wa -k identity
+-w /etc/shadow -p wa -k identity
+-w /etc/gshadow -p wa -k identity
+-w /etc/sudoers -p wa -k sudoers
+-w /etc/sudoers.d/ -p wa -k sudoers
+
+## ---------- Accès SSH ----------
+-w /etc/ssh/sshd_config -p wa -k sshd_config
+-w /etc/ssh/sshd_config.d/ -p wa -k sshd_config
+-w /home/kabo/.ssh/ -p wa -k ssh_keys
+-w /home/deploy/.ssh/ -p wa -k ssh_keys
+-w /root/.ssh/ -p wa -k ssh_keys
+
+## ---------- Application : déploiement, sauvegardes, secrets ----------
+-w /usr/local/sbin/miam-deploy -p x -k deploy
+-w /usr/local/sbin/ -p wa -k admin_scripts
+-w /home/kabo/miam-alert/.env.prod -p rwa -k app_secrets
+-w /etc/miam-backup/ -p rwa -k app_secrets
+
+## ---------- Système : services, Docker, pare-feu, tâches planifiées ----------
+-w /etc/systemd/system/ -p wa -k systemd
+-w /etc/docker/ -p wa -k docker_config
+-w /etc/ufw/ -p wa -k firewall
+-w /etc/cron.d/ -p wa -k cron
+-w /etc/crontab -p wa -k cron
+-w /etc/sysctl.d/ -p wa -k sysctl
+-w /etc/apt/apt.conf.d/ -p wa -k apt_config
+
+## ---------- Modules du noyau (chargement ou retrait) ----------
+-a always,exit -F arch=b64 -S init_module,finit_module,delete_module -k kernel_modules
+
+## ---------- La configuration de l'audit lui-même ----------
+## (Pas de surveillance de /var/log/audit/ : auditd y écrit en permanence.)
+-w /etc/audit/ -p wa -k audit_config

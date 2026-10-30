@@ -57,6 +57,7 @@ Miam'Alert suit les produits alimentaires d'un foyer pour éviter le gaspillage 
 | `deploy/server/` | Script de déploiement du serveur | [deploy/server/README.md](../deploy/server/README.md) |
 | `deploy/backup/` | Sauvegardes chiffrées | [deploy/backup/README.md](../deploy/backup/README.md) |
 | `deploy/runner/` | Runner GitLab CI sur le poste de développement | [deploy/runner/README.md](../deploy/runner/README.md) |
+| `deploy/hardening/` | Durcissement du serveur : redémarrage automatique, noyau, journal d'audit, Lynis | [deploy/hardening/README.md](../deploy/hardening/README.md) |
 | `.gitlab-ci.yml` | Pipeline, publication d'une version | [docs/CI-CD.md](CI-CD.md) |
 | Toutes les parties | Aide-mémoire de toutes les commandes : installation, développement, tests, publication, production | [docs/COMMANDES.md](COMMANDES.md) |
 

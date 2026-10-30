@@ -83,6 +83,7 @@ miam-alert/             # nom technique (npm, Docker) ; nom affiché : Miam'Aler
 ├── deploy/caddy/       # reverse proxy de production (Caddyfile, image non-root)
 ├── deploy/server/      # script de déploiement restreint du serveur
 ├── deploy/backup/      # sauvegardes chiffrées
+├── deploy/hardening/   # durcissement du serveur (redémarrage auto, sysctl, auditd, Lynis)
 ├── deploy/runner/      # runner GitLab du poste de développement (modèles sans jeton)
 ├── docs/               # ARCHITECTURE.md (point d'entrée), COMMANDES.md, CI-CD.md, EVOLUTIONS.md, screenshots/
 ├── .gitlab-ci.yml      # pipeline : qualité, tests, sécurité ; sur tag : images, Trivy, déploiement

@@ -220,6 +220,16 @@ ssh -t miam-vps 'sudo systemctl start miam-backup.service'                      
 
 Restauration, clés et mise en place : [deploy/backup/README.md](../deploy/backup/README.md).
 
+### Durcissement et audit
+
+```bash
+ssh -t miam-vps 'ls /var/run/reboot-required 2>/dev/null; last -x reboot | head -3'                       # redémarrage en attente, derniers redémarrages
+ssh -t miam-vps 'sudo ausearch -k root_commands -ts today -i | grep -E "^type=EXECVE" | tail -20'    # commandes root du jour
+ssh -t miam-vps 'sudo aureport --summary'                                                             # vue d'ensemble du journal d'audit
+```
+
+Toutes les commandes : [deploy/hardening/README.md](../deploy/hardening/README.md#commandes).
+
 ### Tâches planifiées de l'API
 
 ```bash
