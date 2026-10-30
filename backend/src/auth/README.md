@@ -91,6 +91,34 @@ Les deux utilisent le même mécanisme de jetons ([`email-tokens.ts`](email-toke
 
 Événements émis (voir [common/](../common/README.md)) : `auth.register`, `auth.login.success`, `auth.login.failure` (avec l'IP, sans l'email), `auth.refresh`, `auth.refresh.reuse_detected`, `auth.logout`, `auth.password_changed`, `auth.password_change.denied`, `auth.email_verified`, `auth.email_verification.invalid`, `auth.password_reset.requested`, `auth.password_reset.invalid`, `auth.password_reset.completed`.
 
+## Commandes
+
+Variables `API`, `TOKEN` et `HOUSEHOLD` : voir [Appeler l'API en dev](../../../docs/COMMANDES.md#appeler-lapi-en-dev).
+
+```bash
+# Tests du module
+docker compose exec backend npm run test:e2e -- auth- email-verification password-reset
+
+# Créer un compte (le lien de vérification arrive dans Mailpit : http://localhost:8025)
+jq -n --arg e "$EMAIL" --arg p "$PASSWORD" '{email:$e,password:$p}' \
+  | curl -s "$API/auth/register" -H 'Content-Type: application/json' -d @-
+
+# Renouveler la session : nouveau TOKEN, cookie remplacé (rotation)
+TOKEN=$(curl -s -b /tmp/miam-cookies.txt -c /tmp/miam-cookies.txt -X POST "$API/auth/refresh" | jq -r .accessToken)
+
+# Se déconnecter (session révoquée en base) : 204
+curl -s -b /tmp/miam-cookies.txt -X POST "$API/auth/logout" -o /dev/null -w '%{http_code}\n'
+
+# Renvoyer le lien de vérification (un par minute au plus)
+curl -s -X POST "$API/auth/verify-email/resend" -H "Authorization: Bearer $TOKEN" -w '%{http_code}\n'
+
+# Mot de passe oublié : toujours 204 ; l'email (s'il y a un compte) arrive dans Mailpit
+jq -n --arg e "$EMAIL" '{email:$e}' | curl -s "$API/auth/forgot-password" -H 'Content-Type: application/json' -d @- -w '%{http_code}\n'
+
+# Journal de sécurité de l'authentification (en production : prod logs api, voir docs/COMMANDES.md)
+docker compose logs backend | grep -E 'auth\.(login|refresh|logout|password|email|register)'
+```
+
 ## Tests
 
 - e2e : `auth-register`, `auth-login`, `auth-refresh` (rotation, rejeu d'un jeton révoqué, expiration, déconnexion d'un seul appareil), `auth-guard` (token expiré, falsifié, `alg: none`), `auth-change-password`, `email-verification`, `password-reset` (pas d'énumération, limite d'un email par minute même en parallèle, usage unique, expiration).

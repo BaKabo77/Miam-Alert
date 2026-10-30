@@ -82,7 +82,19 @@ docker compose exec backend npm run test:e2e                    # tests e2e
 docker compose exec backend npx prisma migrate dev --name <nom> # nouvelle migration
 docker compose exec backend npx prisma generate                 # régénérer le client
 docker compose exec backend npm run build && docker compose exec backend npm run alerts:generate
+docker compose restart backend                                  # redémarrer (dist/ périmé, variable modifiée)
+docker compose exec backend npm audit --audit-level=high        # vulnérabilités des dépendances
 ```
+
+Lancer seulement les tests d'une partie : le filtre est un morceau du chemin des fichiers.
+
+```bash
+docker compose exec backend npm test -- src/pantry                   # unitaires d'un module
+docker compose exec backend npm run test:e2e -- pantry               # e2e dont le nom contient « pantry »
+docker compose exec backend npm run test:e2e -- auth- password-reset # plusieurs filtres
+```
+
+Chaque module a sa propre section « Commandes », avec les appels de ses routes : voir les README de `src/*/`.
 
 ## Tests
 

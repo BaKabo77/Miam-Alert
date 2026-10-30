@@ -81,6 +81,27 @@ Les identifiants du registre (`CI_REGISTRY_USER`, `CI_REGISTRY_PASSWORD`) sont f
 
 La clé SSH du job ne peut lancer **qu'une seule commande**, le script de déploiement, avec un numéro de version `vX.Y.Z` : c'est contrôlé par `authorized_keys`, par une règle sudo à expression régulière et par le script lui-même. Si cette clé fuyait, la seule action possible serait de redéployer une version déjà publiée et analysée. Détails : [deploy/server/README.md](../deploy/server/README.md).
 
+## Commandes
+
+```bash
+# Versions publiées, de la plus récente à la plus ancienne
+git tag -l 'v*' --sort=-v:refname | head
+
+# Publier une version (après les MR vers develop puis main)
+git switch main && git pull --ff-only origin main
+git tag -a vX.Y.Z -m "vX.Y.Z : résumé"
+git push origin vX.Y.Z
+
+# Vérifier avant de pousser ce que la CI va vérifier
+docker compose exec backend sh -c 'npm run lint && npx tsc --noEmit && npm test && npm run test:e2e'
+docker compose exec frontend sh -c 'npm run lint && npm run build'
+
+# Le runner du poste reçoit-il les jobs ?
+docker logs --tail 20 gitlab-runner
+```
+
+Analyse Trivy d'une image en local : voir [docs/COMMANDES.md](COMMANDES.md#qualité-et-tests).
+
 ## Pièges rencontrés
 
 - **Disque plein** sur le runner (`ENOSPC`) : vider le cache de construction de Docker Desktop (voir [deploy/runner/README.md](../deploy/runner/README.md#exploitation)).

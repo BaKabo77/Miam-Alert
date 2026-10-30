@@ -29,6 +29,22 @@ Dans les deux cas :
 | `household-access.service.ts` | `assertMember()` : le point de contrôle unique de l'appartenance |
 | `households.module.ts` | Exporte le service, importé par `PantryModule` et `AlertsModule` |
 
+## Commandes
+
+Variables `API`, `TOKEN` et `HOUSEHOLD` : voir [Appeler l'API en dev](../../../docs/COMMANDES.md#appeler-lapi-en-dev).
+
+```bash
+# Tests d'accès aux données d'un autre foyer
+docker compose exec backend npm run test:e2e -- idor alerts-api
+
+# Un foyer qui n'est pas le sien répond 404, exactement comme un foyer inexistant
+curl -s -o /dev/null -w '%{http_code}\n' "$API/households/$(cat /proc/sys/kernel/random/uuid)/pantry-items" \
+  -H "Authorization: Bearer $TOKEN"
+
+# Refus d'accès tracés
+docker compose logs backend | grep household.access_denied
+```
+
 ## Tests
 
 Les tests IDOR sont dans chaque module qui expose des données de foyer : `test/pantry-idor.e2e-spec.ts` (lister, ajouter, lire, modifier, supprimer chez un autre ; même réponse qu'un identifiant inexistant) et `test/alerts-api.e2e-spec.ts`. **Toute nouvelle route liée à un foyer doit avoir les siens.**

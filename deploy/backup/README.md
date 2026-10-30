@@ -56,7 +56,7 @@ Le dépôt ne contient **aucun secret** : la vraie configuration n'existe que su
 
 ---
 
-## Commandes courantes
+## Commandes
 
 Toutes se lancent depuis le poste de l'administrateur (`miam-vps` est l'alias SSH du serveur) et demandent le mot de passe `sudo`.
 

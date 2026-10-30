@@ -56,6 +56,27 @@ docker compose exec backend npm run alerts:generate
 | `alerts.types.ts` | Ce qui sort de l'API (ni `householdId`, ni dates techniques) |
 | `generate-alerts.cli.ts` | Génération à la demande, en ligne de commande |
 
+## Commandes
+
+Variables `API`, `TOKEN` et `HOUSEHOLD` : voir [Appeler l'API en dev](../../../docs/COMMANDES.md#appeler-lapi-en-dev).
+
+```bash
+# Tests du module
+docker compose exec backend npm test -- src/alerts
+docker compose exec backend npm run test:e2e -- alerts
+
+# Générer les alertes du jour maintenant (sans doublon si elles existent déjà)
+docker compose exec backend npm run build
+docker compose exec backend npm run alerts:generate
+
+# Alerte du jour du foyer, puis la marquer comme lue (204)
+ALERT=$(curl -s "$API/households/$HOUSEHOLD/alerts/today" -H "Authorization: Bearer $TOKEN" | tee /dev/stderr | jq -r '.alert.id')
+curl -s -X POST "$API/alerts/$ALERT/read" -H "Authorization: Bearer $TOKEN" -w '%{http_code}\n'
+
+# (serveur) La tâche de 9 h a-t-elle tourné ? (prod : voir docs/COMMANDES.md)
+prod logs --since 24h api | grep -E 'Daily alerts|Heartbeat'
+```
+
 ## Tests
 
 - Unitaires : `alert-summary.spec.ts` (classement de chaque urgence), `alerts.scheduler.spec.ts` (signal de vie en cas de succès et d'échec).

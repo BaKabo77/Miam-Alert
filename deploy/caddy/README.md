@@ -35,6 +35,32 @@ Le binaire est copié **sans « capability »** : avec `no-new-privileges`, le n
 
 Dans `docker-compose.prod.yml`, le conteneur tourne en lecture seule, sans aucune capacité, et ne démarre qu'une fois l'API et le front en bonne santé. Les certificats sont conservés dans le volume `caddy-data` : sans lui, Let's Encrypt serait sollicité à chaque redémarrage, et refuse au-delà de 5 certificats par semaine.
 
+## Commandes
+
+```bash
+# Vérifier le Caddyfile après une modification (sans rien démarrer)
+docker run --rm -e DOMAIN=example.com -v "$PWD/deploy/caddy/Caddyfile:/etc/caddy/Caddyfile:ro" \
+  caddy:2.11.7-alpine caddy validate --config /etc/caddy/Caddyfile --adapter caddyfile
+
+# Construire l'image et l'analyser comme la CI
+docker build -t miam-test/proxy deploy/caddy
+docker run --rm -v /var/run/docker.sock:/var/run/docker.sock aquasec/trivy:0.75.0 \
+  image --severity HIGH,CRITICAL --ignore-unfixed miam-test/proxy
+
+# En-têtes servis en production (HSTS, absence de Server)
+curl -sI https://miam-alert.fr | grep -iE '^(HTTP|strict-transport|server)'
+
+# Dates de validité du certificat
+echo | openssl s_client -connect miam-alert.fr:443 -servername miam-alert.fr 2>/dev/null | openssl x509 -noout -dates
+```
+
+**(serveur)** (`prod` : voir [docs/COMMANDES.md](../../docs/COMMANDES.md#production)) :
+
+```bash
+prod logs --tail 100 proxy    # journaux de Caddy (certificats, erreurs de connexion vers web ou api)
+prod restart proxy            # pas d'API d'administration : un changement de configuration demande un redémarrage
+```
+
 ## Mettre à jour Caddy
 
 1. Changer les versions dans le `Dockerfile` (Go, xcaddy, Caddy, image finale), et ajuster ou retirer les `--replace` devenus inutiles.

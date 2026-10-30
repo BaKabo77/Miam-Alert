@@ -62,6 +62,29 @@ Ajouter un événement : l'ajouter à `SecurityEvent`, puis appeler `this.securi
 
 `sendHeartbeat(url, 'success' | 'fail')` prévient un service comme healthchecks.io qu'une tâche planifiée s'est bien (ou mal) déroulée. Il ne lève jamais d'erreur : la surveillance ne doit pas faire échouer la tâche surveillée. L'URL n'est jamais journalisée, car elle contient l'identifiant secret du contrôle.
 
+## Commandes
+
+```bash
+# Tests des briques transverses et de la configuration
+docker compose exec backend npm test -- src/common src/config
+docker compose exec backend npm run test:e2e -- validation throttling exceptions security-logs
+
+# État de l'API (public)
+curl -s http://localhost:3000/health
+
+# Champ inconnu (mass assignment) : 400 avec le nom du champ refusé
+curl -s http://localhost:3000/auth/login -H 'Content-Type: application/json' \
+  -d '{"email":"a@b.fr","password":"x","role":"admin"}' | jq .message
+
+# Limite de débit : les 10 premiers passent (400), puis 429.
+# Attention : bloque la connexion depuis ce poste pendant une minute.
+for i in $(seq 1 12); do curl -s -o /dev/null -w '%{http_code} ' http://localhost:3000/auth/login \
+  -H 'Content-Type: application/json' -d '{}'; done; echo
+
+# Tous les événements de sécurité (dev ; serveur : prod logs api | grep …)
+docker compose logs backend | grep -E 'auth\.|rate_limit\.|household\.|account\.'
+```
+
 ## Tests
 
 - Unitaires : `heartbeat.spec.ts`.

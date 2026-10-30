@@ -43,6 +43,25 @@ Sans ces enregistrements, les emails finissent en courrier indésirable.
    Test.createTestingModule({ imports: [AppModule] }).overrideProvider(Mailer).useValue(fakeMailer)
    ```
 
+## Commandes
+
+```bash
+# Emails capturés en dev : interface web, ou en ligne de commande
+xdg-open http://localhost:8025
+curl -s http://localhost:8025/api/v1/messages | jq '.messages[] | {to: .To[0].Address, subject: .Subject}'
+
+# Tests des parcours qui envoient des emails
+docker compose exec backend npm run test:e2e -- email-verification password-reset
+
+# Échecs d'envoi (dev ; en production : prod logs api, voir docs/COMMANDES.md)
+docker compose logs backend | grep -i 'email not sent'
+
+# Enregistrements DNS d'authentification du domaine
+dig +short TXT miam-alert.fr | grep spf
+dig +short TXT _dmarc.miam-alert.fr
+dig +short CNAME brevo1._domainkey.miam-alert.fr
+```
+
 ## À savoir
 
 - Éviter de créer en production des comptes de test avec des adresses inexistantes : les emails rejetés (*bounces*) nuisent à la réputation d'un domaine récent.

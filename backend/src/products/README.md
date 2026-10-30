@@ -52,6 +52,29 @@ Ajouter une règle : l'insérer au bon endroit dans `RULES`, puis ajouter un cas
 | `shelf-life.ts` | Durées de conservation par catégorie |
 | `products.types.ts` | `ProductData` (donnée nettoyée) et `ProductResponse` (ce qui sort) |
 
+## Commandes
+
+Variables `API`, `TOKEN` et `HOUSEHOLD` : voir [Appeler l'API en dev](../../../docs/COMMANDES.md#appeler-lapi-en-dev).
+
+```bash
+# Tests du module
+docker compose exec backend npm test -- src/products
+docker compose exec backend npm run test:e2e -- products pantry-product
+
+# Chercher un produit : appelle Open Food Facts la première fois, puis sert le cache
+curl -s "$API/products/3017620422003" -H "Authorization: Bearer $TOKEN" | jq
+
+# Code-barres invalide (mauvaise clé de contrôle) : 400, sans appel externe
+curl -s -o /dev/null -w '%{http_code}\n' "$API/products/3017620422004" -H "Authorization: Bearer $TOKEN"
+
+# Contenu du cache
+docker compose exec db sh -c 'psql -U "$POSTGRES_USER" -d "$POSTGRES_DB" \
+  -c "SELECT barcode, name, category FROM \"Product\" ORDER BY \"createdAt\" DESC LIMIT 10"'
+
+# Open Food Facts indisponible ou lent
+docker compose logs backend | grep 'Open Food Facts unavailable'
+```
+
 ## Tests
 
 - Unitaires : `ean.spec.ts`, `open-food-facts.mapper.spec.ts` (types inattendus, caractères de contrôle, image en HTTP, d'un autre domaine, d'un domaine imitant celui d'Open Food Facts ou en `javascript:`), `open-food-facts.client.spec.ts` (réseau simulé : URL appelée, délai, produit inconnu, erreur serveur, réponse qui n'est pas du JSON), `shelf-life.spec.ts`.

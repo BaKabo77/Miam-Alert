@@ -140,6 +140,7 @@ Public visé : **quelqu'un qui découvre le projet, ou le développeur qui n'y a
 - ce que fait chaque fichier ;
 - les choix importants, notamment de sécurité, et leur raison ;
 - où sont les tests ;
+- une section **« Commandes »** : les commandes propres à cette partie (tests ciblés, appels de ses routes avec `curl`, vérifications, exploitation en production), chacune essayée avant d'être écrite ;
 - les pièges et ce qu'il faut savoir pour la modifier.
 
 Règles :

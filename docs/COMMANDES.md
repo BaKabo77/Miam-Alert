@@ -97,6 +97,25 @@ docker run --rm -v /var/run/docker.sock:/var/run/docker.sock aquasec/trivy:0.75.
   image --severity HIGH,CRITICAL --ignore-unfixed miam-test/api
 ```
 
+## Appeler l'API en dev
+
+Pour tester une route à la main (outils : `curl` et `jq`). D'abord, un compte : créé dans l'application (http://localhost:5173) ou par `POST /auth/register` (voir [auth/](../backend/src/auth/README.md#commandes)). Puis, dans le terminal :
+
+```bash
+API=http://localhost:3000
+read -rp 'Email : ' EMAIL; read -rsp 'Mot de passe : ' PASSWORD; echo   # saisie masquée, absente de l'historique
+TOKEN=$(jq -n --arg e "$EMAIL" --arg p "$PASSWORD" '{email:$e,password:$p}' \
+  | curl -s -c /tmp/miam-cookies.txt "$API/auth/login" -H 'Content-Type: application/json' -d @- | jq -r .accessToken)
+HOUSEHOLD=$(curl -s "$API/me" -H "Authorization: Bearer $TOKEN" | jq -r '.households[0].id')
+```
+
+- `TOKEN` est valable 15 minutes : relancer la ligne `TOKEN=…` ensuite.
+- Le cookie de session est gardé dans `/tmp/miam-cookies.txt` (pour `/auth/refresh` et `/auth/logout`).
+- `jq -n` construit le JSON : un mot de passe contenant des guillemets ne casse pas la requête.
+- Les limites de débit s'appliquent aussi en dev (10 requêtes par minute sur `/auth/*`).
+
+Chaque README de module donne ensuite les appels de ses routes, dans sa section « Commandes ».
+
 ## Dépendances
 
 ```bash

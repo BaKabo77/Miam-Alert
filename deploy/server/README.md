@@ -75,3 +75,27 @@ rm /tmp/miam-deploy.sh /tmp/sudoers-miam-deploy
 - **Publier** : tag `vX.Y.Z` sur `main`, puis bouton « play » du job `deploy-production` dans le pipeline du tag.
 - **Revenir en arrière** : relancer le job `deploy-production` du pipeline de la version précédente (*Build → Pipelines*, ou *Operate → Environments → production*).
 - **Déploiement manuel de secours** (si GitLab est indisponible) : `ssh -t miam-vps 'sudo /usr/local/sbin/miam-deploy vX.Y.Z'`, ou construction locale sur le serveur (voir l'en-tête de `docker-compose.prod.yml`).
+
+## Commandes
+
+```bash
+# Déployer une version à la main (secours, si GitLab est indisponible)
+ssh -t miam-vps 'sudo /usr/local/sbin/miam-deploy vX.Y.Z'
+
+# Version des fichiers en place sur le serveur
+ssh miam-vps 'git -C ~/miam-alert describe --tags'
+
+# Vérifier en ligne
+curl -s https://api.miam-alert.fr/health
+```
+
+**(serveur)** Vérifier l'installation :
+
+```bash
+sudo visudo -cf /etc/sudoers.d/miam-deploy                # règle sudo valide
+sudo ssh-keygen -lf /home/deploy/.ssh/authorized_keys     # empreinte de la clé autorisée pour le job
+sudo test -f /root/.docker/config.json && echo "registre : connecté"
+sudo journalctl _COMM=sudo --since today | grep miam-deploy   # déploiements lancés aujourd'hui
+```
+
+Le journal d'un déploiement lancé par GitLab est dans le job `deploy-production` du pipeline.

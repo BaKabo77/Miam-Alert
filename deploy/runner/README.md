@@ -93,3 +93,16 @@ docker run --rm -v gitlab-runner-config:/etc/gitlab-runner alpine:3.24 \
 - **Faire de la place** : un job qui échoue avec `ENOSPC` (« no space left on device ») signale le disque virtuel de Docker Desktop plein. `docker system df` montre ce qui l'occupe. Le cache de construction se vide sans risque : `docker builder prune -f`. Les caches des jobs sont dans des volumes `runner-…`, à supprimer quand le runner ne tourne pas : `docker volume ls -q -f name=runner- | xargs -r docker volume rm`. Prévoir au moins 32 Go de disque pour Docker Desktop (*Settings → Resources → Advanced*).
 - **Poste indisponible et pipeline urgent** : réactiver temporairement les runners partagés (cela consomme des minutes). `build-images` n'y tournera pas, à cause de son tag `docker-build`.
 - **Révoquer** (poste perdu ou compromis) : supprimer les deux runners dans *Settings → CI/CD → Runners*. Leurs jetons deviennent immédiatement invalides.
+
+## Commandes
+
+```bash
+docker ps --filter name=gitlab-runner --format '{{.Names}} {{.Status}}'   # le runner tourne-t-il ?
+docker logs -f gitlab-runner                     # jobs reçus et terminés (sans les jetons)
+docker start gitlab-runner                       # le relancer après un arrêt
+docker restart gitlab-runner                     # le redémarrer
+docker system df                                 # place occupée par Docker
+docker builder prune -f                          # vider le cache de construction (disque plein)
+```
+
+Mettre à jour la version du runner : changer la version dans l'étape 1 de ce README, puis `docker rm -f gitlab-runner` et relancer l'étape 1 (la configuration est conservée dans le volume). Ne jamais lancer `gitlab-runner list`, qui affiche les jetons.

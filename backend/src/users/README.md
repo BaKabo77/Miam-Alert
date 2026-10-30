@@ -48,6 +48,29 @@ Les données disparaissent ensuite des sauvegardes au bout de 30 jours au plus (
 | `dto/update-me.dto.ts` | Prénom et nom, effaçables |
 | `dto/delete-me.dto.ts` | Mot de passe de confirmation |
 
+## Commandes
+
+Variables `API`, `TOKEN` et `HOUSEHOLD` : voir [Appeler l'API en dev](../../../docs/COMMANDES.md#appeler-lapi-en-dev).
+
+```bash
+# Tests du module (me, me-export, me-delete)
+docker compose exec backend npm run test:e2e -- test/me
+
+# Profil
+curl -s "$API/me" -H "Authorization: Bearer $TOKEN" | jq
+
+# Modifier le prénom, effacer le nom
+curl -s -X PATCH "$API/me" -H "Authorization: Bearer $TOKEN" -H 'Content-Type: application/json' \
+  -d '{"firstName":"Marie","lastName":null}' | jq
+
+# Export RGPD dans un fichier (données personnelles : le supprimer après lecture)
+curl -s "$API/me/export" -H "Authorization: Bearer $TOKEN" -o export.json && jq 'keys' export.json && rm export.json
+
+# Supprimer le compte (irréversible) : 204, ou 403 si le mot de passe est faux
+jq -n --arg p "$PASSWORD" '{password:$p}' \
+  | curl -s -X DELETE "$API/me" -H "Authorization: Bearer $TOKEN" -H 'Content-Type: application/json' -d @- -w '%{http_code}\n'
+```
+
 ## Tests
 
 e2e : `me` (profil, noms acceptés et refusés, effacement), `me-export` (contenu complet, absence de champs sensibles, `no-store`, limite de débit), `me-delete` (mauvais mot de passe, foyers et données supprimés, sessions coupées).

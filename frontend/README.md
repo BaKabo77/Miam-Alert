@@ -107,9 +107,21 @@ Le HTTPS et le HSTS sont gérés par Caddy, devant (voir [deploy/caddy/](../depl
 Liste complète : [docs/COMMANDES.md](../docs/COMMANDES.md).
 
 ```bash
-docker compose up -d frontend           # serveur de dev Vite sur http://localhost:5173
-docker compose exec frontend npm run lint
-docker compose exec frontend npm run build
+docker compose up -d frontend                      # serveur de dev Vite sur http://localhost:5173
+docker compose logs -f frontend                    # journaux de Vite
+docker compose exec frontend npm run lint          # oxlint
+docker compose exec frontend npm run build         # compilation TypeScript + build de production
+docker compose exec frontend npm audit --audit-level=high
+docker compose exec frontend npm install <paquet>  # ajouter une dépendance
+```
+
+Essayer l'image de **production** en local (Nginx, CSP, cache), sur http://localhost:8081 :
+
+```bash
+docker build --build-arg VITE_API_URL=http://localhost:3000 -t miam-test/web frontend
+docker run --rm -d --name miam-test-web -p 127.0.0.1:8081:8080 miam-test/web
+curl -sI http://localhost:8081/ | grep -iE 'content-security-policy|x-frame|cache-control'
+docker rm -f miam-test-web
 ```
 
 Le serveur de dev est sur le port **5173 fixe** : c'est l'origine autorisée par le CORS de l'API.

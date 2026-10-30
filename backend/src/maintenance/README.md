@@ -39,6 +39,24 @@ La sauvegarde de la base a lieu à 3 h (voir [deploy/backup/](../../../deploy/ba
 | `purge.scheduler.ts` | Déclenchement chaque nuit à 4 h |
 | `maintenance.module.ts` | Déclaration du module |
 
+## Commandes
+
+```bash
+# Tests de la purge (chaque délai, juste avant et juste après)
+docker compose exec backend npm run test:e2e -- data-purge
+
+# Dernières purges (dev ; serveur : prod logs --since 48h api | grep 'Purge:')
+docker compose logs backend | grep 'Purge:'
+
+# Ce que la prochaine purge supprimera (dev)
+docker compose exec db sh -c 'psql -U "$POSTGRES_USER" -d "$POSTGRES_DB" -c "
+  SELECT (SELECT count(*) FROM \"RefreshToken\" WHERE \"expiresAt\" < now() - interval '"'"'30 days'"'"') AS sessions,
+         (SELECT count(*) FROM \"EmailToken\" WHERE \"usedAt\" < now() - interval '"'"'30 days'"'"' OR \"expiresAt\" < now() - interval '"'"'30 days'"'"') AS liens,
+         (SELECT count(*) FROM \"Alert\" WHERE date < current_date - 90) AS alertes"'
+```
+
+La purge n'a pas de commande pour la lancer à la main : elle tourne chaque nuit à 4 h.
+
 ## Tests
 
 e2e : `data-purge` (chaque délai, testé juste avant et juste après ; une session révoquée mais encore valable est conservée ; comptes, foyers et inventaire jamais touchés).

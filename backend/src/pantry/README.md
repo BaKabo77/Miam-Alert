@@ -62,6 +62,31 @@ Une date de péremption n'a pas d'heure. Elle circule en `YYYY-MM-DD` et est sto
 | `dates.ts` | Dates sans heure |
 | `dto/` | Création, modification partielle, filtres de la liste |
 
+## Commandes
+
+Variables `API`, `TOKEN` et `HOUSEHOLD` : voir [Appeler l'API en dev](../../../docs/COMMANDES.md#appeler-lapi-en-dev).
+
+```bash
+# Tests du module
+docker compose exec backend npm test -- src/pantry
+docker compose exec backend npm run test:e2e -- pantry
+
+# Ajouter un article qui périme dans 3 jours ; ITEM garde son id pour la suite
+ITEM=$(curl -s "$API/households/$HOUSEHOLD/pantry-items" -H "Authorization: Bearer $TOKEN" -H 'Content-Type: application/json' \
+  -d "{\"name\":\"Yaourts\",\"quantity\":4,\"expiryDate\":\"$(date -d '+3 days' +%F)\",\"expiryType\":\"DLC\"}" | jq -r .id)
+
+# Inventaire actif, trié par urgence
+curl -s "$API/households/$HOUSEHOLD/pantry-items?pageSize=100" -H "Authorization: Bearer $TOKEN" \
+  | jq '.items[] | {name, expiryDate, expiryType, urgency, daysLeft}'
+
+# Marquer consommé (aussi : WASTED, FROZEN), puis voir l'historique
+curl -s -X PATCH "$API/pantry-items/$ITEM" -H "Authorization: Bearer $TOKEN" -H 'Content-Type: application/json' -d '{"status":"CONSUMED"}' | jq
+curl -s "$API/households/$HOUSEHOLD/pantry-items?status=CONSUMED" -H "Authorization: Bearer $TOKEN" | jq '.total'
+
+# Supprimer : 204
+curl -s -X DELETE "$API/pantry-items/$ITEM" -H "Authorization: Bearer $TOKEN" -w '%{http_code}\n'
+```
+
 ## Tests
 
 - Unitaires : `urgency.spec.ts` (chaque seuil, DLC et DDM).

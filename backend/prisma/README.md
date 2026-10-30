@@ -71,6 +71,33 @@ Règles d'usage :
 
 En production, les migrations sont appliquées par le conteneur `migrate` **avant** le démarrage de l'API (`prisma migrate deploy`) : si elles échouent, l'API ne démarre pas sur un schéma qui ne lui correspond pas.
 
+## Commandes
+
+Toutes dans le conteneur, pour que l'hôte `db` soit résolu.
+
+```bash
+docker compose exec backend npx prisma migrate dev --name <nom>   # nouvelle migration (après modification du schéma)
+docker compose exec backend npx prisma generate                  # régénérer le client
+docker compose exec backend npx prisma migrate status            # migrations appliquées ou en attente
+docker compose exec backend npx prisma validate                  # vérifier le schéma
+docker compose exec backend npx prisma format                    # mettre en forme schema.prisma
+
+# Console SQL de la base de dev
+docker compose exec db sh -c 'psql -U "$POSTGRES_USER" -d "$POSTGRES_DB"'
+
+# Interface web : Adminer, http://localhost:8080 (système PostgreSQL, serveur db)
+```
+
+⚠️ `docker compose exec backend npx prisma migrate reset` **efface la base de dev** puis réapplique toutes les migrations.
+
+**(serveur)** Console SQL de production, en lecture et avec prudence (`prod` : voir [docs/COMMANDES.md](../../docs/COMMANDES.md#production)) :
+
+```bash
+prod exec db sh -c 'psql -U "$POSTGRES_USER" -d "$POSTGRES_DB"'
+```
+
+`prisma studio` n'est pas utilisable : son port n'est pas publié par `docker-compose.yml`.
+
 ## Pièges
 
 - Une migration déjà appliquée (en prod ou sur une autre branche) **ne se modifie jamais** : on en crée une nouvelle.
