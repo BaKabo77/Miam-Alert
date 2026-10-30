@@ -3,6 +3,7 @@ import type { Paginated } from '../common/pagination.js';
 import { Prisma } from '../generated/prisma/client.js';
 import { HouseholdAccessService } from '../households/household-access.service.js';
 import { PrismaService } from '../prisma/prisma.service.js';
+import { matchIngredient } from '../recipes/ingredient-matcher.js';
 import { parseDateOnly, todayUtc } from './dates.js';
 import { CreatePantryItemDto } from './dto/create-pantry-item.dto.js';
 import { ListPantryItemsQuery } from './dto/list-pantry-items.query.js';
@@ -24,15 +25,15 @@ export class PantryService {
   ): Promise<PantryItemResponse> {
     await this.householdAccess.assertMember(userId, householdId);
 
-    if (dto.productId !== undefined) {
-      await this.assertProductExists(dto.productId);
-    }
+    const categories = dto.productId === undefined ? [] : await this.productCategories(dto.productId);
 
     const item = await this.prisma.pantryItem.create({
       data: {
         householdId,
         productId: dto.productId,
         name: dto.name,
+        // Ingrédient reconnu par le serveur (fiche produit, sinon nom) : sert aux recettes.
+        ingredientKey: matchIngredient({ name: dto.name, categories }),
         quantity: dto.quantity,
         unit: dto.unit,
         expiryDate: parseDateOnly(dto.expiryDate),
@@ -91,12 +92,27 @@ export class PantryService {
     itemId: string,
     dto: UpdatePantryItemDto,
   ): Promise<PantryItemResponse> {
+    // Nouveau nom : l'ingrédient est reconnu de nouveau (la fiche produit, s'il y en a une, reste
+    // prioritaire). L'article d'un autre foyer est introuvable dès cette lecture.
+    let ingredientKey: string | null | undefined;
+    if (dto.name !== undefined) {
+      const current = await this.prisma.pantryItem.findUnique({
+        where: accessibleItem(userId, itemId),
+        select: { product: { select: { categories: true } } },
+      });
+      if (!current) {
+        throw new NotFoundException('Pantry item not found');
+      }
+      ingredientKey = matchIngredient({ name: dto.name, categories: current.product?.categories });
+    }
+
     try {
       const item = await this.prisma.pantryItem.update({
         where: accessibleItem(userId, itemId),
         // Champs recopiés un par un ; un champ absent (undefined) n'est pas modifié.
         data: {
           name: dto.name,
+          ingredientKey,
           quantity: dto.quantity,
           unit: dto.unit,
           expiryDate: dto.expiryDate === undefined ? undefined : parseDateOnly(dto.expiryDate),
@@ -121,15 +137,16 @@ export class PantryService {
 
   // Les fiches produits sont publiques et partagées : pas de contrôle de foyer ici, seulement
   // d'existence. Sans cette vérification, un id inconnu ferait échouer la clé étrangère en base
-  // (erreur 500) au lieu d'un 400 explicite.
-  private async assertProductExists(productId: string): Promise<void> {
+  // (erreur 500) au lieu d'un 400 explicite. Renvoie ses catégories (reconnaissance de l'ingrédient).
+  private async productCategories(productId: string): Promise<string[]> {
     const product = await this.prisma.product.findUnique({
       where: { id: productId },
-      select: { id: true },
+      select: { categories: true },
     });
     if (!product) {
       throw new BadRequestException('Unknown product');
     }
+    return product.categories;
   }
 }
 

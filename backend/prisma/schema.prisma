@@ -124,9 +124,16 @@ model PantryItem {
   createdAt   DateTime         @default(now())
   updatedAt   DateTime         @updatedAt
 
-  household Household @relation(fields: [householdId], references: [id], onDelete: Cascade)
+  // Ingrédient reconnu (« oeuf », « pasta »...), déterminé par le SERVEUR à partir de la fiche
+  // produit ou du nom, jamais envoyé par le client. Sert aux suggestions de recettes ; vide si
+  // l'article n'est pas reconnu.
+  ingredientKey String? @db.VarChar(50)
+
+  household  Household   @relation(fields: [householdId], references: [id], onDelete: Cascade)
   // SetNull : si une fiche produit est supprimée du cache, l'article reste dans l'inventaire.
-  product   Product?  @relation(fields: [productId], references: [id], onDelete: SetNull)
+  product    Product?    @relation(fields: [productId], references: [id], onDelete: SetNull)
+  // SetNull : un ingrédient retiré du catalogue ne supprime pas l'article.
+  ingredient Ingredient? @relation(fields: [ingredientKey], references: [key], onDelete: SetNull)
 
   // Index taillé pour la requête principale : "les articles actifs de mon foyer, par date".
   @@index([householdId, status, expiryDate])
@@ -198,4 +205,63 @@ model EmailToken {
   user User @relation(fields: [userId], references: [id], onDelete: Cascade)
 
   @@index([userId, purpose])
+}
+
+// ---------- Recettes locales (v0.7) ----------
+// Catalogue de référence défini dans le code (src/recipes/catalog/), recopié en base au démarrage
+// de l'API par RecipeCatalogSync. Ces tables ne contiennent AUCUNE donnée personnelle.
+
+// Ingrédient que l'application sait reconnaître et utiliser. La clé est un identifiant stable
+// défini dans le code (« egg », « pasta ») : catalogue public, rien à cacher, pas besoin d'UUID.
+model Ingredient {
+  key      String  @id @db.VarChar(50)
+  name     String  @db.VarChar(100)
+  // Basique du placard (sel, huile...) : jamais compté comme manquant dans une recette.
+  isStaple Boolean @default(false)
+
+  pantryItems       PantryItem[]
+  recipeIngredients RecipeIngredient[]
+}
+
+model Recipe {
+  // UUID comme partout : les futures recettes générées par IA (Premium) pourront être privées.
+  id          String   @id @default(uuid()) @db.Uuid
+  // Identifiant stable dans le code : sert à retrouver la recette lors de la synchronisation.
+  slug        String   @unique @db.VarChar(100)
+  title       String   @db.VarChar(150)
+  summary     String   @db.VarChar(300)
+  servings    Int
+  prepMinutes Int
+  cookMinutes Int
+  vegetarian  Boolean
+  steps       String[] @db.VarChar(500)
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+
+  ingredients RecipeIngredient[]
+}
+
+model RecipeIngredient {
+  recipeId      String  @db.Uuid
+  ingredientKey String  @db.VarChar(50)
+  // Texte libre affiché tel quel (« 200 g », « 1 pincée »).
+  quantity      String  @db.VarChar(50)
+  // Facultatif : la recette se fait sans ; jamais compté comme manquant.
+  optional      Boolean @default(false)
+  // Ordre d'affichage dans la recette.
+  position      Int
+
+  recipe     Recipe     @relation(fields: [recipeId], references: [id], onDelete: Cascade)
+  ingredient Ingredient @relation(fields: [ingredientKey], references: [key], onDelete: Cascade)
+
+  @@id([recipeId, ingredientKey])
+  @@index([ingredientKey])
+}
+
+// Empreinte du catalogue déjà recopié en base : au démarrage, la synchronisation ne fait rien si le
+// catalogue du code n'a pas changé.
+model CatalogVersion {
+  name      String   @id @db.VarChar(50)
+  hash      String   @db.Char(64)
+  updatedAt DateTime @updatedAt
 }
