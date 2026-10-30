@@ -293,6 +293,8 @@ Tag `v0.6.0` posé (déploiement continu), mais Trivy a bloqué le déploiement 
 
 En cours (branche `chore/local-runner`) : runner GitLab sur le poste du développeur (Docker Desktop), deux runners dans un conteneur `gitlab-runner` : `miam-pc` (jobs sans tag, non privilégié) et `miam-pc-docker-build` (protégé, tag `docker-build`, images `docker:*` seulement, seul le service dind privilégié). Runners partagés désactivés. Voir `deploy/runner/README.md`. Publication prévue en `v0.6.1`.
 
-Ensuite : Renovate, durcissement du serveur (redémarrage après mise à jour du noyau, Lynis, sysctl, auditd), puis passer DMARC en `p=quarantine` une fois les rapports propres.
+Durcissement du serveur appliqué le 2026-10-30 (`deploy/hardening/`, branche `chore/server-hardening`) : redémarrage automatique à 03:30 UTC si une mise à jour l'exige, sysctl (rp_filter strict, kptr_restrict 2, ptrace 2, BPF non privilégié interdit, kexec bloqué, aucun core dump, apport désactivé), modules dccp/sctp/rds/tipc/usb-storage interdits, SSH sans aucun transfert et LogLevel VERBOSE (00-hardening.conf désormais versionné), auditd (26 règles : commandes root des personnes, comptes, sudo, SSH, secrets, déploiement), permissions de cron et sshd_config réservées à root (dpkg-statoverride), bannière, profil Lynis des écarts acceptés. Lynis : 70 → 77+, aucun avertissement. Redémarrage contrôlé vérifié (tout se réapplique, l'application repart seule).
+
+Ensuite : Renovate ; supervision (journaux et audit envoyés hors du serveur, puis règles d'audit immuables `-e 2`) ; durcir `miam-backup.service` (sandbox systemd) ; passer DMARC en `p=quarantine` une fois les rapports propres.
 
 Mettre à jour cette section au fil de l'avancement.
