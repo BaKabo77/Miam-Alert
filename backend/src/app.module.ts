@@ -18,6 +18,7 @@ import { LoggingThrottlerGuard } from './common/logging-throttler.guard.js';
 import { UsersModule } from './users/users.module.js';
 import { PantryModule } from './pantry/pantry.module.js';
 import { ProductsModule } from './products/products.module.js';
+import { RecipesModule } from './recipes/recipes.module.js';
 
 
 @Module({
@@ -38,7 +39,8 @@ import { ProductsModule } from './products/products.module.js';
     ProductsModule,
     AlertsModule,
     MaintenanceModule,
-    PantryModule
+    PantryModule,
+    RecipesModule,
   ],
   controllers: [HealthController],
   providers: [
