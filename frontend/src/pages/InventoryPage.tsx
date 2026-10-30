@@ -6,6 +6,7 @@ import { useAuth, useHouseholdId } from '../auth/session';
 import { BasketIcon, PlusIcon, ScanIcon } from '../components/icons';
 import { fetchPantryItems, type PantryItem } from '../pantry/pantry-api';
 import { PantryItemRow } from '../pantry/PantryItemRow';
+import { RecipeTeaser } from '../recipes/RecipeTeaser';
 
 export function InventoryPage() {
   const householdId = useHouseholdId();
@@ -22,7 +23,13 @@ export function InventoryPage() {
     <>
       <div className="mb-6">
         {firstName && <p className="mb-1 text-[15px] font-semibold text-ink-600">Bonjour {firstName}</p>}
-        <h1 className="page-title">Mon inventaire</h1>
+        <div className="flex items-center justify-between gap-3">
+          <h1 className="page-title">Mon inventaire</h1>
+          {/* Saisie manuelle (produit sans code-barres) ; le scan reste l'action principale, au centre de la barre. */}
+          <Link to="/add" className="btn-secondary h-10 shrink-0 px-4 text-sm">
+            <PlusIcon className="h-4 w-4" /> Ajouter
+          </Link>
+        </div>
         <p className="page-subtitle">
           {items ? `${items.length} produit${items.length > 1 ? 's' : ''}, du plus urgent au moins urgent` : ' '}
         </p>
@@ -30,6 +37,7 @@ export function InventoryPage() {
 
       <EmailVerificationBanner />
       <AlertBanner householdId={householdId} />
+      <RecipeTeaser householdId={householdId} />
 
       {isPending && <LoadingSkeleton />}
 

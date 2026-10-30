@@ -9,6 +9,8 @@ import { LegalNoticePage } from './pages/LegalNoticePage';
 import { LoginPage } from './pages/LoginPage';
 import { PrivacyPage } from './pages/PrivacyPage';
 import { ProfilePage } from './pages/ProfilePage';
+import { RecipePage } from './pages/RecipePage';
+import { RecipesPage } from './pages/RecipesPage';
 import { RegisterPage } from './pages/RegisterPage';
 import { ResetPasswordPage } from './pages/ResetPasswordPage';
 import { VerifyEmailPage } from './pages/VerifyEmailPage';
@@ -36,6 +38,8 @@ export default function App() {
           <Route path="/" element={<InventoryPage />} />
           <Route path="/add" element={<AddItemPage />} />
           <Route path="/profile" element={<ProfilePage />} />
+          <Route path="/recipes" element={<RecipesPage />} />
+          <Route path="/recipes/:recipeId" element={<RecipePage />} />
           <Route
             path="/scan"
             element={

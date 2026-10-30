@@ -134,3 +134,40 @@ export function DownloadIcon(props: IconProps) {
     </Icon>
   );
 }
+
+// Marmite fumante : l'onglet des recettes.
+export function PotIcon(props: IconProps) {
+  return (
+    <Icon {...props}>
+      <path d="M4 11h16v2a6 6 0 0 1-6 6h-4a6 6 0 0 1-6-6z" />
+      <path d="M2 11h2M20 11h2M9 4v3M12 3v4M15 4v3" />
+    </Icon>
+  );
+}
+
+export function ClockIcon(props: IconProps) {
+  return (
+    <Icon {...props}>
+      <circle cx="12" cy="12" r="9" />
+      <path d="M12 7v5l3 2" />
+    </Icon>
+  );
+}
+
+// Feuille : recette végétarienne.
+export function LeafIcon(props: IconProps) {
+  return (
+    <Icon {...props}>
+      <path d="M5 19c0-8 6-14 14-14 0 8-6 14-14 14z" />
+      <path d="M5 19l7-7" />
+    </Icon>
+  );
+}
+
+export function ArrowLeftIcon(props: IconProps) {
+  return (
+    <Icon {...props}>
+      <path d="M15 6l-6 6 6 6" />
+    </Icon>
+  );
+}

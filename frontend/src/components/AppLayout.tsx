@@ -1,7 +1,7 @@
 import { NavLink, Outlet } from 'react-router';
 import { useAuth } from '../auth/session';
 import { initials } from './initials';
-import { ListIcon, PlusIcon, ScanIcon, UserIcon } from './icons';
+import { ListIcon, PotIcon, ScanIcon, UserIcon } from './icons';
 import { Logo } from './Logo';
 
 // Cadre commun à toutes les pages de l'application connectée : barre du haut, la page demandée
@@ -53,7 +53,8 @@ export function AppLayout() {
             </span>
             Scanner
           </NavLink>
-          <TabLink to="/add" label="Ajouter" icon={<PlusIcon />} />
+          {/* « Ajouter à la main » est sur l'inventaire et sur la page de scan. */}
+          <TabLink to="/recipes" label="Recettes" icon={<PotIcon />} />
         </div>
       </nav>
     </div>
@@ -64,7 +65,8 @@ function TabLink({ to, label, icon }: { to: string; label: string; icon: React.R
   return (
     <NavLink
       to={to}
-      end
+      // L'inventaire n'est actif que sur « / » ; Recettes l'est aussi sur la fiche d'une recette.
+      end={to === '/'}
       // NavLink sait si son lien correspond à la page affichée : on met cet onglet en avant.
       className={({ isActive }) =>
         `group flex flex-col items-center gap-1 py-2.5 text-xs font-bold transition ${

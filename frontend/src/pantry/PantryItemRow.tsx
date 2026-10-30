@@ -2,16 +2,7 @@ import { useMutation, useQueryClient } from '@tanstack/react-query';
 import type { ReactNode } from 'react';
 import { CheckIcon, SnowflakeIcon, TrashIcon } from '../components/icons';
 import { type PantryItem, type PantryItemStatus, updatePantryItemStatus } from './pantry-api';
-
-// Un style par niveau d'urgence. Record<…> oblige TypeScript à vérifier qu'aucun niveau
-// n'est oublié : si l'API en ajoute un, le code ne compilera plus tant qu'il n'est pas traité ici.
-const URGENCY_STYLES: Record<PantryItem['urgency'], { label: string; colors: string }> = {
-  EXPIRED: { label: 'Périmé', colors: 'bg-tomato-100 text-tomato-700' },
-  PAST_BEST_BEFORE: { label: 'Date dépassée', colors: 'bg-peach-100 text-peach-800' },
-  URGENT: { label: 'À consommer vite', colors: 'bg-peach-100 text-peach-800' },
-  SOON: { label: 'Cette semaine', colors: 'bg-sun-100 text-sun-800' },
-  OK: { label: 'OK', colors: 'bg-mint-100 text-mint-800' },
-};
+import { formatDaysLeft, URGENCY_STYLES } from './urgency';
 
 // Les actions proposées sur chaque article : il quitte alors l'inventaire actif.
 // (Les statuts consommé / jeté serviront aux statistiques de gaspillage.)
@@ -40,8 +31,13 @@ export function PantryItemRow({ item }: PantryItemRowProps) {
   const changeStatus = useMutation({
     mutationFn: (status: PantryItemStatus) => updatePantryItemStatus(item.id, status),
     // Une fois l'API à jour, on déclare la liste périmée : TanStack Query la recharge
-    // tout seul, et l'article disparaît de l'inventaire actif.
-    onSuccess: () => queryClient.invalidateQueries({ queryKey: ['pantry-items'] }),
+    // tout seul, et l'article disparaît de l'inventaire actif. Les idées de recettes aussi
+    // dépendent de l'inventaire.
+    onSuccess: () =>
+      Promise.all([
+        queryClient.invalidateQueries({ queryKey: ['pantry-items'] }),
+        queryClient.invalidateQueries({ queryKey: ['recipe-suggestions'] }),
+      ]),
   });
 
   return (
@@ -124,12 +120,4 @@ function formatDate(isoDate: string): string {
     month: 'short',
     year: 'numeric',
   });
-}
-
-function formatDaysLeft(daysLeft: number): string {
-  if (daysLeft < -1) return `Dépassée de ${-daysLeft} jours`;
-  if (daysLeft === -1) return 'Dépassée depuis hier';
-  if (daysLeft === 0) return "Aujourd'hui";
-  if (daysLeft === 1) return 'Demain';
-  return `Dans ${daysLeft} jours`;
 }

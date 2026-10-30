@@ -45,7 +45,10 @@ export function AddItemPage() {
   const create = useMutation({
     mutationFn: (item: NewPantryItem) => createPantryItem(householdId, item),
     onSuccess: async () => {
-      await queryClient.invalidateQueries({ queryKey: ['pantry-items'] });
+      await Promise.all([
+        queryClient.invalidateQueries({ queryKey: ['pantry-items'] }),
+        queryClient.invalidateQueries({ queryKey: ['recipe-suggestions'] }),
+      ]);
       navigate('/');
     },
   });
