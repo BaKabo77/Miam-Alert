@@ -1,0 +1,21 @@
+# Profil Lynis de Miam'Alert : les écarts acceptés, chacun justifié (registre des exceptions).
+# Installé dans /etc/lynis/custom.prf (root:root, 644), lu automatiquement par Lynis.
+#
+# On n'y déclare QUE des faux positifs et des exigences incompatibles avec Docker. Les suggestions
+# écartées par choix (port SSH, expiration des mots de passe, partitions...) restent visibles dans
+# le rapport : l'indice de Lynis doit refléter l'état réel, pas être embelli.
+
+# Modules dccp, sctp, rds et tipc bloqués par « install <module> /bin/false » (miam-modules.conf),
+# la forme recommandée par le CIS pour Ubuntu 24.04. Lynis 3.0.9 ne reconnaît que « /bin/true ».
+# Vérification manuelle : modprobe -n -v dccp  →  install /bin/false
+skip-test=NETW-3200
+
+# Ubuntu règle perf_event_paranoid à 4, plus strict que le 3 attendu par Lynis.
+skip-test=KRNL-6000:kernel.perf_event_paranoid
+
+# Docker charge des modules du noyau à la demande (réseau, overlay) : interdire tout chargement
+# après le démarrage casserait les déploiements.
+skip-test=KRNL-6000:kernel.modules_disabled
+
+# Docker fait passer le trafic entre Internet et les conteneurs : le transfert doit rester actif.
+skip-test=KRNL-6000:net.ipv4.conf.all.forwarding

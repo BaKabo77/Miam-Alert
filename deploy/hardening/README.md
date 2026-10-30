@@ -18,6 +18,8 @@ Le but est de **réduire ce qu'un attaquant peut faire** sur le serveur, et de *
 | [`miam.rules`](miam.rules) | `/etc/audit/rules.d/50-miam.rules` | Règles du journal d'audit |
 | [`issue`](issue) | `/etc/issue`, `/etc/issue.net` | Bannière légale de connexion |
 | [`fail2ban-miam.local`](fail2ban-miam.local) | `/etc/fail2ban/fail2ban.d/miam.local` | Réglage général de fail2ban |
+| [`lynis-custom.prf`](lynis-custom.prf) | `/etc/lynis/custom.prf` | Écarts acceptés par Lynis, chacun justifié |
+| aucun (commandes `dpkg-statoverride`) | `/etc/crontab`, `/etc/cron.*`, `/etc/ssh/sshd_config` | Permissions réservées à root |
 
 ## Les choix
 
@@ -31,8 +33,8 @@ Les mises à jour automatiques installent chaque jour les correctifs du noyau et
 
 ### Noyau
 Ubuntu durcit déjà beaucoup de choses (BPF non privilégié désactivé, protection des liens, ASLR…). [`99-miam-hardening.conf`](99-miam-hardening.conf) ne change que ce qui reste ; chaque ligne y est commentée :
-- **réseau** : filtrage strict de l'adresse source (paquets usurpés rejetés), aucune redirection ICMP envoyée ni acceptée, paquets aux adresses impossibles journalisés ;
-- **mémoire** : adresses du noyau masquées à tous, lecture de la mémoire d'un autre processus (`ptrace`) réservée à l'administrateur, compilateur BPF durci, pas de remplacement du noyau à chaud (`kexec`), touches « magiques » désactivées ;
+- **réseau** : filtrage strict de l'adresse source (paquets usurpés rejetés), aucune redirection ICMP envoyée ni acceptée, routage par la source refusé aussi sur les interfaces que Docker crée, paquets aux adresses impossibles journalisés ;
+- **mémoire** : adresses du noyau masquées à tous, lecture de la mémoire d'un autre processus (`ptrace`) réservée à l'administrateur, BPF interdit aux non-administrateurs et compilateur BPF durci, pas de remplacement du noyau à chaud (`kexec`), touches « magiques » désactivées ;
 - **vidages mémoire** (*core dumps*) : interdits, car ils contiennent toute la mémoire d'un processus, donc des secrets. Apport, l'outil de rapport de plantage d'Ubuntu, est désactivé : il collecte ces vidages et remplacerait le réglage.
 
 [`miam-modules.conf`](miam-modules.conf) interdit le chargement de modules dont rien ne se sert ici, et qui ont un historique de failles permettant de devenir root : protocoles réseau rares (`dccp`, `sctp`, `rds`, `tipc`) et clés USB.
@@ -71,6 +73,21 @@ Le noyau enregistre les actions sensibles, et `ausearch` permet de répondre à 
 - **Bannière** : rappelle avant la connexion que l'accès est réservé et journalisé. Elle n'arrête pas une attaque, mais facilite d'éventuelles poursuites (l'intrus ne peut pas prétendre l'ignorer).
 - **fail2ban** : déclare explicitement une valeur par défaut, pour supprimer un avertissement à chaque lancement.
 
+### Permissions
+La crontab, les dossiers `/etc/cron.*` et la configuration SSH étaient lisibles par tous les comptes. Ils révèlent les tâches planifiées et les réglages SSH à un compte non privilégié compromis. Ils sont réservés à root, comme le recommande le CIS. Les permissions sont fixées avec `dpkg-statoverride`, que dpkg respecte lors des mises à jour : une nouvelle version du paquet `cron` ne les remet pas à l'ancienne valeur (vérifié).
+
+### Les écarts acceptés par Lynis
+[`lynis-custom.prf`](lynis-custom.prf) déclare à Lynis **uniquement** ses faux positifs et ses exigences incompatibles avec Docker :
+
+| Test | Pourquoi |
+|---|---|
+| `NETW-3200` | Les modules sont bloqués par `install … /bin/false` (forme recommandée par le CIS), alors que Lynis 3.0.9 n'accepte que `/bin/true`. Contrôle manuel : `modprobe -n -v dccp` |
+| `KRNL-6000:kernel.perf_event_paranoid` | Ubuntu le règle à 4, plus strict que le 3 attendu |
+| `KRNL-6000:kernel.modules_disabled` | Docker charge des modules à la demande : tout interdire casserait les déploiements |
+| `KRNL-6000:net.ipv4.conf.all.forwarding` | Docker fait passer le trafic vers les conteneurs |
+
+Les suggestions écartées **par choix** (tableau suivant) restent visibles dans le rapport : l'indice de Lynis doit refléter l'état réel, pas être embelli.
+
 ### Les suggestions de Lynis écartées
 | Suggestion | Pourquoi |
 |---|---|
@@ -88,7 +105,7 @@ Le noyau enregistre les actions sensibles, et `ausearch` permet de répondre à 
 Depuis le poste, à la racine du dépôt :
 
 ```bash
-scp deploy/hardening/{52unattended-upgrades-miam,99-miam-hardening.conf,miam-modules.conf,90-miam-nocore.conf,00-hardening.conf,miam.rules,issue,fail2ban-miam.local} miam-vps:/tmp/
+scp deploy/hardening/{52unattended-upgrades-miam,99-miam-hardening.conf,miam-modules.conf,90-miam-nocore.conf,00-hardening.conf,miam.rules,issue,fail2ban-miam.local,lynis-custom.prf} miam-vps:/tmp/
 ssh -t miam-vps
 ```
 
@@ -173,13 +190,25 @@ sudo fail2ban-client -t && sudo systemctl restart fail2ban
 sudo fail2ban-client status sshd | tail -3                               # la prison SSH est toujours active
 ```
 
-### 6. Mesure finale et nettoyage
+### 6. Permissions et profil Lynis
+
+```bash
+sudo dpkg-statoverride --update --add root root 0600 /etc/crontab
+sudo dpkg-statoverride --update --add root root 0600 /etc/ssh/sshd_config
+for d in /etc/cron.d /etc/cron.daily /etc/cron.hourly /etc/cron.weekly /etc/cron.monthly; do
+  sudo dpkg-statoverride --update --add root root 0700 "$d"
+done
+sudo dpkg-statoverride --list                                            # les 7 permissions fixées
+sudo install -o root -g root -m 644 /tmp/lynis-custom.prf /etc/lynis/custom.prf
+```
+
+### 7. Mesure finale et nettoyage
 
 ```bash
 sudo lynis audit system --quick > /dev/null
 sudo grep -E '^(hardening_index|warning\[\]|suggestion\[\])' /var/log/lynis-report.dat
-sudo sed -n '/Performing test ID KRNL-6000/,/Performing test ID [A-Z]/p' /var/log/lynis.log | grep -iE 'different|expected' | head -20
-rm /tmp/{52unattended-upgrades-miam,99-miam-hardening.conf,miam-modules.conf,90-miam-nocore.conf,00-hardening.conf,miam.rules,issue,fail2ban-miam.local}
+sudo grep 'different value than expected' /var/log/lynis.log                 # réglages du noyau encore différents
+rm /tmp/{52unattended-upgrades-miam,99-miam-hardening.conf,miam-modules.conf,90-miam-nocore.conf,00-hardening.conf,miam.rules,issue,fail2ban-miam.local,lynis-custom.prf}
 ```
 
 ## Revenir en arrière
@@ -191,6 +220,8 @@ rm /tmp/{52unattended-upgrades-miam,99-miam-hardening.conf,miam-modules.conf,90-
 | SSH | Depuis la session restée ouverte : réinstaller la version précédente du fichier (historique Git), puis `sudo sshd -t && sudo systemctl reload ssh` |
 | Journal d'audit | `sudo rm /etc/audit/rules.d/50-miam.rules && sudo systemctl restart auditd` (ou `sudo apt remove auditd`) |
 | Bannière, fail2ban | `sudo rm /etc/fail2ban/fail2ban.d/miam.local && sudo systemctl restart fail2ban` ; `/etc/issue` : `sudo apt install --reinstall base-files` |
+| Permissions | Pour chaque chemin : `sudo dpkg-statoverride --remove <chemin>`, puis `sudo chmod 644` (fichiers) ou `755` (dossiers) |
+| Profil Lynis | `sudo rm /etc/lynis/custom.prf` |
 
 ## Commandes
 
@@ -204,6 +235,7 @@ sudo grep -i reboot /var/log/unattended-upgrades/unattended-upgrades.log | tail 
 
 # Noyau
 sysctl net.ipv4.conf.all.rp_filter kernel.kptr_restrict kernel.yama.ptrace_scope kernel.core_pattern
+/usr/sbin/modprobe -n -v dccp                                                    # « install /bin/false » : module bloqué
 sudo journalctl -k --since today | grep -i martian | tail                        # paquets aux adresses impossibles
 
 # SSH : connexions du jour, avec l'empreinte de la clé
@@ -220,6 +252,8 @@ sudo auditctl -s                                                                
 
 # Lynis (un audit tourne aussi chaque jour : lynis.timer)
 sudo lynis audit system --quick > /dev/null && sudo grep '^hardening_index' /var/log/lynis-report.dat
+sudo grep -E '^(warning|suggestion)\[\]' /var/log/lynis-report.dat                # ce qu'il reste à examiner
+sudo dpkg-statoverride --list                                                    # permissions fixées
 ```
 
 ## À savoir
