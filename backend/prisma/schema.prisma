@@ -136,7 +136,7 @@ model RefreshToken {
   id        String    @id @default(uuid()) @db.Uuid
   userId    String    @db.Uuid
   // Une "famille" = une session (une connexion). Toutes les rotations d'une même connexion
-  // partagent cet id : si un ancien token est réutilisé, on révoque toute la famille (4d).
+  // partagent cet id : si un ancien token est réutilisé, on révoque toute la famille (vol probable).
   familyId  String    @db.Uuid
   // Empreinte SHA-256 du token, jamais le token : une fuite de la base ne donne aucune session.
   tokenHash String    @unique @db.Char(64)
@@ -177,11 +177,11 @@ model Alert {
 
 enum EmailTokenPurpose {
   EMAIL_VERIFICATION
-  // Réservé au futur « mot de passe oublié » : même mécanisme, autre usage.
+  // Mot de passe oublié : même mécanisme, autre usage (un jeton de l'un ne vaut pas pour l'autre).
   PASSWORD_RESET
 }
 
-// Jeton envoyé par email (lien de vérification, plus tard de réinitialisation du mot de passe).
+// Jeton envoyé par email (lien de vérification de l'adresse ou de réinitialisation du mot de passe).
 // Comme pour les sessions, seule l'empreinte SHA-256 est stockée : une fuite de la base ne donne
 // aucun lien utilisable.
 model EmailToken {

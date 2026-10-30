@@ -31,7 +31,7 @@ export class AlertsService {
     await this.householdAccess.assertMember(userId, householdId);
 
     const alert = await this.prisma.alert.findUnique({
-      // Recherche par la clé unique (foyer, jour) : directe grâce à l'index de l'étape A.
+      // Recherche par la clé unique (foyer, jour) : directe grâce à l'index de la contrainte @@unique([householdId, date]).
       where: { householdId_date: { householdId, date: todayUtc() } },
       select: ALERT_SELECT,
     });

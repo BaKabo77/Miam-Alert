@@ -5,7 +5,7 @@ import { sendHeartbeat } from '../common/heartbeat.js';
 import { EnvironmentVariables } from '../config/env.validation.js';
 import { AlertsService } from './alerts.service.js';
 
-// Séparé du service : le calcul se teste en l'appelant directement, sans attendre 7 h du matin.
+// Séparé du service : le calcul se teste en l'appelant directement, sans attendre 9 h du matin.
 @Injectable()
 export class AlertsScheduler {
   private readonly logger = new Logger(AlertsScheduler.name);
