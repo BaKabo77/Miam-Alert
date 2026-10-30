@@ -17,14 +17,34 @@ COPY . .
 RUN DATABASE_URL=postgresql://build:build@localhost:5432/build npx prisma generate \
   && npm run build
 
-# ---------- 3. Migrations de la base (lancées une fois avant chaque déploiement) ----------
-# Contient la CLI Prisma (dépendance de développement), absente de l'image de l'API.
-FROM build AS migrate
-ENV NPM_CONFIG_UPDATE_NOTIFIER=false
-USER node
-CMD ["npx", "prisma", "migrate", "deploy"]
+# ---------- 3. Base d'exécution, sans gestionnaire de paquets ----------
+# L'API et les migrations sont lancées directement par node : les gestionnaires de paquets (npm,
+# yarn, corepack) ne servent à rien en production et figurent parmi les premières sources
+# d'alertes de sécurité (Trivy a relevé undici et brace-expansion vulnérables dans npm).
+FROM node:24-alpine AS node-runtime
+RUN rm -rf /usr/local/lib/node_modules/npm /usr/local/lib/node_modules/corepack /opt/yarn* \
+  /usr/local/bin/npm /usr/local/bin/npx /usr/local/bin/corepack /usr/local/bin/yarn /usr/local/bin/yarnpkg
 
-# ---------- 4. Dépendances de production uniquement ----------
+# ---------- 4. Dépendances des migrations ----------
+# Production + CLI Prisma : la CLI est une dépendance « pair » facultative de @prisma/client
+# (devOptional dans le lockfile), gardée par --omit=dev. Ni linter, ni compilateur NestJS, ni
+# outils de test, qui n'ont rien à faire dans une image de production.
+FROM node:24-alpine AS migrate-deps
+WORKDIR /app
+COPY package.json package-lock.json ./
+RUN npm ci --omit=dev && npm cache clean --force
+
+# ---------- 5. Migrations de la base (lancées une fois avant chaque déploiement) ----------
+FROM node-runtime AS migrate
+WORKDIR /app
+# Fichiers appartenant à root, lisibles par node : le conteneur ne peut pas modifier ses migrations.
+COPY --from=migrate-deps /app/node_modules ./node_modules
+COPY prisma.config.ts ./
+COPY prisma ./prisma
+USER node
+CMD ["node_modules/.bin/prisma", "migrate", "deploy"]
+
+# ---------- 6. Dépendances de production uniquement ----------
 FROM node:24-alpine AS prod-deps
 WORKDIR /app
 COPY package.json package-lock.json ./
@@ -36,15 +56,10 @@ RUN npm ci --omit=dev --omit=optional && npm cache clean --force
 # plateforme) : on recopie celui de la plateforme de construction depuis l'installation complète.
 COPY --from=deps /app/node_modules/@node-rs ./node_modules/@node-rs
 
-# ---------- 5. Image finale ----------
-FROM node:24-alpine AS runtime
+# ---------- 7. Image finale de l'API ----------
+FROM node-runtime AS runtime
 ENV NODE_ENV=production
 WORKDIR /app
-
-# L'API est lancée directement par node : les gestionnaires de paquets (npm, yarn, corepack)
-# ne servent à rien en production et figurent parmi les premières sources d'alertes de sécurité.
-RUN rm -rf /usr/local/lib/node_modules/npm /usr/local/lib/node_modules/corepack /opt/yarn* \
-  /usr/local/bin/npm /usr/local/bin/npx /usr/local/bin/corepack /usr/local/bin/yarn /usr/local/bin/yarnpkg
 
 COPY --from=prod-deps --chown=node:node /app/node_modules ./node_modules
 COPY --from=build --chown=node:node /app/dist ./dist
