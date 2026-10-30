@@ -211,6 +211,62 @@ sudo grep 'different value than expected' /var/log/lynis.log                 # r
 rm /tmp/{52unattended-upgrades-miam,99-miam-hardening.conf,miam-modules.conf,90-miam-nocore.conf,00-hardening.conf,miam.rules,issue,fail2ban-miam.local,lynis-custom.prf}
 ```
 
+## Vérifier que tout fonctionne
+
+On teste l'**effet** de chaque réglage, pas seulement sa présence.
+
+**Depuis le poste :**
+
+```bash
+curl -s https://api.miam-alert.fr/health                        # {"status":"ok"}
+curl -s -o /dev/null -w '%{http_code}\n' https://miam-alert.fr   # 200
+ssh -W 127.0.0.1:22 miam-vps </dev/null                         # « administratively prohibited » : tunnels refusés
+ssh -A miam-vps 'echo "[$SSH_AUTH_SOCK]"'                        # [] : agent SSH non transmis
+ssh -o PubkeyAuthentication=no miam-vps                          # « Permission denied (publickey) » : pas de mot de passe
+```
+
+Le dernier test compte comme un échec pour fail2ban : ne pas le répéter plus de deux ou trois fois de suite. Dans le navigateur : se connecter et scanner un produit (l'API doit toujours joindre Open Food Facts).
+
+**Sur le serveur :**
+
+```bash
+# Noyau
+sudo modprobe dccp; echo "code $?"                    # erreur « could not insert 'dccp' », code 1 : module bloqué
+sudo head -2 /proc/kallsyms                           # adresses à 0000000000000000, même pour root
+bash -c 'ulimit -Hc'                                  # 0 : aucun vidage mémoire
+
+# SSH : la connexion, avec l'empreinte de la clé (à comparer à : ssh-keygen -lf ~/.ssh/miam-alert-vps.pub, sur le poste)
+sudo journalctl -u ssh --since -10min | grep 'Accepted publickey' | tail -2
+
+# Journal d'audit : une modification et une lecture de secret, puis leur trace
+sudo touch /etc/ssh/sshd_config.d/00-hardening.conf
+sudo wc -c ~/miam-alert/.env.prod                     # lit le fichier, n'affiche que sa taille
+sudo ausearch -k sshd_config -ts recent -i | grep '^type=SYSCALL' | tail -1    # comm=touch, auid=kabo
+sudo ausearch -k app_secrets -ts recent -i | grep '^type=SYSCALL' | tail -1    # comm=wc, auid=kabo
+
+# Permissions
+ls -ld /etc/crontab /etc/cron.d /etc/ssh/sshd_config  # -rw------- et drwx------
+cat /etc/crontab                                      # « Permission denied » sans sudo
+
+# fail2ban
+sudo fail2ban-client status sshd
+```
+
+**Le redémarrage**, test final : il vérifie que tout se réapplique au démarrage (réglages du noyau, règles d'audit) et que l'application repart seule, comme lors d'un redémarrage automatique de nuit. Une à deux minutes d'interruption.
+
+```bash
+sudo reboot
+```
+
+Puis, depuis le poste, après deux minutes :
+
+```bash
+curl -s https://api.miam-alert.fr/health
+ssh -t miam-vps 'uptime -p; sysctl kernel.kexec_load_disabled net.ipv4.conf.default.accept_source_route kernel.core_pattern; sudo auditctl -l | wc -l; cd ~/miam-alert && sudo docker compose -f docker-compose.prod.yml --env-file .env.prod ps -a --format "{{.Service}}: {{.Status}}"'
+```
+
+Attendu : `{"status":"ok"}` ; `1`, `0`, `|/bin/false` ; `26` règles ; `db`, `api`, `web`, `proxy` en `healthy`. `migrate` reste `Exited (0)` : il ne tourne qu'au déploiement.
+
 ## Revenir en arrière
 
 | Chantier | Commande |
