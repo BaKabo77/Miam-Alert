@@ -298,6 +298,10 @@ Durcissement du serveur appliqué le 2026-10-30 (`deploy/hardening/`, branche `c
 
 Journaux hors du serveur (branche `feat/log-shipping`, `deploy/logship/`) : toutes les 15 min, journald (système, conteneurs via le pilote `journald` de Docker, audit via le greffon syslog d'auditd) exporté depuis la dernière position, gzip + age (clé publique des sauvegardes), envoyé dans un bucket B2 dédié (Object Lock Compliance 180 jours, clé en écriture seule) ; position enregistrée après succès. Journal local : 30 jours, 2 Go. Politique de confidentialité mise à jour. Clôt la `v0.6` (publication `v0.6.2`).
 
+En cours (branche `feat/local-recipes`, empilée sur `feat/log-shipping`) : recettes locales (`v0.7`). Backend fait : catalogue dans le code (`src/recipes/catalog/` : 71 ingrédients avec catégories OFF et mots-clés, 46 recettes rédigées pour le projet), recopié en base au démarrage (`RecipeCatalogSync`, empreinte dans `CatalogVersion`, une transaction) ; `PantryItem.ingredientKey` calculé par le serveur (catégorie OFF la plus précise, sinon mot-clé le plus long) ; classement par priorité (urgents sauvés, puis semaine, puis couverture, puis courses ; DLC dépassée jamais proposée) ; `RecipeProvider` + `LocalRecipeProvider` ; routes suggestions (membre du foyer) et détail. 83 tests unitaires, 194 e2e. Reste : le front (onglet Recettes, fiche, « J'ai cuisiné ça »).
+
+En attente côté serveur (fait par le développeur plus tard) : installer l'envoi des journaux (`deploy/logship/README.md`, bucket B2 + clé), puis publier `v0.6.2`.
+
 Reporté après la `v1.0` : Renovate, durcissement de `miam-backup.service`, DMARC en `p=quarantine`, règles d'audit immuables (`-e 2`), alertes sur les événements de sécurité.
 
 Mettre à jour cette section au fil de l'avancement.

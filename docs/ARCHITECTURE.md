@@ -11,7 +11,8 @@ Miam'Alert suit les produits alimentaires d'un foyer pour éviter le gaspillage 
 3. l'utilisateur confirme la date (le code-barres ne la contient pas) et son type : **DLC** (à respecter strictement) ou **DDM** (consommable après la date) ;
 4. l'inventaire est **trié par urgence** : périmé, à manger vite, cette semaine, OK ;
 5. chaque matin à 9 h, une **alerte** résume ce qui est périmé ou urgent ;
-6. l'utilisateur marque chaque produit consommé, congelé ou jeté.
+6. l'application **suggère des recettes** qui utilisent d'abord les produits les plus urgents ;
+7. l'utilisateur marque chaque produit consommé, congelé ou jeté.
 
 ## Vue d'ensemble
 
@@ -52,6 +53,7 @@ Miam'Alert suit les produits alimentaires d'un foyer pour éviter le gaspillage 
 | `backend/src/pantry/` | Inventaire et calcul de l'urgence | [pantry/README.md](../backend/src/pantry/README.md) |
 | `backend/src/products/` | Recherche par code-barres, Open Food Facts, date suggérée | [products/README.md](../backend/src/products/README.md) |
 | `backend/src/alerts/` | Alerte quotidienne de 9 h | [alerts/README.md](../backend/src/alerts/README.md) |
+| `backend/src/recipes/` | Suggestions de recettes selon l'urgence, catalogue de recettes | [recipes/README.md](../backend/src/recipes/README.md) |
 | `backend/src/mail/` | Envoi des emails | [mail/README.md](../backend/src/mail/README.md) |
 | `backend/src/maintenance/` | Purge nocturne des données devenues inutiles | [maintenance/README.md](../backend/src/maintenance/README.md) |
 | `backend/src/common/` | Briques transverses (erreurs, limites de débit, journal de sécurité…) | [common/README.md](../backend/src/common/README.md) |

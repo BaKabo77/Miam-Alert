@@ -6,6 +6,8 @@ Le modèle de données est décrit dans [`schema.prisma`](schema.prisma) ; chaqu
 
 ```
 User ──< HouseholdMember >── Household ──< PantryItem >── Product (cache Open Food Facts)
+                                              │
+                                              └──▶ Ingredient ──< RecipeIngredient >── Recipe
  │                               │
  ├──< RefreshToken (sessions)    └──< Alert (une par foyer et par jour)
  └──< EmailToken (liens envoyés par email)
@@ -17,10 +19,13 @@ User ──< HouseholdMember >── Household ──< PantryItem >── Produc
 | `Household` | Foyer : un nom | Propriétaire de l'inventaire et des alertes |
 | `HouseholdMember` | Lien utilisateur ↔ foyer, avec un rôle (`OWNER`, `MEMBER`) | Clé primaire composée : on ne peut pas être deux fois membre du même foyer. C'est la table interrogée pour tout contrôle d'accès |
 | `Product` | Fiche produit issue d'Open Food Facts : code-barres (unique), nom, marque, image, catégories, Nutri-Score | Partagée par tous les foyers (donnée publique) |
-| `PantryItem` | Article de l'inventaire : nom, quantité et unité, date et type (DLC/DDM), statut | `householdId` obligatoire ; `productId` facultatif (saisie manuelle) ; index `(householdId, status, expiryDate)` taillé pour l'inventaire trié |
+| `PantryItem` | Article de l'inventaire : nom, quantité et unité, date et type (DLC/DDM), statut, ingrédient reconnu | `householdId` obligatoire ; `productId` facultatif (saisie manuelle) ; `ingredientKey` calculé par le serveur ; index `(householdId, status, expiryDate)` taillé pour l'inventaire trié |
 | `RefreshToken` | Une ligne par refresh token émis : empreinte SHA-256, famille (= connexion), expiration, révocation | Jamais le jeton lui-même |
 | `EmailToken` | Lien de vérification ou de réinitialisation : empreinte SHA-256, usage, expiration, date d'utilisation | Usage unique |
 | `Alert` | Alerte du jour d'un foyer : deux compteurs, date de lecture | `@@unique([householdId, date])` : impossible d'en créer deux le même jour |
+| `Ingredient` | Ingrédient du catalogue (clé stable « egg », nom, basique ou non) | Catalogue public défini dans le code, recopié au démarrage (voir [recipes/](../src/recipes/README.md)) |
+| `Recipe`, `RecipeIngredient` | Recettes locales et leurs ingrédients (quantité, facultatif, ordre) | Idem ; `slug` stable, identifiant UUID |
+| `CatalogVersion` | Empreinte du catalogue déjà recopié | Évite toute écriture au démarrage si rien n'a changé |
 
 ### Conventions du schéma
 

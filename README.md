@@ -25,6 +25,7 @@ Projet personnel conçu **security by design** : chaque fonctionnalité est pens
 - **Tri par urgence** : chaque article reçoit un niveau d'urgence calculé (périmé, à consommer sous 2 jours, cette semaine…), en distinguant la **DLC** (date limite, stricte) de la **DDM** (date de durabilité minimale, indicative).
 - **Scan du code-barres** avec la caméra (ou saisie du code) : fiche produit (nom, marque, photo, Nutri-Score) récupérée sur [Open Food Facts](https://world.openfoodfacts.org) puis mise en cache ; la date est pré-remplie selon la catégorie du produit (yaourt, conserve, viande…) et reste modifiable, avec des raccourcis (+3 j, +1 sem, +1 mois).
 - **Alerte du jour** : chaque matin à 9 h, une alerte unique par foyer résume les produits périmés et à consommer d'urgence (pas une notification par produit), affichée en bandeau sur l'inventaire.
+- **Suggestions de recettes** : une quarantaine de recettes du quotidien, classées pour sauver d'abord les produits les plus urgents ; un produit à DLC dépassée n'est jamais proposé.
 - **Application installable** sur téléphone et ordinateur (PWA), pensée d'abord pour le mobile.
 
 ## Stack
@@ -66,6 +67,8 @@ Projet personnel conçu **security by design** : chaque fonctionnalité est pens
 | `GET /products/:barcode` | Connecté, 30 req/min | Fiche produit par code-barres EAN |
 | `GET /households/:householdId/alerts/today` | Membre du foyer | Alerte du jour du foyer (ou aucune) |
 | `POST /alerts/:alertId/read` | Membre du foyer de l'alerte | Marquer l'alerte comme lue |
+| `GET /households/:householdId/recipes/suggestions` | Membre du foyer | Recettes qui utilisent d'abord les produits les plus urgents (jamais un produit à DLC dépassée) |
+| `GET /recipes/:recipeId` | Connecté | Recette complète (catalogue public) |
 
 Toutes les routes exigent un access token, sauf celles marquées « Public ».
 

@@ -16,6 +16,7 @@ Un module NestJS par domaine, chacun avec son README :
 | [`src/pantry/`](src/pantry/README.md) | Inventaire, urgence, dates |
 | [`src/products/`](src/products/README.md) | Code-barres, Open Food Facts, date suggérée |
 | [`src/alerts/`](src/alerts/README.md) | Alerte quotidienne de 9 h |
+| [`src/recipes/`](src/recipes/README.md) | Suggestions de recettes, catalogue d'ingrédients et de recettes |
 | [`src/mail/`](src/mail/README.md) | Envoi d'emails (SMTP) |
 | [`src/maintenance/`](src/maintenance/README.md) | Purge nocturne |
 | [`src/common/`](src/common/README.md) | Briques transverses : erreurs, validation, limites de débit, journal de sécurité, pagination… |

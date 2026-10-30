@@ -26,6 +26,7 @@ Les identifiants de l'URL sont validés par `ParseUUIDPipe` (400 si malformés, 
 | `expiryType` | `DLC` ou `DDM` |
 | `status` | `ACTIVE`, `CONSUMED`, `WASTED`, `FROZEN` : modifiable seulement par `PATCH` |
 | `productId` | Facultatif : lien vers la fiche produit d'un article scanné. Une fiche inconnue donne 400 |
+| `ingredientKey` | **Jamais envoyé par le client** : l'ingrédient reconnu (fiche produit, sinon nom) est calculé par le serveur à la création et au renommage, pour les recettes (voir [recipes/](../recipes/README.md)) |
 
 Ni `householdId` ni `status` ne sont acceptés à la création, et `householdId` n'est jamais modifiable : un article ne peut pas être déplacé vers un autre foyer. Le `ValidationPipe` rejette ces champs (protection contre le *mass assignment*).
 
