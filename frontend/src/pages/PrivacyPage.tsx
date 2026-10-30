@@ -73,7 +73,11 @@ export function PrivacyPage() {
             Liens envoyés par email (confirmation de l'adresse, mot de passe oublié) : valables 24 heures ou 30
             minutes, puis supprimés 30 jours après avoir servi ou expiré.
           </li>
-          <li>Journal de sécurité : effacé automatiquement au-delà d'un volume limité.</li>
+          <li>
+            Journaux techniques et de sécurité (adresses IP comprises) : 30 jours sur le serveur. Une copie chiffrée,
+            impossible à modifier ou à effacer, est conservée 6 mois chez le prestataire de sauvegarde, pour pouvoir
+            enquêter sur un incident de sécurité, puis supprimée automatiquement.
+          </li>
           <li>
             Sauvegardes : 7 jours sur le serveur, 30 jours chez le prestataire de sauvegarde. Après la suppression d'un
             compte, ses données disparaissent donc des sauvegardes au plus tard 30 jours plus tard.
@@ -163,8 +167,8 @@ const PROVIDERS = [
   },
   {
     name: 'Backblaze, Inc. (États-Unis)',
-    role: "Stockage des sauvegardes, dans l'Union européenne (région EU Central).",
-    data: "Sauvegardes chiffrées sur le serveur avant leur envoi : Backblaze ne peut pas les lire, la clé n'est détenue que par l'éditeur.",
+    role: "Stockage des sauvegardes et de l'archive des journaux, dans l'Union européenne (région EU Central).",
+    data: "Sauvegardes et journaux (dont des adresses IP), chiffrés sur le serveur avant leur envoi : Backblaze ne peut pas les lire, la clé n'est détenue que par l'éditeur.",
   },
   {
     name: 'Open Food Facts (association, France)',

@@ -14,4 +14,4 @@ export const HOST = {
 };
 
 // Date de la dernière modification des textes : à mettre à jour à chaque changement de fond.
-export const LEGAL_LAST_UPDATED = '28 octobre 2026';
+export const LEGAL_LAST_UPDATED = '30 octobre 2026';
