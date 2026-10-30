@@ -15,9 +15,10 @@ src/
 ├── auth/session.tsx    # session : état, connexion, déconnexion, garde des pages privées
 ├── pages/              # une page par route
 ├── components/         # cadres de page (AppLayout, AuthLayout), logo, icônes
-├── pantry/             # inventaire : appels API, carte d'un article, calcul de dates
+├── pantry/             # inventaire : appels API, carte d'un article, dates, styles d'urgence partagés
 ├── products/           # scanner de code-barres, appel API produit
 ├── alerts/             # bandeau de l'alerte du jour
+├── recipes/            # idées de recettes : appels API, carte de suggestion, idée sur l'inventaire
 ├── profile/            # sections de la page profil
 └── legal/              # cadre et informations des pages légales
 ```
@@ -33,12 +34,14 @@ Chaque domaine a un fichier `*-api.ts` qui fait les appels et déclare les types
 | `/reset-password#token=…` | Choix du nouveau mot de passe (lien de l'email) | Publique |
 | `/verify-email#token=…` | Confirmation de l'adresse (lien de l'email) | Publique : le lien peut être ouvert sur un autre appareil |
 | `/legal`, `/privacy` | Mentions légales, politique de confidentialité | Publiques (obligation légale) |
-| `/` | Inventaire : compteurs, bandeaux (email à confirmer, alerte du jour), liste par urgence | Connecté |
+| `/` | Inventaire : compteurs, bandeaux (email à confirmer, alerte du jour, idée de recette si un produit est urgent), liste par urgence, bouton « Ajouter » | Connecté |
+| `/recipes` | Idées recettes : les 8 meilleures, puis les autres sur demande ; produits utilisés aux couleurs de l'urgence, ingrédients à acheter | Connecté |
+| `/recipes/:recipeId` | Fiche recette : ingrédients (✓ = dans l'inventaire), étapes, « J'ai cuisiné ça » (les produits cochés passent en « consommé ») | Connecté |
 | `/scan` | Scanner, ou saisie du code-barres au clavier | Connecté ; chargée à la demande (la bibliothèque de lecture est lourde) |
 | `/add` | Formulaire d'ajout, pré-rempli après un scan | Connecté |
 | `/profile` | Prénom et nom, déconnexion, mot de passe, export, suppression du compte | Connecté |
 
-Les pages connectées sont enveloppées par `<RequireAuth>` (redirection vers `/login`) et partagent `<AppLayout>` : barre du haut avec l'avatar, barre d'onglets en bas, avec le scan au centre. Toute URL inconnue renvoie vers `/`.
+Les pages connectées sont enveloppées par `<RequireAuth>` (redirection vers `/login`) et partagent `<AppLayout>` : barre du haut avec l'avatar, barre d'onglets en bas (**Inventaire, Scanner au centre, Recettes**). La saisie manuelle (`/add`) s'ouvre depuis l'inventaire et la page de scan. Toute URL inconnue renvoie vers `/`.
 
 ## Session et appels à l'API
 
@@ -65,7 +68,8 @@ Règles de sécurité :
 
 ### Les données (TanStack Query)
 
-- **Lire** : `useQuery` avec une clé, par exemple `['pantry-items', householdId]` ou `['today-alert', householdId]`. TanStack Query gère le chargement, les erreurs et le cache.
+- **Lire** : `useQuery` avec une clé, par exemple `['pantry-items', householdId]`, `['today-alert', householdId]` ou `['recipe-suggestions', householdId]`. TanStack Query gère le chargement, les erreurs et le cache. Les suggestions sont toujours demandées au maximum (20) : la page Recettes, l'idée de l'inventaire et la fiche partagent le même cache.
+- Toute modification de l'inventaire invalide **aussi** `['recipe-suggestions']` : une idée de recette ne doit jamais reposer sur un inventaire périmé.
 - **Modifier** : `useMutation`, puis `invalidateQueries` sur la clé concernée : la liste est rechargée toute seule. Le bandeau d'alerte fait une mise à jour optimiste : il disparaît tout de suite, et réapparaît si l'API refuse.
 
 ## Le scan
