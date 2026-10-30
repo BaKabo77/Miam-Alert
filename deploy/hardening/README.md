@@ -314,7 +314,7 @@ sudo dpkg-statoverride --list                                                   
 
 ## À savoir
 
-- **Limite** : un intrus devenu root pourrait effacer le journal d'audit, qui reste sur le serveur. Deux suites possibles : l'envoyer hors du serveur (supervision, `v0.6`), et rendre les règles **immuables** (`-e 2` : plus modifiables sans redémarrer), une fois vérifié pendant quelques semaines qu'elles ne sont pas trop bruyantes.
+- Le journal d'audit part toutes les 15 minutes, chiffré, vers une archive non modifiable hors du serveur ([deploy/logship/](../logship/README.md)) : un intrus devenu root ne peut plus effacer ses traces déjà envoyées. Suite possible : rendre les règles **immuables** (`-e 2` : plus modifiables sans redémarrer), une fois vérifié pendant quelques semaines qu'elles ne sont pas trop bruyantes.
 - Une alerte UptimeRobot pendant la nuit peut simplement correspondre à un redémarrage automatique : vérifier avec `last -x reboot`.
 - Les commandes Docker lancées par `miam-deploy` apparaissent dans `root_commands` avec `auid=deploy` : c'est la trace des déploiements.
 - `00-hardening.conf` contient `AllowUsers kabo deploy` : l'étape 4 de [deploy/server/README.md](../server/README.md) (ajout de `deploy`) n'est utile que sur un serveur qui n'a pas encore ce fichier.

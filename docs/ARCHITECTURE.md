@@ -31,6 +31,9 @@ Miam'Alert suit les produits alimentaires d'un foyer pour éviter le gaspillage 
                           ┌──────▼───────┐
                           │ db (Postgres)│──▶ sauvegarde chiffrée chaque nuit (Backblaze B2)
                           └──────────────┘
+
+   Journaux du serveur (système, audit, conteneurs) ──▶ archive chiffrée et non modifiable,
+   toutes les 15 minutes (Backblaze B2, 6 mois)
 ```
 
 - Le **navigateur** charge le front (fichiers statiques servis par Nginx), puis appelle l'API directement sur son sous-domaine.
@@ -58,6 +61,7 @@ Miam'Alert suit les produits alimentaires d'un foyer pour éviter le gaspillage 
 | `deploy/backup/` | Sauvegardes chiffrées | [deploy/backup/README.md](../deploy/backup/README.md) |
 | `deploy/runner/` | Runner GitLab CI sur le poste de développement | [deploy/runner/README.md](../deploy/runner/README.md) |
 | `deploy/hardening/` | Durcissement du serveur : redémarrage automatique, noyau, journal d'audit, Lynis | [deploy/hardening/README.md](../deploy/hardening/README.md) |
+| `deploy/logship/` | Envoi des journaux hors du serveur (archive chiffrée et non modifiable) | [deploy/logship/README.md](../deploy/logship/README.md) |
 | `.gitlab-ci.yml` | Pipeline, publication d'une version | [docs/CI-CD.md](CI-CD.md) |
 | Toutes les parties | Aide-mémoire de toutes les commandes : installation, développement, tests, publication, production | [docs/COMMANDES.md](COMMANDES.md) |
 

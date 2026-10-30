@@ -84,6 +84,7 @@ miam-alert/             # nom technique (npm, Docker) ; nom affiché : Miam'Aler
 ├── deploy/server/      # script de déploiement restreint du serveur
 ├── deploy/backup/      # sauvegardes chiffrées
 ├── deploy/hardening/   # durcissement du serveur (redémarrage auto, sysctl, auditd, Lynis)
+├── deploy/logship/     # envoi des journaux hors du serveur (archive B2 chiffrée, non modifiable)
 ├── deploy/runner/      # runner GitLab du poste de développement (modèles sans jeton)
 ├── docs/               # ARCHITECTURE.md (point d'entrée), COMMANDES.md, CI-CD.md, EVOLUTIONS.md, screenshots/
 ├── .gitlab-ci.yml      # pipeline : qualité, tests, sécurité ; sur tag : images, Trivy, déploiement
@@ -295,6 +296,8 @@ En cours (branche `chore/local-runner`) : runner GitLab sur le poste du dévelop
 
 Durcissement du serveur appliqué le 2026-10-30 (`deploy/hardening/`, branche `chore/server-hardening`) : redémarrage automatique à 03:30 UTC si une mise à jour l'exige, sysctl (rp_filter strict, kptr_restrict 2, ptrace 2, BPF non privilégié interdit, kexec bloqué, aucun core dump, apport désactivé), modules dccp/sctp/rds/tipc/usb-storage interdits, SSH sans aucun transfert et LogLevel VERBOSE (00-hardening.conf désormais versionné), auditd (26 règles : commandes root des personnes, comptes, sudo, SSH, secrets, déploiement), permissions de cron et sshd_config réservées à root (dpkg-statoverride), bannière, profil Lynis des écarts acceptés. Lynis : 70 → 77+, aucun avertissement. Redémarrage contrôlé vérifié (tout se réapplique, l'application repart seule).
 
-Ensuite : Renovate ; supervision (journaux et audit envoyés hors du serveur, puis règles d'audit immuables `-e 2`) ; durcir `miam-backup.service` (sandbox systemd) ; passer DMARC en `p=quarantine` une fois les rapports propres.
+Journaux hors du serveur (branche `feat/log-shipping`, `deploy/logship/`) : toutes les 15 min, journald (système, conteneurs via le pilote `journald` de Docker, audit via le greffon syslog d'auditd) exporté depuis la dernière position, gzip + age (clé publique des sauvegardes), envoyé dans un bucket B2 dédié (Object Lock Compliance 180 jours, clé en écriture seule) ; position enregistrée après succès. Journal local : 30 jours, 2 Go. Politique de confidentialité mise à jour. Clôt la `v0.6` (publication `v0.6.2`).
+
+Reporté après la `v1.0` : Renovate, durcissement de `miam-backup.service`, DMARC en `p=quarantine`, règles d'audit immuables (`-e 2`), alertes sur les événements de sécurité.
 
 Mettre à jour cette section au fil de l'avancement.

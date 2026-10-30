@@ -1,0 +1,13 @@
+# Envoi des journaux toutes les 15 minutes : au pire, un intrus pourrait effacer sur le serveur les
+# 15 dernières minutes, jamais ce qui est déjà parti.
+# Installation : /etc/systemd/system/miam-logship.timer, puis systemctl enable --now miam-logship.timer
+[Unit]
+Description=Envoi des journaux de Miam'Alert toutes les 15 minutes
+
+[Timer]
+OnCalendar=*:00/15
+RandomizedDelaySec=60
+Persistent=true
+
+[Install]
+WantedBy=timers.target

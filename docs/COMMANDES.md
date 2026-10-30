@@ -230,6 +230,15 @@ ssh -t miam-vps 'sudo aureport --summary'                                       
 
 Toutes les commandes : [deploy/hardening/README.md](../deploy/hardening/README.md#commandes).
 
+### Journaux hors du serveur
+
+```bash
+ssh -t miam-vps 'sudo journalctl -u miam-logship.service --since today --no-pager | tail -3'   # derniers envois
+ssh -t miam-vps 'sudo journalctl -t miam-alert-prod-api-1 --since -1h'                         # journaux d'un conteneur
+```
+
+Consulter l'archive depuis le poste : [deploy/logship/README.md](../deploy/logship/README.md#consulter-les-journaux-poste-de-ladministrateur).
+
 ### Tâches planifiées de l'API
 
 ```bash

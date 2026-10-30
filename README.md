@@ -116,6 +116,7 @@ Correspondance avec l'OWASP Top 10 et procédure de signalement d'une faille : v
 ### Journalisation
 - Événements de sécurité en JSON (connexions, échecs, refresh, vol de session détecté, accès refusé à un foyer, rate limit).
 - Les champs journalisables sont imposés par le typage : aucun email, mot de passe ni token ne peut y figurer, et un test le vérifie.
+- Journaux du serveur, de l'audit système et des conteneurs envoyés toutes les 15 minutes, chiffrés, vers une archive **impossible à modifier ou à effacer** pendant 6 mois : un intrus ne peut pas effacer ses traces.
 
 ### Côté navigateur
 - **Aucun token lisible par JavaScript** : l'access token reste en mémoire (jamais de `localStorage`), le refresh token est dans un cookie `HttpOnly`. Une faille XSS ne permettrait pas d'emporter la session.

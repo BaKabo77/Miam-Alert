@@ -16,12 +16,14 @@ x-hardened: &hardened
   # Interdit à un processus d'obtenir plus de droits que ceux de son lancement (setuid...).
   security_opt:
     - no-new-privileges:true
-  # Logs Docker plafonnés : sans limite, ils finiraient par remplir le disque.
+  # Logs des conteneurs dans le journal système (journald) : ils partent avec les autres journaux,
+  # chiffrés, vers une archive non modifiable hors du serveur (deploy/logship). Taille et durée de
+  # conservation locales plafonnées par journald (2 Go, 30 jours). « docker compose logs » marche
+  # toujours ; l'étiquette est le nom du conteneur (journalctl -t miam-alert-prod-api-1).
   logging:
-    driver: json-file
+    driver: journald
     options:
-      max-size: 10m
-      max-file: '3'
+      tag: '{{.Name}}'
 
 services:
   db:
