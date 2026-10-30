@@ -81,9 +81,11 @@ miam-alert/             # nom technique (npm, Docker) ; nom affiché : Miam'Aler
 │   └── src/
 ├── frontend/           # React (Vite), PWA ; Dockerfile + nginx/ pour la production
 ├── deploy/caddy/       # reverse proxy de production (Caddyfile, image non-root)
+├── deploy/server/      # script de déploiement restreint du serveur
+├── deploy/backup/      # sauvegardes chiffrées
 ├── deploy/runner/      # runner GitLab du poste de développement (modèles sans jeton)
-├── docs/screenshots/   # captures du README
-├── .gitlab-ci.yml      # pipeline de CI (qualité, tests, sécurité)
+├── docs/               # ARCHITECTURE.md (point d'entrée), CI-CD.md, EVOLUTIONS.md, screenshots/
+├── .gitlab-ci.yml      # pipeline : qualité, tests, sécurité ; sur tag : images, Trivy, déploiement
 ├── docker-compose.yml       # développement
 ├── docker-compose.prod.yml  # production
 ├── SECURITY.md
@@ -128,6 +130,24 @@ Points d'environnement à connaître :
 - Configuration via `@nestjs/config`, jamais de secret en dur.
 - Tests unitaires sur la logique métier (services), au minimum pour le tri par urgence et le score des recettes.
 - Petits commits fréquents, un sujet par commit.
+
+## Documentation de chaque partie
+
+Chaque partie de l'application a un `README.md` dans son dossier : chaque module du backend (`backend/src/<module>/`), `backend/`, `backend/prisma/`, `frontend/`, chaque dossier de `deploy/`. Le point d'entrée est `docs/ARCHITECTURE.md` : vue d'ensemble, carte de toutes les documentations, trajet d'une requête, concepts clés. La chaîne CI/CD est décrite dans `docs/CI-CD.md`.
+
+Public visé : **quelqu'un qui découvre le projet, ou le développeur qui n'y a pas touché depuis longtemps** et veut se rafraîchir la mémoire. Chaque README explique :
+- le rôle de la partie et son fonctionnement général (les parcours, les flux) ;
+- ses routes : qui y a accès et comment c'est vérifié ;
+- ce que fait chaque fichier ;
+- les choix importants, notamment de sécurité, et leur raison ;
+- où sont les tests ;
+- les pièges et ce qu'il faut savoir pour la modifier.
+
+Règles :
+- Toute modification qui change un comportement, une route, un fichier, une règle ou une commande met à jour le README de la partie concernée **dans le même commit**.
+- Une nouvelle partie (module, dossier de `deploy/`…) arrive avec son README, ajouté au tableau de `docs/ARCHITECTURE.md`.
+- La documentation décrit ce que fait **réellement** le code : vérifier dans le code (et dans les tests) chaque affirmation avant de l'écrire. Pas de chiffres qui se périment (nombre de tests).
+- En français, comme le reste de la documentation ; les noms de code restent en anglais.
 
 ## Workflow Git (GitLab)
 
@@ -213,10 +233,12 @@ Avant de considérer une fonctionnalité terminée :
 - [ ] Tests unitaires de la logique + tests e2e d'autorisation (cas « autre foyer » refusé).
 - [ ] Aucun secret, aucune donnée sensible dans le code ou les logs.
 - [ ] `npm audit` sans vulnérabilité haute ou critique.
+- [ ] README de la partie concernée à jour (voir « Documentation de chaque partie »).
 
 ### Documentation
 - Un fichier `SECURITY.md` à la racine décrit les mesures de sécurité en place et comment signaler une vulnérabilité.
 - Le README contient une section « Sécurité » résumant les choix ; `docs/EVOLUTIONS.md` liste les évolutions possibles par priorité.
+- Le fonctionnement détaillé de chaque partie est dans son propre `README.md` (voir « Documentation de chaque partie »).
 
 ## Feuille de route
 

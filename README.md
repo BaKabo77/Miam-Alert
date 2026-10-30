@@ -4,9 +4,11 @@
 
 Projet personnel conçu **security by design** : chaque fonctionnalité est pensée, codée et testée avec la sécurité en tête, en s'appuyant sur l'OWASP Top 10 et l'OWASP API Security Top 10.
 
-> **Statut : en ligne sur [miam-alert.fr](https://miam-alert.fr) (v0.4.0)** : API sécurisée, application web installable (PWA) avec scan du code-barres, alerte quotidienne, suppression du compte et export des données (RGPD), sauvegardes chiffrées. Prochaines étapes : mot de passe oublié, déploiement continu, puis recettes.
+> **Statut : en ligne sur [miam-alert.fr](https://miam-alert.fr) (v0.6.1)** : API sécurisée, application web installable (PWA) avec scan du code-barres et date suggérée, alerte quotidienne, vérification de l'email et mot de passe oublié, suppression du compte et export des données (RGPD), purge automatique, sauvegardes chiffrées, déploiement continu. Prochaines étapes : durcissement du serveur, puis recettes.
 >
 > Le développement se fait sur GitLab (CI/CD, merge requests) ; ce dépôt GitHub en est un miroir en lecture seule.
+>
+> **Documentation technique** : [docs/ARCHITECTURE.md](docs/ARCHITECTURE.md) donne la vue d'ensemble et renvoie vers le README de chaque partie.
 
 ---
 
@@ -142,8 +144,8 @@ Correspondance avec l'OWASP Top 10 et procédure de signalement d'une faille : v
 
 ## Tests
 
-- **Unitaires** (40) : calcul de l'urgence, contenu de l'alerte du jour, clé de contrôle EAN, nettoyage des données Open Food Facts, client HTTP (réseau simulé).
-- **End-to-end** (125) sur une vraie base PostgreSQL dédiée : authentification (token expiré, falsifié, `alg: none`, refresh réutilisé), validation, **tentatives d'accès aux données d'un autre foyer**, génération idempotente des alertes, rate limiting derrière un proxy (IP usurpée), absence de données sensibles dans les logs.
+- **Unitaires** : calcul de l'urgence, contenu de l'alerte du jour, clé de contrôle EAN, nettoyage des données Open Food Facts, client HTTP (réseau simulé).
+- **End-to-end** sur une vraie base PostgreSQL dédiée : authentification (token expiré, falsifié, `alg: none`, refresh réutilisé), validation, **tentatives d'accès aux données d'un autre foyer**, génération idempotente des alertes, rate limiting derrière un proxy (IP usurpée), absence de données sensibles dans les logs.
 - Aucun test ne dépend d'un service extérieur.
 - Le parcours de l'application (connexion, inventaire, ajout, scan d'un code-barres filmé) a été vérifié dans Chrome avec une caméra simulée, puis avec les images de production derrière le reverse proxy en HTTPS.
 
