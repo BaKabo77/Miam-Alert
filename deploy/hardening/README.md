@@ -6,14 +6,18 @@ Réglages du système du serveur de production (VPS IONOS, Ubuntu 24.04), en plu
 - mises à jour de sécurité automatiques ;
 - conteneurs non-root, en lecture seule, sans capacités.
 
-Le but est de **réduire ce qu'un attaquant peut faire** sur le serveur, et de **garder une trace** de ce qui s'y passe.
+Le but est de **réduire ce qu'un attaquant peut faire** sur le serveur, et de **garder une trace** de ce qui s'y passe. Les choix suivent les suggestions de **Lynis** (outil d'audit), triées une à une (voir plus bas).
 
-| Chantier | Fichier | Installé dans |
+| Fichier | Installé dans | Rôle |
 |---|---|---|
-| Redémarrage automatique après une mise à jour du noyau | [`52unattended-upgrades-miam`](52unattended-upgrades-miam) | `/etc/apt/apt.conf.d/` |
-| Réglages du noyau | [`99-miam-hardening.conf`](99-miam-hardening.conf) | `/etc/sysctl.d/` |
-| Journal d'audit (auditd) | [`miam.rules`](miam.rules) | `/etc/audit/rules.d/50-miam.rules` |
-| Mesure (Lynis) | aucun | paquet `lynis` |
+| [`52unattended-upgrades-miam`](52unattended-upgrades-miam) | `/etc/apt/apt.conf.d/` | Redémarrage automatique après une mise à jour du noyau |
+| [`99-miam-hardening.conf`](99-miam-hardening.conf) | `/etc/sysctl.d/` | Réglages du noyau (réseau, mémoire, vidages mémoire) |
+| [`miam-modules.conf`](miam-modules.conf) | `/etc/modprobe.d/` | Modules du noyau inutiles interdits de chargement |
+| [`90-miam-nocore.conf`](90-miam-nocore.conf) | `/etc/security/limits.d/` | Aucun vidage mémoire dans les sessions |
+| [`00-hardening.conf`](00-hardening.conf) | `/etc/ssh/sshd_config.d/` | Configuration SSH complète (versionnée ici depuis la v0.6) |
+| [`miam.rules`](miam.rules) | `/etc/audit/rules.d/50-miam.rules` | Règles du journal d'audit |
+| [`issue`](issue) | `/etc/issue`, `/etc/issue.net` | Bannière légale de connexion |
+| [`fail2ban-miam.local`](fail2ban-miam.local) | `/etc/fail2ban/fail2ban.d/miam.local` | Réglage général de fail2ban |
 
 ## Les choix
 
@@ -22,16 +26,28 @@ Les mises à jour automatiques installent chaque jour les correctifs du noyau et
 
 - Redémarrage **seulement quand il est nécessaire** (fichier `/var/run/reboot-required`).
 - À **03:30 UTC** (le serveur est en UTC), soit 4 h 30 à Paris en hiver et 5 h 30 en été. C'est toujours après la sauvegarde (3 h à Paris) et la purge de l'API (4 h à Paris).
-- Une à deux minutes d'interruption : Docker démarre avec le système, et les conteneurs repartent seuls (`restart: unless-stopped`). La base vérifie son état avant que l'API démarre.
+- Une à deux minutes d'interruption : Docker démarre avec le système et les conteneurs repartent seuls (`restart: unless-stopped`).
 - Un correctif installé vers 6 h UTC attend le redémarrage de la nuit suivante.
 
-### Réglages du noyau
-Ubuntu durcit déjà beaucoup de choses (BPF non privilégié désactivé, protection des liens, ASLR…). Le fichier ne change que ce qui reste ; chaque ligne y est commentée. Les principaux :
+### Noyau
+Ubuntu durcit déjà beaucoup de choses (BPF non privilégié désactivé, protection des liens, ASLR…). [`99-miam-hardening.conf`](99-miam-hardening.conf) ne change que ce qui reste ; chaque ligne y est commentée :
 - **réseau** : filtrage strict de l'adresse source (paquets usurpés rejetés), aucune redirection ICMP envoyée ni acceptée, paquets aux adresses impossibles journalisés ;
-- **noyau** : adresses mémoire masquées à tous, seul un administrateur peut lire la mémoire d'un autre processus (`ptrace`), compilateur BPF durci, pas de remplacement du noyau à chaud (`kexec`), touches « magiques » désactivées ;
-- **fichiers** : pas de vidage mémoire des programmes setuid, tubes nommés protégés dans `/tmp`.
+- **mémoire** : adresses du noyau masquées à tous, lecture de la mémoire d'un autre processus (`ptrace`) réservée à l'administrateur, compilateur BPF durci, pas de remplacement du noyau à chaud (`kexec`), touches « magiques » désactivées ;
+- **vidages mémoire** (*core dumps*) : interdits, car ils contiennent toute la mémoire d'un processus, donc des secrets. Apport, l'outil de rapport de plantage d'Ubuntu, est désactivé : il collecte ces vidages et remplacerait le réglage.
 
-⚠️ `net.ipv4.ip_forward` reste à 1 : Docker en a besoin pour faire passer le trafic vers les conteneurs. C'est pourquoi le fichier n'y touche pas.
+[`miam-modules.conf`](miam-modules.conf) interdit le chargement de modules dont rien ne se sert ici, et qui ont un historique de failles permettant de devenir root : protocoles réseau rares (`dccp`, `sctp`, `rds`, `tipc`) et clés USB.
+
+⚠️ `net.ipv4.ip_forward` reste à 1 : Docker en a besoin pour faire passer le trafic vers les conteneurs. Le fichier n'y touche pas.
+
+### SSH
+[`00-hardening.conf`](00-hardening.conf) est la configuration complète. Ce qui change par rapport à la version précédente :
+- **plus aucun transfert** (`DisableForwarding`, tunnels compris) : une clé volée ne donne plus de passage réseau vers la base, sur le réseau interne de Docker. L'accès à la base passe par `sudo docker compose exec db psql` ;
+- **journal `VERBOSE`** : l'empreinte de la clé utilisée est enregistrée à chaque connexion, ce qui permet de savoir quelle clé révoquer après un incident ;
+- deux sessions au plus par connexion ; keepalive TCP (en clair, falsifiable) remplacé par le contrôle chiffré déjà en place.
+
+Le port reste 22 : en changer serait de la sécurité par l'obscurité. Cela casserait l'empreinte connue de la CI et la config de fail2ban, et les clés suffisent.
+
+La clé de déploiement de GitLab n'est pas concernée : `authorized_keys` lui interdit déjà tout transfert (`restrict`).
 
 ### Journal d'audit (auditd)
 Le noyau enregistre les actions sensibles, et `ausearch` permet de répondre à « **qui a fait quoi, et quand** » : c'est la traçabilité attendue en environnement ISO 27001.
@@ -51,15 +67,28 @@ Le noyau enregistre les actions sensibles, et `ausearch` permet de répondre à 
 - **Taille bornée** : 10 fichiers de 50 Mo, avec rotation (au lieu de 5 × 8 Mo par défaut), pour garder plusieurs mois d'historique sans remplir le disque.
 - Le journal ne contient aucun contenu de fichier, seulement qui y a accédé.
 
-### Lynis
-Outil d'audit qui examine le système **sans rien modifier**. Il donne un indice de durcissement sur 100 et une liste de suggestions. On le lance avant les changements, pour avoir un point de départ, et après, pour mesurer le gain. Ses suggestions disent aussi ce qu'il reste d'utile à faire. Paquet des dépôts Ubuntu : signé, et mis à jour par le système.
+### Bannière et fail2ban
+- **Bannière** : rappelle avant la connexion que l'accès est réservé et journalisé. Elle n'arrête pas une attaque, mais facilite d'éventuelles poursuites (l'intrus ne peut pas prétendre l'ignorer).
+- **fail2ban** : déclare explicitement une valeur par défaut, pour supprimer un avertissement à chaque lancement.
+
+### Les suggestions de Lynis écartées
+| Suggestion | Pourquoi |
+|---|---|
+| Changer le port SSH | Sécurité par l'obscurité (voir plus haut) |
+| Expiration et complexité des mots de passe | Connexion par clé uniquement ; le seul mot de passe (sudo) n'a pas à expirer, ce que le NIST déconseille |
+| Partitions séparées, mot de passe GRUB | Inadaptés à un VPS. La console est protégée par le compte IONOS : double authentification indispensable |
+| `umask 027`, `libpam-tmpdir`, `apt-listbugs`, `apt-listchanges`, `apt-show-versions` | Peu de gain sur un serveur à un seul administrateur, sans session interactive d'installation |
+| `jail.local` pour fail2ban | La configuration est déjà dans `jail.d/sshd.local`, la méthode recommandée |
+| Comptabilité des processus, sysstat | Le journal d'audit trace déjà les commandes ; les mesures de performance viendront avec la supervision |
+| Journaux hors du serveur, contrôle d'intégrité (AIDE), détecteur de logiciels malveillants (rkhunter) | **Prévus avec la supervision** (`v0.6`) : utiles, mais demandent un service extérieur ou un suivi des alertes (rkhunter est connu pour ses faux positifs) |
+| Durcir les services systemd | À faire pour `miam-backup.service` (le seul service écrit pour le projet) |
 
 ## Installation, un chantier à la fois
 
 Depuis le poste, à la racine du dépôt :
 
 ```bash
-scp deploy/hardening/52unattended-upgrades-miam deploy/hardening/99-miam-hardening.conf deploy/hardening/miam.rules miam-vps:/tmp/
+scp deploy/hardening/{52unattended-upgrades-miam,99-miam-hardening.conf,miam-modules.conf,90-miam-nocore.conf,00-hardening.conf,miam.rules,issue,fail2ban-miam.local} miam-vps:/tmp/
 ssh -t miam-vps
 ```
 
@@ -73,7 +102,7 @@ sudo lynis audit system --quick > /dev/null
 sudo grep -E '^(hardening_index|warning\[\]|suggestion\[\])' /var/log/lynis-report.dat
 ```
 
-Noter l'indice (`hardening_index`) et garder la liste.
+Le paquet installe aussi `lynis.timer`, un audit quotidien dont le rapport est dans `/var/log/lynis-report.dat`.
 
 ### 1. Redémarrage automatique
 
@@ -82,11 +111,18 @@ sudo install -o root -g root -m 644 /tmp/52unattended-upgrades-miam /etc/apt/apt
 apt-config dump | grep -E 'Automatic-Reboot|Remove-Unused-Kernel'      # 4 lignes, Reboot "true", Time "03:30"
 ```
 
-### 2. Réglages du noyau
+### 2. Noyau
 
 ```bash
+# Apport d'abord : en s'arrêtant, il réécrit le réglage des vidages mémoire.
+sudo sed -i 's/^enabled=1/enabled=0/' /etc/default/apport
+sudo systemctl disable --now apport.service apport-autoreport.path apport-autoreport.timer apport-forward.socket
+
+sudo install -o root -g root -m 644 /tmp/miam-modules.conf /etc/modprobe.d/
+sudo install -o root -g root -m 644 /tmp/90-miam-nocore.conf /etc/security/limits.d/
 sudo install -o root -g root -m 644 /tmp/99-miam-hardening.conf /etc/sysctl.d/
 sudo sysctl -p /etc/sysctl.d/99-miam-hardening.conf                    # affiche chaque valeur appliquée
+lsmod | grep -E '^(dccp|sctp|rds|tipc|usb_storage) ' || echo "aucun module interdit chargé"
 ```
 
 Vérifier tout de suite, dans une **nouvelle** session SSH et depuis le poste :
@@ -98,7 +134,17 @@ curl -s -o /dev/null -w '%{http_code}\n' https://miam-alert.fr           # 200
 ssh -t miam-vps 'sudo docker exec miam-alert-prod-api-1 wget -q -O /dev/null https://world.openfoodfacts.org && echo "sortie Internet des conteneurs ok"'
 ```
 
-### 3. Journal d'audit
+### 3. SSH
+
+```bash
+sudo install -o root -g root -m 644 /tmp/00-hardening.conf /etc/ssh/sshd_config.d/00-hardening.conf
+sudo sshd -t && sudo systemctl reload ssh                                # sshd -t : rien n'est appliqué si la config est invalide
+sudo sshd -T | grep -E '^(allowtcpforwarding|disableforwarding|loglevel|maxsessions|tcpkeepalive|passwordauthentication) '
+```
+
+Puis, **sans fermer la session en cours**, depuis le poste : `ssh miam-vps true && echo "SSH ok"`. La connexion apparaît ensuite avec l'empreinte de la clé : `sudo journalctl -u ssh --since -5min | grep 'Accepted publickey'`.
+
+### 4. Journal d'audit
 
 ```bash
 sudo apt install -y auditd
@@ -110,21 +156,30 @@ sudo auditctl -l | wc -l                                                 # 26
 sudo auditctl -s | grep -E '^(enabled|lost)'                             # enabled 1, lost 0
 ```
 
-Si une règle est refusée, `augenrules` indique la ligne : `sudo augenrules --load`.
-
-Essai :
+Si une règle est refusée, `sudo augenrules --load` indique la ligne. Essai :
 
 ```bash
 sudo ls /etc/sudoers.d > /dev/null
 sudo ausearch -k root_commands -ts recent -i | tail -4                   # la commande ls, avec auid=kabo
 ```
 
-### 4. Mesure finale et nettoyage
+### 5. Bannière et fail2ban
+
+```bash
+sudo install -o root -g root -m 644 /tmp/issue /etc/issue
+sudo install -o root -g root -m 644 /tmp/issue /etc/issue.net
+sudo install -o root -g root -m 644 /tmp/fail2ban-miam.local /etc/fail2ban/fail2ban.d/miam.local
+sudo fail2ban-client -t && sudo systemctl restart fail2ban
+sudo fail2ban-client status sshd | tail -3                               # la prison SSH est toujours active
+```
+
+### 6. Mesure finale et nettoyage
 
 ```bash
 sudo lynis audit system --quick > /dev/null
 sudo grep -E '^(hardening_index|warning\[\]|suggestion\[\])' /var/log/lynis-report.dat
-rm /tmp/52unattended-upgrades-miam /tmp/99-miam-hardening.conf /tmp/miam.rules
+sudo sed -n '/Performing test ID KRNL-6000/,/Performing test ID [A-Z]/p' /var/log/lynis.log | grep -iE 'different|expected' | head -20
+rm /tmp/{52unattended-upgrades-miam,99-miam-hardening.conf,miam-modules.conf,90-miam-nocore.conf,00-hardening.conf,miam.rules,issue,fail2ban-miam.local}
 ```
 
 ## Revenir en arrière
@@ -132,8 +187,10 @@ rm /tmp/52unattended-upgrades-miam /tmp/99-miam-hardening.conf /tmp/miam.rules
 | Chantier | Commande |
 |---|---|
 | Redémarrage automatique | `sudo rm /etc/apt/apt.conf.d/52unattended-upgrades-miam` |
-| Réglages du noyau | `sudo rm /etc/sysctl.d/99-miam-hardening.conf && sudo sysctl --system`, puis **redémarrer** : certains réglages (`kexec_load_disabled`, et ceux qu'Ubuntu ne fixe pas) gardent leur valeur jusqu'au redémarrage |
+| Noyau | `sudo rm /etc/sysctl.d/99-miam-hardening.conf /etc/modprobe.d/miam-modules.conf /etc/security/limits.d/90-miam-nocore.conf`, puis **redémarrer** : certains réglages (`kexec_load_disabled`, et ceux qu'Ubuntu ne fixe pas) gardent leur valeur jusque-là. Apport : `enabled=1` dans `/etc/default/apport`, puis `sudo systemctl enable --now apport.service` |
+| SSH | Depuis la session restée ouverte : réinstaller la version précédente du fichier (historique Git), puis `sudo sshd -t && sudo systemctl reload ssh` |
 | Journal d'audit | `sudo rm /etc/audit/rules.d/50-miam.rules && sudo systemctl restart auditd` (ou `sudo apt remove auditd`) |
+| Bannière, fail2ban | `sudo rm /etc/fail2ban/fail2ban.d/miam.local && sudo systemctl restart fail2ban` ; `/etc/issue` : `sudo apt install --reinstall base-files` |
 
 ## Commandes
 
@@ -145,9 +202,13 @@ ls /var/run/reboot-required 2>/dev/null && cat /var/run/reboot-required.pkgs    
 last -x reboot | head -5                                                         # derniers redémarrages
 sudo grep -i reboot /var/log/unattended-upgrades/unattended-upgrades.log | tail -5
 
-# Réglages du noyau
-sysctl net.ipv4.conf.all.rp_filter kernel.kptr_restrict kernel.yama.ptrace_scope
+# Noyau
+sysctl net.ipv4.conf.all.rp_filter kernel.kptr_restrict kernel.yama.ptrace_scope kernel.core_pattern
 sudo journalctl -k --since today | grep -i martian | tail                        # paquets aux adresses impossibles
+
+# SSH : connexions du jour, avec l'empreinte de la clé
+sudo journalctl -u ssh --since today | grep -E 'Accepted publickey|Failed|Invalid user' | tail -20
+sudo fail2ban-client status sshd                                                 # adresses bannies
 
 # Journal d'audit
 sudo aureport --summary                                                          # vue d'ensemble
@@ -157,7 +218,7 @@ sudo ausearch -k app_secrets -ts today -i | grep -E 'auid=|name=' | tail        
 sudo aureport -l --failed -ts week-ago                                           # connexions échouées
 sudo auditctl -s                                                                 # état (enabled, lost, backlog)
 
-# Lynis
+# Lynis (un audit tourne aussi chaque jour : lynis.timer)
 sudo lynis audit system --quick > /dev/null && sudo grep '^hardening_index' /var/log/lynis-report.dat
 ```
 
@@ -166,3 +227,4 @@ sudo lynis audit system --quick > /dev/null && sudo grep '^hardening_index' /var
 - **Limite** : un intrus devenu root pourrait effacer le journal d'audit, qui reste sur le serveur. Deux suites possibles : l'envoyer hors du serveur (supervision, `v0.6`), et rendre les règles **immuables** (`-e 2` : plus modifiables sans redémarrer), une fois vérifié pendant quelques semaines qu'elles ne sont pas trop bruyantes.
 - Une alerte UptimeRobot pendant la nuit peut simplement correspondre à un redémarrage automatique : vérifier avec `last -x reboot`.
 - Les commandes Docker lancées par `miam-deploy` apparaissent dans `root_commands` avec `auid=deploy` : c'est la trace des déploiements.
+- `00-hardening.conf` contient `AllowUsers kabo deploy` : l'étape 4 de [deploy/server/README.md](../server/README.md) (ajout de `deploy`) n'est utile que sur un serveur qui n'a pas encore ce fichier.

@@ -1,0 +1,5 @@
+# Réglages généraux de fail2ban (les prisons sont dans /etc/fail2ban/jail.d/sshd.local).
+# Installé dans /etc/fail2ban/fail2ban.d/miam.local (root:root, 644).
+[Definition]
+# Valeur par défaut, déclarée explicitement : supprime l'avertissement « allowipv6 not defined ».
+allowipv6 = auto
