@@ -72,7 +72,7 @@ Ajouter une variable : la déclarer dans `EnvironmentVariables`, avec ses règle
 
 ## Commandes
 
-Tout se lance **dans le conteneur**, pour que l'hôte `db` soit résolu :
+Les plus courantes ci-dessous ; la liste complète est dans [docs/COMMANDES.md](../docs/COMMANDES.md). Tout se lance **dans le conteneur**, pour que l'hôte `db` soit résolu :
 
 ```bash
 docker compose logs -f backend                                  # journaux

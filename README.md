@@ -164,7 +164,7 @@ Chaque merge request déclenche un pipeline GitLab CI ; un tag de version `vX.Y.
 
 ## Lancer le projet
 
-Prérequis : Docker et Docker Compose.
+Prérequis : Docker et Docker Compose. Toutes les commandes (base de données, tests, dépendances, publication, production, dépannage) : [docs/COMMANDES.md](docs/COMMANDES.md).
 
 ```bash
 cp .env.example .env    # puis remplacer les valeurs factices (voir les commentaires du fichier)

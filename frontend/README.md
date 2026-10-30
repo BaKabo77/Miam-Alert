@@ -104,6 +104,8 @@ Le HTTPS et le HSTS sont gérés par Caddy, devant (voir [deploy/caddy/](../depl
 
 ## Commandes
 
+Liste complète : [docs/COMMANDES.md](../docs/COMMANDES.md).
+
 ```bash
 docker compose up -d frontend           # serveur de dev Vite sur http://localhost:5173
 docker compose exec frontend npm run lint

@@ -84,7 +84,7 @@ miam-alert/             # nom technique (npm, Docker) ; nom affiché : Miam'Aler
 ├── deploy/server/      # script de déploiement restreint du serveur
 ├── deploy/backup/      # sauvegardes chiffrées
 ├── deploy/runner/      # runner GitLab du poste de développement (modèles sans jeton)
-├── docs/               # ARCHITECTURE.md (point d'entrée), CI-CD.md, EVOLUTIONS.md, screenshots/
+├── docs/               # ARCHITECTURE.md (point d'entrée), COMMANDES.md, CI-CD.md, EVOLUTIONS.md, screenshots/
 ├── .gitlab-ci.yml      # pipeline : qualité, tests, sécurité ; sur tag : images, Trivy, déploiement
 ├── docker-compose.yml       # développement
 ├── docker-compose.prod.yml  # production
@@ -104,11 +104,10 @@ docker compose up -d --build          # lancer
 docker compose logs -f backend        # logs du backend
 docker compose exec backend npx prisma migrate dev --name <nom>
 docker compose exec backend npx prisma generate
-docker compose exec backend npx prisma studio
 docker compose exec backend npm run test
 ```
 
-Les commandes Prisma se lancent **dans le conteneur** pour que l'hôte `db` soit résolu.
+Les commandes Prisma se lancent **dans le conteneur** pour que l'hôte `db` soit résolu. Pour consulter la base : Adminer ou `docker compose exec db psql` (`prisma studio` est inutilisable, son port n'est pas publié). **Toutes les commandes** (dev, tests, dépendances, Git, runner, production, dépannage) sont dans `docs/COMMANDES.md`.
 
 - Backend : http://localhost:3000
 - Adminer : http://localhost:8080 (système PostgreSQL, serveur `db`)
@@ -133,7 +132,7 @@ Points d'environnement à connaître :
 
 ## Documentation de chaque partie
 
-Chaque partie de l'application a un `README.md` dans son dossier : chaque module du backend (`backend/src/<module>/`), `backend/`, `backend/prisma/`, `frontend/`, chaque dossier de `deploy/`. Le point d'entrée est `docs/ARCHITECTURE.md` : vue d'ensemble, carte de toutes les documentations, trajet d'une requête, concepts clés. La chaîne CI/CD est décrite dans `docs/CI-CD.md`.
+Chaque partie de l'application a un `README.md` dans son dossier : chaque module du backend (`backend/src/<module>/`), `backend/`, `backend/prisma/`, `frontend/`, chaque dossier de `deploy/`. Le point d'entrée est `docs/ARCHITECTURE.md` : vue d'ensemble, carte de toutes les documentations, trajet d'une requête, concepts clés. La chaîne CI/CD est décrite dans `docs/CI-CD.md`. **Toutes les commandes** importantes (installation, développement, base, tests, dépendances, Git, runner, production, dépannage) sont rassemblées dans `docs/COMMANDES.md`.
 
 Public visé : **quelqu'un qui découvre le projet, ou le développeur qui n'y a pas touché depuis longtemps** et veut se rafraîchir la mémoire. Chaque README explique :
 - le rôle de la partie et son fonctionnement général (les parcours, les flux) ;
@@ -146,6 +145,7 @@ Public visé : **quelqu'un qui découvre le projet, ou le développeur qui n'y a
 Règles :
 - Toute modification qui change un comportement, une route, un fichier, une règle ou une commande met à jour le README de la partie concernée **dans le même commit**.
 - Une nouvelle partie (module, dossier de `deploy/`…) arrive avec son README, ajouté au tableau de `docs/ARCHITECTURE.md`.
+- Une commande ajoutée, modifiée ou devenue inutile (script npm, service Docker, procédure serveur) est reportée dans `docs/COMMANDES.md` dans le même commit. Chaque commande y est vérifiée avant d'être écrite.
 - La documentation décrit ce que fait **réellement** le code : vérifier dans le code (et dans les tests) chaque affirmation avant de l'écrire. Pas de chiffres qui se périment (nombre de tests).
 - En français, comme le reste de la documentation ; les noms de code restent en anglais.
 

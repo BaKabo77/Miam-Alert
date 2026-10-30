@@ -58,6 +58,7 @@ Miam'Alert suit les produits alimentaires d'un foyer pour éviter le gaspillage 
 | `deploy/backup/` | Sauvegardes chiffrées | [deploy/backup/README.md](../deploy/backup/README.md) |
 | `deploy/runner/` | Runner GitLab CI sur le poste de développement | [deploy/runner/README.md](../deploy/runner/README.md) |
 | `.gitlab-ci.yml` | Pipeline, publication d'une version | [docs/CI-CD.md](CI-CD.md) |
+| Toutes les parties | Aide-mémoire de toutes les commandes : installation, développement, tests, publication, production | [docs/COMMANDES.md](COMMANDES.md) |
 
 Autres documents : [README.md](../README.md) (présentation, résumé des choix de sécurité), [SECURITY.md](../SECURITY.md) (mesures par risque OWASP, signalement d'une faille), [docs/EVOLUTIONS.md](EVOLUTIONS.md) (évolutions possibles), [CLAUDE.md](../CLAUDE.md) (règles du projet, état d'avancement).
 
@@ -99,7 +100,19 @@ Exemple : l'utilisateur marque un yaourt comme consommé.
 | Emails | Mailpit, http://localhost:8025 (rien ne part) | Brevo |
 | Accès | ports publiés sur `127.0.0.1` uniquement | seul Caddy est exposé (80/443) |
 
-Lancer le projet en local : voir la section « Lancer le projet » du [README](../README.md#lancer-le-projet).
+## Commandes
+
+L'essentiel pour démarrer :
+
+```bash
+cp .env.example .env                                     # puis remplir les valeurs (voir les commentaires)
+docker compose up -d --build                             # lancer l'environnement de dev
+docker compose exec backend npx prisma migrate deploy    # créer les tables
+docker compose exec backend npm test                     # tests unitaires
+docker compose exec backend npm run test:e2e             # tests e2e
+```
+
+Toutes les autres (base de données, dépendances, qualité, Git, runner, production, dépannage) : **[docs/COMMANDES.md](COMMANDES.md)**.
 
 ## Où intervenir pour…
 
