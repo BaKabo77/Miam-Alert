@@ -41,7 +41,7 @@ compose() { docker compose -f docker-compose.prod.yml --env-file .env.prod "$@";
 # Images téléchargées depuis le registre (aucune construction sur le serveur), puis lancées.
 # Les migrations de la base s'appliquent avant l'API (service migrate, dépendance du compose).
 log "téléchargement des images $VERSION"
-compose pull --quiet migrate api web proxy
+compose pull --quiet migrate api web stats proxy
 log "démarrage"
 compose up -d --no-build --remove-orphans
 

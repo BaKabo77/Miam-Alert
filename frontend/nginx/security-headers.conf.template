@@ -6,8 +6,9 @@
 # Même si une faille XSS injectait du code, le navigateur refuserait de l'exécuter (pas de script
 # en ligne ni de domaine tiers) et d'envoyer des données ailleurs qu'à l'API (connect-src).
 #   - img-src : photos des produits, servies par Open Food Facts (l'API n'accepte que ce domaine).
+#   - __STATS_URL__ : mesure d'audience auto-hébergée (script et envoi des visites), vide si désactivée.
 #   - frame-ancestors 'none' : l'application ne peut pas être affichée dans un cadre (clickjacking).
-add_header Content-Security-Policy "default-src 'none'; script-src 'self'; style-src 'self'; img-src 'self' https://*.openfoodfacts.org; font-src 'self'; connect-src 'self' __API_URL__; manifest-src 'self'; worker-src 'self'; base-uri 'none'; form-action 'self'; frame-ancestors 'none'; object-src 'none'" always;
+add_header Content-Security-Policy "default-src 'none'; script-src 'self' __STATS_URL__; style-src 'self'; img-src 'self' https://*.openfoodfacts.org; font-src 'self'; connect-src 'self' __API_URL__ __STATS_URL__; manifest-src 'self'; worker-src 'self'; base-uri 'none'; form-action 'self'; frame-ancestors 'none'; object-src 'none'" always;
 
 # Le navigateur doit respecter le type annoncé (pas de fichier texte exécuté comme script).
 add_header X-Content-Type-Options "nosniff" always;

@@ -1,0 +1,20 @@
+# Purge des statistiques au-delà de 13 mois (déclenchée par miam-stats-purge.timer).
+# Installation : /etc/systemd/system/miam-stats-purge.service
+[Unit]
+Description=Purge des statistiques de Miam'Alert au-delà de 13 mois
+After=docker.service
+Requires=docker.service
+
+[Service]
+Type=oneshot
+WorkingDirectory=/home/kabo/miam-alert
+# Requête versionnée dans le dépôt (deploy/analytics/purge-stats.sql), exécutée avec le rôle umami
+# sur la base umami uniquement.
+ExecStart=/bin/sh -c 'docker compose -f docker-compose.prod.yml --env-file .env.prod exec -T db psql -U umami -d umami -v ON_ERROR_STOP=1 -q < deploy/analytics/purge-stats.sql'
+NoNewPrivileges=yes
+PrivateTmp=yes
+ProtectSystem=strict
+ProtectHome=read-only
+ProtectKernelTunables=yes
+ProtectKernelModules=yes
+ProtectControlGroups=yes

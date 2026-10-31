@@ -106,6 +106,9 @@ services:
       context: ./frontend
       args:
         VITE_API_URL: https://api.${DOMAIN:?DOMAIN manquant}
+        # Mesure d'audience : seulement si l'identifiant du site est fourni (sinon, aucune).
+        VITE_STATS_URL: ${STATS_URL:-}
+        VITE_STATS_WEBSITE_ID: ${STATS_WEBSITE_ID:-}
     read_only: true
     tmpfs:
       - /tmp
@@ -114,12 +117,65 @@ services:
     networks:
       - edge
 
+  # Mesure d'audience (deploy/analytics) : prépare la base et le rôle propres à Umami, puis s'arrête.
+  # Umami n'a aucun accès à la base de l'application.
+  stats-db-init:
+    <<: *hardened
+    restart: 'no'
+    image: postgres:16-alpine
+    user: '70:70'
+    command: ['sh', '/init/init-umami-db.sh']
+    environment:
+      PGHOST: db
+      PGUSER: ${POSTGRES_USER}
+      PGPASSWORD: ${POSTGRES_PASSWORD}
+      PGDATABASE: ${POSTGRES_DB}
+      UMAMI_DB_PASSWORD: ${UMAMI_DB_PASSWORD:?UMAMI_DB_PASSWORD manquant}
+    volumes:
+      - ./deploy/analytics/init-umami-db.sh:/init/init-umami-db.sh:ro
+    read_only: true
+    tmpfs:
+      - /tmp
+    cap_drop:
+      - ALL
+    depends_on:
+      db:
+        condition: service_healthy
+    networks:
+      - internal
+
+  # Umami, image durcie (deploy/analytics/Dockerfile) : statistiques sans cookie, sur stats.<domaine>.
+  stats:
+    <<: *hardened
+    image: ${MIAM_REGISTRY:-miam-alert}/stats:${MIAM_VERSION:-local}
+    build: ./deploy/analytics
+    environment:
+      # Mot de passe en hexadécimal (voir .env.prod.example) : utilisable tel quel dans l'URL.
+      DATABASE_URL: postgresql://umami:${UMAMI_DB_PASSWORD}@db:5432/umami
+      APP_SECRET: ${UMAMI_APP_SECRET:?UMAMI_APP_SECRET manquant}
+      DISABLE_TELEMETRY: 1
+    read_only: true
+    tmpfs:
+      - /tmp
+    cap_drop:
+      - ALL
+    depends_on:
+      stats-db-init:
+        condition: service_completed_successfully
+    # internal pour sa base, edge pour Caddy.
+    networks:
+      - internal
+      - edge
+
   proxy:
     <<: *hardened
     image: ${MIAM_REGISTRY:-miam-alert}/proxy:${MIAM_VERSION:-local}
     build: ./deploy/caddy
     environment:
       DOMAIN: ${DOMAIN:?DOMAIN manquant}
+      # Second mot de passe devant le tableau de bord d'Umami (empreinte bcrypt, voir deploy/analytics).
+      STATS_ADMIN_USER: ${STATS_ADMIN_USER:?STATS_ADMIN_USER manquant}
+      STATS_ADMIN_HASH: ${STATS_ADMIN_HASH:?STATS_ADMIN_HASH manquant}
     ports:
       - '80:80'
       - '443:443'

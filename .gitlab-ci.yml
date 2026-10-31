@@ -127,7 +127,7 @@ include:
   rules:
     - if: $CI_COMMIT_TAG =~ /^v\d+\.\d+\.\d+$/
 
-# Construction des 4 images de production et envoi dans le registre du projet GitLab.
+# Construction des 5 images de production (dont la mesure d'audience) et envoi dans le registre du projet GitLab.
 # Le serveur ne construit plus rien : il télécharge exactement ce qui a été testé et analysé.
 build-images:
   extends: .release
@@ -142,6 +142,8 @@ build-images:
     DOCKER_TLS_CERTDIR: /certs
     # Adresse publique de l'API, inscrite dans le front et dans sa CSP (ce n'est pas un secret).
     PUBLIC_API_URL: https://api.miam-alert.fr
+    # Mesure d'audience : STATS_WEBSITE_ID est une variable GitLab (identifiant du site dans Umami,
+    # pas un secret). Vide : le front est construit sans mesure d'audience.
   before_script:
     # Jeton propre à ce job, valable le temps du job : aucun identifiant permanent dans la CI.
     - echo "$CI_REGISTRY_PASSWORD" | docker login -u "$CI_REGISTRY_USER" --password-stdin "$CI_REGISTRY"
@@ -149,9 +151,14 @@ build-images:
     # --pull : toujours partir des images de base les plus récentes (correctifs de sécurité).
     - docker build --pull --target runtime -t "$CI_REGISTRY_IMAGE/api:$CI_COMMIT_TAG" backend
     - docker build --pull --target migrate -t "$CI_REGISTRY_IMAGE/migrate:$CI_COMMIT_TAG" backend
-    - docker build --pull --build-arg VITE_API_URL="$PUBLIC_API_URL" -t "$CI_REGISTRY_IMAGE/web:$CI_COMMIT_TAG" frontend
+    - |
+      if [ -n "${STATS_WEBSITE_ID:-}" ]; then STATS_URL=https://stats.miam-alert.fr; else STATS_URL=; fi
+      docker build --pull --build-arg VITE_API_URL="$PUBLIC_API_URL" \
+        --build-arg VITE_STATS_URL="$STATS_URL" --build-arg VITE_STATS_WEBSITE_ID="${STATS_WEBSITE_ID:-}" \
+        -t "$CI_REGISTRY_IMAGE/web:$CI_COMMIT_TAG" frontend
     - docker build --pull -t "$CI_REGISTRY_IMAGE/proxy:$CI_COMMIT_TAG" deploy/caddy
-    - for image in api migrate web proxy; do docker push --quiet "$CI_REGISTRY_IMAGE/$image:$CI_COMMIT_TAG"; done
+    - docker build --pull -t "$CI_REGISTRY_IMAGE/stats:$CI_COMMIT_TAG" deploy/analytics
+    - for image in api migrate web proxy stats; do docker push --quiet "$CI_REGISTRY_IMAGE/$image:$CI_COMMIT_TAG"; done
 
 # Analyse des images : le déploiement est impossible tant qu'une faille haute ou critique
 # disposant d'un correctif subsiste (dans le système de base comme dans les dépendances).
@@ -164,7 +171,7 @@ scan-images:
     entrypoint: ['']
   parallel:
     matrix:
-      - IMAGE: [api, migrate, web, proxy]
+      - IMAGE: [api, migrate, web, proxy, stats]
   variables:
     TRIVY_USERNAME: $CI_REGISTRY_USER
     TRIVY_PASSWORD: $CI_REGISTRY_PASSWORD

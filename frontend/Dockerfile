@@ -17,10 +17,21 @@ ARG VITE_API_URL
 RUN echo "$VITE_API_URL" | grep -Eq '^(https://[a-z0-9.-]+|http://localhost)(:[0-9]{1,5})?$' \
   || { echo "VITE_API_URL invalide : attendu https://api.exemple.fr (sans chemin ni / final)" >&2; exit 1; }
 
+# Mesure d'audience (facultative) : adresse d'Umami et identifiant du site. Les deux ensemble ou
+# aucun ; mêmes contrôles que pour l'API, puisque l'adresse est aussi inscrite dans la CSP.
+ARG VITE_STATS_URL=""
+ARG VITE_STATS_WEBSITE_ID=""
+RUN if [ -n "$VITE_STATS_URL$VITE_STATS_WEBSITE_ID" ]; then \
+      echo "$VITE_STATS_URL" | grep -Eq '^(https://[a-z0-9.-]+|http://localhost)(:[0-9]{1,5})?$' \
+        || { echo "VITE_STATS_URL invalide : attendu https://stats.exemple.fr" >&2; exit 1; }; \
+      echo "$VITE_STATS_WEBSITE_ID" | grep -Eq '^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$' \
+        || { echo "VITE_STATS_WEBSITE_ID invalide : attendu l'identifiant (UUID) du site dans Umami" >&2; exit 1; }; \
+    fi
+
 RUN npm run build \
   && mkdir /tmp/nginx \
   && for f in default.conf security-headers.conf; do \
-       sed "s|__API_URL__|$VITE_API_URL|g" "nginx/$f.template" > "/tmp/nginx/$f"; \
+       sed -e "s|__API_URL__|$VITE_API_URL|g" -e "s|__STATS_URL__|$VITE_STATS_URL|g" "nginx/$f.template" > "/tmp/nginx/$f"; \
      done
 
 # ---------- 2. Image finale ----------

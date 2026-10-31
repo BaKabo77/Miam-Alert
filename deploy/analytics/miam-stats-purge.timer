@@ -1,0 +1,11 @@
+# Chaque dimanche à 5 h (heure de Paris), après la sauvegarde et la purge de l'API.
+# Installation : /etc/systemd/system/miam-stats-purge.timer, puis systemctl enable --now miam-stats-purge.timer
+[Unit]
+Description=Purge hebdomadaire des statistiques de Miam'Alert
+
+[Timer]
+OnCalendar=Sun *-*-* 05:00 Europe/Paris
+Persistent=true
+
+[Install]
+WantedBy=timers.target
