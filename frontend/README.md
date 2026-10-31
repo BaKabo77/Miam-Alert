@@ -33,7 +33,7 @@ Chaque domaine a un fichier `*-api.ts` qui fait les appels et déclare les types
 | `/forgot-password` | Demande d'un lien de réinitialisation | Publique |
 | `/reset-password#token=…` | Choix du nouveau mot de passe (lien de l'email) | Publique |
 | `/verify-email#token=…` | Confirmation de l'adresse (lien de l'email) | Publique : le lien peut être ouvert sur un autre appareil |
-| `/legal`, `/privacy` | Mentions légales, politique de confidentialité | Publiques (obligation légale) |
+| `/legal`, `/privacy`, `/terms` | Mentions légales, politique de confidentialité, conditions générales d'utilisation | Publiques (obligation légale ; les CGU se lisent avant l'inscription) |
 | `/` | Inventaire : compteurs, bandeaux (email à confirmer, alerte du jour, idée de recette si un produit est urgent), liste par urgence, bouton « Ajouter » | Connecté |
 | `/recipes` | Idées recettes : les 8 meilleures, puis les autres sur demande ; produits utilisés aux couleurs de l'urgence, ingrédients à acheter | Connecté |
 | `/recipes/:recipeId` | Fiche recette : ingrédients (✓ = dans l'inventaire), étapes, « J'ai cuisiné ça » (les produits cochés passent en « consommé ») | Connecté |
@@ -42,6 +42,12 @@ Chaque domaine a un fichier `*-api.ts` qui fait les appels et déclare les types
 | `/profile` | Prénom et nom, déconnexion, mot de passe, export, suppression du compte | Connecté |
 
 Les pages connectées sont enveloppées par `<RequireAuth>` (redirection vers `/login`) et partagent `<AppLayout>` : barre du haut avec l'avatar, barre d'onglets en bas (**Inventaire, Scanner au centre, Recettes**). La saisie manuelle (`/add`) s'ouvre depuis l'inventaire et la page de scan. Toute URL inconnue renvoie vers `/`.
+
+### CGU et contact
+
+- L'inscription exige de cocher « J'accepte les conditions générales d'utilisation » ; la version acceptée (`legal/terms.ts`, identique à celle du backend) part avec le formulaire.
+- Quand les CGU changent, `/me` renvoie `termsAccepted: false` et `<RequireAuth>` affiche [`TermsGate`](src/auth/TermsGate.tsx) à la place de l'application : accepter, se déconnecter ou supprimer son compte (refuser ne doit pas obliger à accepter pour partir).
+- L'adresse de contact publique est `support@miam-alert.fr` (`legal/publisher.ts`) : lien « Contact » en bas des pages, section « Aide et contact » du profil, CGU et pages légales.
 
 ## Session et appels à l'API
 

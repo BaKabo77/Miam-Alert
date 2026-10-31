@@ -6,9 +6,10 @@ Tout ce qui concerne **son propre compte** : lire et modifier son profil, export
 
 | Route | Accès | Vérification | Réponse |
 |---|---|---|---|
-| `GET /me` | Connecté | Token | Profil : id, email, prénom, nom, `emailVerified`, foyers (id, nom, rôle) |
+| `GET /me` | Connecté | Token | Profil : id, email, prénom, nom, `emailVerified`, `termsAccepted`, foyers (id, nom, rôle) |
 | `PATCH /me` | Connecté | Token + DTO (prénom, nom) | Profil mis à jour |
 | `GET /me/export` | Connecté, **5/min** | Token | Fichier JSON téléchargeable, `Cache-Control: no-store` |
+| `POST /me/terms-acceptance` | Connecté | Token + `version` = version des CGU en vigueur | 204 ; 400 pour une autre version |
 | `DELETE /me` | Connecté, **10/min** | Token + **mot de passe redemandé** | 204, cookie effacé ; **403** si le mot de passe est faux |
 
 Si le compte a été supprimé alors que son access token est encore valide (15 min au plus), ces routes répondent 401.
@@ -19,6 +20,14 @@ Si le compte a été supprimé alors que son access token est encore valide (15 
 - Seuls le prénom et le nom sont modifiables ici. Tout autre champ est rejeté (protection contre le *mass assignment*). Le mot de passe a sa propre route (`/auth/change-password`).
 - Prénom et nom sont **facultatifs** (minimisation RGPD), validés par [`person-name.ts`](person-name.ts) : une lettre, puis lettres, espaces, apostrophes, traits d'union ou points, 100 caractères au plus. Ni chiffres, ni balises, ni caractères de contrôle.
 - À la modification, un champ **absent** est inchangé, un champ **vide ou `null`** est effacé (droit de rectification). À l'inscription, un champ vide est simplement ignoré.
+
+## Conditions générales d'utilisation (CGU)
+
+La version en vigueur est une constante, [`terms.ts`](terms.ts) : la date de la dernière modification du texte. Elle est à changer **en même temps** que le texte et la constante du front (`frontend/src/legal/terms.ts`).
+
+- **Inscription** : le client envoie la version qu'il a affichée (case à cocher obligatoire). Toute autre version donne 400 et aucun compte n'est créé. Le serveur enregistre la version et la date (`termsVersion`, `termsAcceptedAt`) : c'est la **preuve d'acceptation**, que le client ne peut pas dater lui-même.
+- **Nouvelle version** : `GET /me` renvoie `termsAccepted: false` ; le front affiche alors un écran d'acceptation avant toute autre page (voir [frontend/README.md](../../../frontend/README.md)). `POST /me/terms-acceptance` enregistre la nouvelle acceptation, et refuse une version périmée : une ancienne version de l'application, restée en cache, ne peut pas faire accepter un texte que l'utilisateur n'a pas vu.
+- La version et la date d'acceptation figurent dans l'export ; l'événement `account.terms_accepted` est journalisé.
 
 ## Export des données (`GET /me/export`)
 
@@ -41,12 +50,14 @@ Les données disparaissent ensuite des sauvegardes au bout de 30 jours au plus (
 
 | Fichier | Rôle |
 |---|---|
-| `users.controller.ts` | Les quatre routes ; en-têtes du téléchargement de l'export |
+| `users.controller.ts` | Les cinq routes ; en-têtes du téléchargement de l'export |
+| `terms.ts` | Version des CGU en vigueur |
 | `users.service.ts` | Lecture et mise à jour du profil, construction de l'export, suppression transactionnelle |
 | `users.types.ts` | `MeResponse` et `DataExport` : ce qui sort de l'API, champ par champ |
 | `person-name.ts` | Règles de validation des prénoms et noms (inscription et modification) |
 | `dto/update-me.dto.ts` | Prénom et nom, effaçables |
 | `dto/delete-me.dto.ts` | Mot de passe de confirmation |
+| `dto/accept-terms.dto.ts` | Version des CGU acceptée (doit être celle en vigueur) |
 
 ## Commandes
 

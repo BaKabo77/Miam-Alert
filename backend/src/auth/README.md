@@ -21,7 +21,7 @@ Toutes sous `/auth`, limitées à **10 requêtes par minute et par IP**.
 
 | Route | Accès | Vérification | Réponse |
 |---|---|---|---|
-| `POST /auth/register` | Public | DTO (email, mot de passe ≥ 12, noms facultatifs) | 201 `{ id, email }` ; 409 si l'email existe |
+| `POST /auth/register` | Public | DTO (email, mot de passe ≥ 12, noms facultatifs, `termsVersion` = version des CGU en vigueur) | 201 `{ id, email }` ; 409 si l'email existe ; 400 sans acceptation des CGU à jour |
 | `POST /auth/login` | Public | Email + mot de passe (argon2) | 200 `{ accessToken }` + cookie ; 401 « Invalid credentials » |
 | `POST /auth/refresh` | Public | Cookie de refresh, vérifié en base | 200 `{ accessToken }` + nouveau cookie ; 401 |
 | `POST /auth/logout` | Public | Cookie de refresh (s'il est valide) | 204, cookie effacé, session révoquée |

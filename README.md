@@ -57,7 +57,8 @@ Projet personnel conçu **security by design** : chaque fonctionnalité est pens
 | `POST /auth/verify-email/resend` | Connecté, 10 req/min, 1 email/min | Renvoyer le lien de confirmation |
 | `POST /auth/forgot-password` | Public, 10 req/min, 1 email/min par adresse | Recevoir un lien de réinitialisation (réponse identique que l'adresse ait un compte ou non) |
 | `POST /auth/reset-password` | Public (jeton de l'email), 10 req/min | Choisir un nouveau mot de passe |
-| `GET /me` | Connecté | Profil (prénom et nom facultatifs) et foyers |
+| `GET /me` | Connecté | Profil (prénom et nom facultatifs), foyers, CGU à jour ou non |
+| `POST /me/terms-acceptance` | Connecté | Accepter la version en vigueur des CGU |
 | `PATCH /me` | Connecté | Modifier ou effacer son prénom et son nom |
 | `GET /me/export` | Connecté, 5 req/min | Télécharger toutes ses données (JSON) |
 | `DELETE /me` | Connecté + mot de passe, 10 req/min | Supprimer son compte et toutes ses données |
