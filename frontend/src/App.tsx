@@ -13,6 +13,7 @@ import { RecipePage } from './pages/RecipePage';
 import { RecipesPage } from './pages/RecipesPage';
 import { RegisterPage } from './pages/RegisterPage';
 import { ResetPasswordPage } from './pages/ResetPasswordPage';
+import { TermsPage } from './pages/TermsPage';
 import { VerifyEmailPage } from './pages/VerifyEmailPage';
 
 // Page de scan chargée à la demande : la bibliothèque de lecture de codes-barres est lourde,
@@ -27,6 +28,7 @@ export default function App() {
       {/* Pages légales : publiques, car elles doivent être consultables avant de créer un compte. */}
       <Route path="/legal" element={<LegalNoticePage />} />
       <Route path="/privacy" element={<PrivacyPage />} />
+      <Route path="/terms" element={<TermsPage />} />
       {/* Publique : le lien de l'email peut être ouvert sur un appareil où l'on n'est pas connecté. */}
       <Route path="/verify-email" element={<VerifyEmailPage />} />
       {/* Publiques : on a perdu son mot de passe, on ne peut donc pas être connecté. */}

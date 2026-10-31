@@ -6,6 +6,7 @@ import { useQueryClient } from '@tanstack/react-query';
 import { createContext, useContext, useEffect, useState, type ReactNode } from 'react';
 import { Navigate, Outlet } from 'react-router';
 import { apiRequest, refreshSession, setAccessToken, setSessionExpiredHandler } from '../lib/api';
+import { TermsGate } from './TermsGate';
 
 export interface User {
   id: string;
@@ -13,6 +14,8 @@ export interface User {
   firstName: string | null;
   lastName: string | null;
   emailVerified: boolean;
+  // false : les CGU ont changé depuis la dernière acceptation (décidé par l'API) ; voir TermsGate.
+  termsAccepted: boolean;
   households: { id: string; name: string; role: 'OWNER' | 'MEMBER' }[];
 }
 
@@ -38,6 +41,8 @@ interface AuthContextValue {
 export interface RegisterData {
   email: string;
   password: string;
+  // Version des CGU affichée et acceptée (la case est obligatoire) ; l'API refuse toute autre version.
+  termsVersion: string;
   firstName?: string;
   lastName?: string;
 }
@@ -180,6 +185,10 @@ export function RequireAuth() {
   }
   if (session.status === 'anonymous') {
     return <Navigate to="/login" replace />;
+  }
+  // CGU modifiées depuis la dernière acceptation : on les fait accepter avant tout le reste.
+  if (!session.user.termsAccepted) {
+    return <TermsGate />;
   }
   return <Outlet />;
 }

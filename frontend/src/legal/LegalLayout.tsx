@@ -1,17 +1,19 @@
 import type { ReactNode } from 'react';
 import { Link } from 'react-router';
 import { Logo } from '../components/Logo';
-import { LEGAL_LAST_UPDATED } from './publisher';
+import { LEGAL_LAST_UPDATED, PUBLISHER } from './publisher';
 
 interface LegalLayoutProps {
   title: string;
   children: ReactNode;
   // Faux pour une page publique qui n'est pas un texte légal (vérification de l'email).
   showLastUpdated?: boolean;
+  // Date propre au texte (les CGU ont leur version) ; par défaut, celle des mentions et de la confidentialité.
+  lastUpdated?: string;
 }
 
 // Cadre des pages légales : accessibles sans être connecté (obligation légale), en texte simple.
-export function LegalLayout({ title, children, showLastUpdated = true }: LegalLayoutProps) {
+export function LegalLayout({ title, children, showLastUpdated = true, lastUpdated = LEGAL_LAST_UPDATED }: LegalLayoutProps) {
   return (
     <div className="min-h-dvh bg-white">
       <div className="mx-auto max-w-2xl px-5 py-8">
@@ -25,7 +27,7 @@ export function LegalLayout({ title, children, showLastUpdated = true }: LegalLa
         </div>
 
         <h1 className="page-title mt-10">{title}</h1>
-        {showLastUpdated && <p className="page-subtitle">Dernière mise à jour : {LEGAL_LAST_UPDATED}</p>}
+        {showLastUpdated && <p className="page-subtitle">Dernière mise à jour : {lastUpdated}</p>}
 
         <div className="mt-8 space-y-10 text-[15px] leading-relaxed text-ink-900">{children}</div>
 
@@ -53,16 +55,24 @@ export function ExternalLink({ href, children }: { href: string; children: React
   );
 }
 
-// Liens vers les deux pages légales, affichés en bas des pages de connexion, du profil et des pages légales.
+// Liens vers les pages légales et le contact, affichés en bas des pages de connexion, du profil et des
+// pages légales.
 export function LegalLinks({ className = '' }: { className?: string }) {
+  const link = 'underline underline-offset-4 hover:text-ink-900';
   return (
-    <p className={`flex justify-center gap-5 text-sm text-ink-600 ${className}`}>
-      <Link to="/legal" className="underline underline-offset-4 hover:text-ink-900">
+    <p className={`flex flex-wrap justify-center gap-x-5 gap-y-2 text-sm text-ink-600 ${className}`}>
+      <Link to="/terms" className={link}>
+        CGU
+      </Link>
+      <Link to="/legal" className={link}>
         Mentions légales
       </Link>
-      <Link to="/privacy" className="underline underline-offset-4 hover:text-ink-900">
+      <Link to="/privacy" className={link}>
         Confidentialité
       </Link>
+      <a href={`mailto:${PUBLISHER.email}`} className={link}>
+        Contact
+      </a>
     </p>
   );
 }

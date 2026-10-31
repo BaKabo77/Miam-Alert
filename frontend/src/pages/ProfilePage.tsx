@@ -3,6 +3,7 @@ import { useAuth } from '../auth/session';
 import { LogoutIcon, UserIcon } from '../components/icons';
 import { initials } from '../components/initials';
 import { LegalLinks } from '../legal/LegalLayout';
+import { PUBLISHER } from '../legal/publisher';
 import { ApiError } from '../lib/api';
 import { ChangePasswordSection } from '../profile/ChangePasswordSection';
 import { DataExportSection } from '../profile/DataExportSection';
@@ -127,6 +128,17 @@ export function ProfilePage() {
 
       <div className="mt-8 border-t border-line pt-6">
         <DataExportSection />
+      </div>
+
+      <div className="mt-8 border-t border-line pt-6">
+        <h2 className="text-lg font-extrabold">Aide et contact</h2>
+        <p className="mt-1 text-sm text-ink-600">
+          Une question, un problème, une idée ? Écrivez-nous à{' '}
+          <a href={`mailto:${PUBLISHER.email}`} className="font-semibold text-ink-900 underline underline-offset-4">
+            {PUBLISHER.email}
+          </a>
+          .
+        </p>
       </div>
 
       <div className="mt-8 border-t border-line pt-6">

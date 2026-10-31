@@ -34,6 +34,10 @@ export function PrivacyPage() {
               "Protéger votre compte. Il n'est jamais enregistré tel quel : seule une empreinte (argon2id) est conservée, illisible même par l'éditeur.",
             ],
             ['Prénom et nom (facultatifs)', "Vous saluer dans l'application. Modifiables et effaçables à tout moment depuis votre profil."],
+            [
+              "Acceptation des conditions d'utilisation",
+              'La version acceptée et la date, pour prouver votre accord et vous présenter une nouvelle version le moment venu.',
+            ],
             ['Inventaire', 'Les produits ajoutés (nom, quantité, date et type de date, statut) et les alertes du jour.'],
             ['Sessions', 'Une empreinte du jeton de connexion et sa date d’expiration, pour vous garder connecté.'],
             [
@@ -51,8 +55,8 @@ export function PrivacyPage() {
       <LegalSection title="Finalités et bases légales">
         <ul className="list-disc space-y-1.5 pl-5">
           <li>
-            <strong>Fournir le service</strong> (compte, inventaire, alertes) : exécution du service que vous demandez
-            en créant un compte (RGPD, art. 6.1.b).
+            <strong>Fournir le service</strong> (compte, inventaire, alertes, recettes, preuve d'acceptation des
+            conditions d'utilisation) : exécution du service que vous demandez en créant un compte (RGPD, art. 6.1.b).
           </li>
           <li>
             <strong>Sécuriser l'application</strong> (journal de sécurité, limitation des tentatives) : intérêt légitime

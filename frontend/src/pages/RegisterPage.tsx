@@ -2,6 +2,7 @@ import { useState, type FormEvent } from 'react';
 import { Link, Navigate, useNavigate } from 'react-router';
 import { useAuth } from '../auth/session';
 import { AuthLayout } from '../components/AuthLayout';
+import { TERMS_VERSION } from '../legal/terms';
 import { ApiError } from '../lib/api';
 
 export function RegisterPage() {
@@ -31,6 +32,8 @@ export function RegisterPage() {
         password: String(form.get('password')),
         firstName: String(form.get('firstName') ?? ''),
         lastName: String(form.get('lastName') ?? ''),
+        // La case est obligatoire (required) : on envoie la version des CGU qu'elle désigne.
+        termsVersion: TERMS_VERSION,
       });
       navigate('/', { replace: true });
     } catch (caught) {
@@ -102,6 +105,18 @@ export function RegisterPage() {
             autoComplete="new-password"
             className="input"
           />
+        </label>
+
+        <label className="flex items-start gap-3 text-sm">
+          <input name="acceptTerms" type="checkbox" required className="mt-0.5 h-5 w-5 shrink-0 accent-ink-900" />
+          <span>
+            J'ai lu et j'accepte les{' '}
+            {/* Nouvel onglet : le formulaire déjà rempli n'est pas perdu. */}
+            <Link to="/terms" target="_blank" className="font-semibold underline underline-offset-4">
+              conditions générales d'utilisation
+            </Link>
+            .
+          </span>
         </label>
 
         {error && (

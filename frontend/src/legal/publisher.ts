@@ -3,7 +3,9 @@
 
 export const PUBLISHER = {
   name: 'TRAORE Koba',
-  email: 'traorekoba7@gmail.com',
+  // Adresse de contact publique (support, données personnelles, sécurité) : celle du domaine, plutôt
+  // qu'une adresse personnelle.
+  email: 'support@miam-alert.fr',
 };
 
 export const HOST = {
@@ -14,4 +16,4 @@ export const HOST = {
 };
 
 // Date de la dernière modification des textes : à mettre à jour à chaque changement de fond.
-export const LEGAL_LAST_UPDATED = '30 octobre 2026';
+export const LEGAL_LAST_UPDATED = '31 octobre 2026';
