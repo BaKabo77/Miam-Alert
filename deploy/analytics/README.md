@@ -59,7 +59,7 @@ Enregistrement **A** `stats` → IP du serveur (comme `@`, `www` et `api`). Cadd
 ```bash
 openssl rand -hex 32     # UMAMI_DB_PASSWORD
 openssl rand -hex 32     # UMAMI_APP_SECRET
-docker run --rm caddy:2.11.7-alpine caddy hash-password --plaintext '<mot de passe long>'   # STATS_ADMIN_HASH
+docker run --rm -it caddy:2.11.7-alpine caddy hash-password   # STATS_ADMIN_HASH : mot de passe demandé deux fois, masqué
 ```
 
 Dans `.env.prod`, l'empreinte s'écrit **entre apostrophes** : elle contient des `$` que Docker Compose interpréterait sinon (vérifié : avec les apostrophes, elle arrive intacte dans le conteneur).
