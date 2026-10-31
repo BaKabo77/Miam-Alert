@@ -7,7 +7,7 @@ En production, Caddy est le **seul point d'entrée depuis Internet** (ports 80 e
 | `miam-alert.fr` | `web:8080` (Nginx, le front) |
 | `www.miam-alert.fr` | redirection permanente vers `miam-alert.fr` |
 | `api.miam-alert.fr` | `api:3000` (NestJS), corps de requête limité à 64 Ko |
-| `stats.miam-alert.fr` | `stats:3000` (Umami) : `/script.js` et `/api/send` publics ; tout le reste derrière un mot de passe vérifié par Caddy (`basic_auth`, variables `STATS_ADMIN_USER` et `STATS_ADMIN_HASH`). Voir [deploy/analytics/](../analytics/README.md) |
+| `stats.miam-alert.fr` | `stats:3000` (Umami) : `/script.js` et `/api/send` publics ; tout le reste derrière une **porte** : mot de passe vérifié par Caddy sur `/gate`, qui remet un cookie secret (voir plus bas). Voir [deploy/analytics/](../analytics/README.md) |
 
 ## Fichiers
 
@@ -23,6 +23,11 @@ En production, Caddy est le **seul point d'entrée depuis Internet** (ports 80 e
 - **API d'administration désactivée** (`admin off`) : personne ne peut modifier la configuration à chaud.
 - **IP réelle** : Caddy remplace le `X-Forwarded-For` envoyé par le client par la vraie IP. L'API ne fait confiance qu'à ce seul proxy (`TRUST_PROXY=1`, voir [backend/src/common/](../../backend/src/common/README.md#derrière-le-proxy)).
 - Limite de 64 Ko par requête vers l'API : une première barrière, avant celle de l'API (16 Ko de JSON).
+- **Porte du tableau de bord d'Umami** (`stats.miam-alert.fr`) : un simple `basic_auth` devant tout le site ne fonctionne pas. Le front d'Umami envoie son propre en-tête `Authorization: Bearer` à chaque appel, qui remplace celui du mot de passe, et le navigateur redemande le mot de passe sans fin. Le mot de passe (`STATS_ADMIN_USER`, `STATS_ADMIN_HASH`) n'est donc vérifié que sur **`/gate`**, qui remet le cookie `miam_stats_gate` (valeur `STATS_GATE_TOKEN` ; `HttpOnly`, `Secure`, `SameSite=Strict`, 12 h) puis redirige vers `/`. Sans ce cookie, toute requête est renvoyée vers `/gate` et n'atteint jamais Umami.
+  - Les directives de `/gate` sont dans un bloc **`route`** : sans lui, Caddy exécute `header` et `redir` avant `basic_auth` (ordre par défaut des directives) et remettrait le cookie sans vérifier le mot de passe.
+  - Le cookie doit à la fois être **égal** au secret et faire **64 caractères hexadécimaux** : un secret vide empêche Caddy de démarrer, un secret mal formé ne laisse passer personne (testé).
+  - Changer `STATS_GATE_TOKEN` (puis redémarrer le proxy) ferme toutes les sessions ouvertes du tableau de bord.
+  - Piège de syntaxe : `redir /gate 303` signifie « rediriger les requêtes **vers le chemin** `/gate` vers l'adresse `303` ». Un chemin en première position est un filtre ; d'où `redir * /gate 303`.
 - DNS : l'enregistrement **CAA** limite l'émission de certificats pour le domaine à Let's Encrypt.
 
 ## L'image
@@ -39,8 +44,10 @@ Dans `docker-compose.prod.yml`, le conteneur tourne en lecture seule, sans aucun
 ## Commandes
 
 ```bash
-# Vérifier le Caddyfile après une modification (sans rien démarrer)
-docker run --rm -e DOMAIN=example.com -v "$PWD/deploy/caddy/Caddyfile:/etc/caddy/Caddyfile:ro" \
+# Vérifier le Caddyfile après une modification (sans rien démarrer). Valeurs factices : sans elles,
+# la validation échoue (un secret de porte vide est refusé, c'est voulu).
+docker run --rm -e DOMAIN=example.com -e STATS_ADMIN_USER=test -e 'STATS_ADMIN_HASH=$2a$14$factice' \
+  -e STATS_GATE_TOKEN="$(openssl rand -hex 32)" -v "$PWD/deploy/caddy/Caddyfile:/etc/caddy/Caddyfile:ro" \
   caddy:2.11.7-alpine caddy validate --config /etc/caddy/Caddyfile --adapter caddyfile
 
 # Construire l'image et l'analyser comme la CI

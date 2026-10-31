@@ -41,11 +41,36 @@ stats.{$DOMAIN} {
 		}
 		reverse_proxy stats:3000
 	}
-	handle {
-		basic_auth {
-			{$STATS_ADMIN_USER} {$STATS_ADMIN_HASH}
+	# Le mot de passe de Caddy ne peut pas protéger directement le tableau de bord : le front d'Umami
+	# envoie son propre en-tête « Authorization: Bearer » à chaque appel, qui remplace celui du
+	# mot de passe (le navigateur le redemanderait sans fin). Il est donc vérifié UNE fois, sur
+	# /gate, qui remet un cookie secret ; c'est ce cookie qui ouvre ensuite le tableau de bord.
+	handle /gate {
+		# route : directives exécutées dans l'ordre écrit. Sans elle, Caddy placerait header et
+		# redir AVANT basic_auth, et remettrait le cookie sans vérifier le mot de passe.
+		route {
+			basic_auth {
+				{$STATS_ADMIN_USER} {$STATS_ADMIN_HASH}
+			}
+			# HttpOnly : illisible par un script ; SameSite=Strict : jamais envoyé depuis un autre
+			# site ; 12 h au plus dans le navigateur.
+			header Set-Cookie "miam_stats_gate={$STATS_GATE_TOKEN}; Path=/; Max-Age=43200; Secure; HttpOnly; SameSite=Strict"
+			header Cache-Control no-store
+			redir * / 303
 		}
+	}
+	# Les deux conditions s'appliquent ensemble : valeur identique au secret ET 64 caractères
+	# hexadécimaux. Un secret vide ou mal formé ne laisse donc passer personne (échec fermé).
+	@gate_open {
+		vars {http.request.cookie.miam_stats_gate} {$STATS_GATE_TOKEN}
+		vars_regexp {http.request.cookie.miam_stats_gate} ^[0-9a-f]{64}$
+	}
+	handle @gate_open {
 		reverse_proxy stats:3000
+	}
+	# Sans le cookie : vers la porte (le navigateur demande alors le mot de passe).
+	handle {
+		redir * /gate 303
 	}
 }
 

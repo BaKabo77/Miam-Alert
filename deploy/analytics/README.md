@@ -9,7 +9,7 @@ navigateur ──▶ miam-alert.fr (front)
     │  script.js et envoi des visites (publics)
     └────────▶ stats.miam-alert.fr ──▶ Caddy ──▶ stats (Umami, image durcie) ──▶ db : base « umami »
                        │                                                        (rôle « umami », séparé)
-                       └── tableau de bord : mot de passe Caddy, PUIS mot de passe Umami
+                       └── tableau de bord : /gate (mot de passe Caddy → cookie), PUIS mot de passe Umami
 ```
 
 ## Ce qui est mesuré, et ce qui ne l'est pas
@@ -31,7 +31,7 @@ navigateur ──▶ miam-alert.fr (front)
 | Rôle et base **séparés** (`stats-db-init`) | Umami a sa base et son rôle sans privilège ; le droit de connexion par défaut (`PUBLIC`) est retiré, si bien que le rôle `umami` ne peut **même pas se connecter** à la base de l'application (testé) |
 | **Image durcie** ([`Dockerfile`](Dockerfile)) | L'image officielle 3.4.1 a 8 failles hautes corrigibles (Trivy). Corrigées : `apk upgrade` (curl), gestionnaires de paquets retirés (pnpm et son undici), pilote MySQL retiré (dépendance de la CLI Prisma inutile avec PostgreSQL), `deepmerge-ts` remplacé par la 8.0.2 (celle de notre backend) avec **vérification de son empreinte**. Résultat : 0 faille ; analysée par Trivy à chaque version, comme nos autres images |
 | Conteneur non-root, **lecture seule**, sans aucune capacité | Comme les autres services (testé : Umami fonctionne ainsi) |
-| Tableau de bord derrière un **second mot de passe** (Caddy) | Umami crée au premier démarrage un compte `admin` / `umami`. Caddy n'expose que `/script.js` et `/api/send` ; tout le reste exige un mot de passe vérifié **avant** d'atteindre Umami. Ni ce compte par défaut ni une faille de l'interface d'Umami ne sont exposés à Internet |
+| Tableau de bord derrière un **second mot de passe** (Caddy) | Umami crée au premier démarrage un compte `admin` / `umami`. Caddy n'expose que `/script.js` et `/api/send` ; tout le reste exige le cookie remis par `/gate` après un mot de passe vérifié par Caddy, **avant** d'atteindre Umami (un simple `basic_auth` ne fonctionne pas avec Umami : voir [deploy/caddy/](../caddy/README.md#choix-de-sécurité)). Ni ce compte par défaut ni une faille de l'interface d'Umami ne sont exposés à Internet |
 | Conservation de **13 mois** | Purge hebdomadaire ([`purge-stats.sql`](purge-stats.sql), [`miam-stats-purge.timer`](miam-stats-purge.timer)) : Umami ne supprime rien de lui-même |
 | Pas de sauvegarde | Des statistiques perdues ne gênent personne ; la sauvegarde nocturne ne copie que la base de l'application |
 | Filtre anti-robots d'Umami actif | Les navigateurs automatisés (`HeadlessChrome`…) ne faussent pas les chiffres. Pour un test automatisé, `DISABLE_BOT_CHECK=1` sur un Umami de test, **jamais en production** |
@@ -60,6 +60,7 @@ Enregistrement **A** `stats` → IP du serveur (comme `@`, `www` et `api`). Cadd
 openssl rand -hex 32     # UMAMI_DB_PASSWORD
 openssl rand -hex 32     # UMAMI_APP_SECRET
 docker run --rm -it caddy:2.11.7-alpine caddy hash-password   # STATS_ADMIN_HASH : mot de passe demandé deux fois, masqué
+openssl rand -hex 32     # STATS_GATE_TOKEN : cookie de la porte, exactement 64 caractères hexadécimaux
 ```
 
 Dans `.env.prod`, l'empreinte s'écrit **entre apostrophes** : elle contient des `$` que Docker Compose interpréterait sinon (vérifié : avec les apostrophes, elle arrive intacte dans le conteneur).
@@ -69,6 +70,13 @@ UMAMI_DB_PASSWORD=…
 UMAMI_APP_SECRET=…
 STATS_ADMIN_USER=kabo
 STATS_ADMIN_HASH='$2a$14$…'
+STATS_GATE_TOKEN=…
+```
+
+Pour éviter les erreurs de copier-coller (valeur passée à la ligne, commande collée au lieu de son résultat), un secret aléatoire peut s'écrire directement dans le fichier :
+
+```bash
+echo "STATS_GATE_TOKEN=$(openssl rand -hex 32)" >> .env.prod
 ```
 
 Sans ces variables, `docker compose` refuse de démarrer : c'est voulu.
@@ -82,8 +90,8 @@ ssh -t miam-vps 'sudo install -o root -g root -m 755 /tmp/miam-deploy.sh /usr/lo
 ```
 
 ### 4. Première version : Umami installé, front sans mesure
-Publier la version et la déployer. Puis ouvrir https://stats.miam-alert.fr :
-1. le mot de passe de Caddy (`STATS_ADMIN_USER` et celui choisi à l'étape 2) ;
+Publier la version et la déployer. Puis ouvrir https://stats.miam-alert.fr (redirigé vers `/gate`) :
+1. le mot de passe de Caddy (`STATS_ADMIN_USER` et celui choisi à l'étape 2), demandé **une seule fois** par le navigateur ; le cookie remis vaut 12 h ;
 2. le compte d'Umami `admin` / `umami` : **changer son mot de passe immédiatement** (*Settings → Profile*) ;
 3. *Settings → Websites → Add website* : nom `Miam'Alert`, domaine `miam-alert.fr`. Copier son **identifiant** (UUID).
 
@@ -109,9 +117,13 @@ docker build -t miam-test/stats deploy/analytics
 docker run --rm -v /var/run/docker.sock:/var/run/docker.sock aquasec/trivy:0.75.0 \
   image --severity HIGH,CRITICAL --ignore-unfixed miam-test/stats
 
-# En production : le script est public, le tableau de bord exige le mot de passe de Caddy (401)
+# En production : le script est public ; sans cookie, le tableau de bord renvoie vers la porte (303 -> /gate),
+# qui exige le mot de passe de Caddy (401)
 curl -sI https://stats.miam-alert.fr/script.js | head -1
-curl -s -o /dev/null -w '%{http_code}\n' https://stats.miam-alert.fr/
+curl -s -o /dev/null -w '%{http_code} -> %{redirect_url}\n' https://stats.miam-alert.fr/
+curl -s -o /dev/null -w '%{http_code}\n' https://stats.miam-alert.fr/gate
+# Le mot de passe (demandé, masqué) : 303 et un cookie miam_stats_gate si il est bon, 401 sinon
+curl -s -D - -o /dev/null -u kabo https://stats.miam-alert.fr/gate | grep -iE '^(HTTP|set-cookie)' | cut -c1-40
 ```
 
 **(serveur)** (`prod` : voir [docs/COMMANDES.md](../../docs/COMMANDES.md#production)) :
@@ -135,6 +147,8 @@ sudo journalctl -u miam-stats-purge.service -n 5 --no-pager           # dernièr
 
 ## À savoir
 
-- Le premier démarrage d'Umami crée le compte `admin` / `umami` : le mot de passe de Caddy le protège, mais il faut quand même le changer dès la première connexion (étape 4).
+- Si le navigateur redemande le mot de passe de Caddy sans fin, c'est que le tableau de bord est protégé par un `basic_auth` direct au lieu de la porte : le front d'Umami remplace l'en-tête `Authorization` (voir [deploy/caddy/](../caddy/README.md#choix-de-sécurité)).
+- Pour fermer toutes les sessions du tableau de bord (poste perdu, cookie copié) : changer `STATS_GATE_TOKEN` dans `.env.prod`, puis `prod up -d --no-build proxy`.
+- Le premier démarrage d'Umami crée le compte `admin` / `umami` : la porte de Caddy le protège, mais il faut quand même le changer dès la première connexion (étape 4).
 - Si Umami est arrêté ou en panne, l'application fonctionne normalement : le script ne se charge pas, et les appels de mesure ne font rien.
 - La conservation de 13 mois est annoncée dans la politique de confidentialité : la changer impose de modifier les deux.

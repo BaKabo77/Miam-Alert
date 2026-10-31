@@ -233,11 +233,11 @@ Toutes les commandes : [deploy/hardening/README.md](../deploy/hardening/README.m
 ### Mesure d'audience
 
 ```bash
-curl -s -o /dev/null -w '%{http_code}\n' https://stats.miam-alert.fr/     # 401 : tableau de bord protégé par Caddy
+curl -s -o /dev/null -w '%{http_code}\n' https://stats.miam-alert.fr/gate # 401 : tableau de bord derrière la porte de Caddy
 ssh -t miam-vps 'systemctl list-timers miam-stats-purge.timer --no-pager'  # prochaine purge (13 mois)
 ```
 
-Tableau de bord : https://stats.miam-alert.fr (deux mots de passe). Détails : [deploy/analytics/README.md](../deploy/analytics/README.md#commandes).
+Tableau de bord : https://stats.miam-alert.fr (deux mots de passe : celui de Caddy sur `/gate`, puis celui d'Umami). Détails : [deploy/analytics/README.md](../deploy/analytics/README.md#commandes).
 
 ### Journaux hors du serveur
 

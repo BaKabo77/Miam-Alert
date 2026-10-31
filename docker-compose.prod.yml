@@ -176,6 +176,8 @@ services:
       # Second mot de passe devant le tableau de bord d'Umami (empreinte bcrypt, voir deploy/analytics).
       STATS_ADMIN_USER: ${STATS_ADMIN_USER:?STATS_ADMIN_USER manquant}
       STATS_ADMIN_HASH: ${STATS_ADMIN_HASH:?STATS_ADMIN_HASH manquant}
+      # Valeur du cookie remis après ce mot de passe (64 caractères hexadécimaux).
+      STATS_GATE_TOKEN: ${STATS_GATE_TOKEN:?STATS_GATE_TOKEN manquant}
     ports:
       - '80:80'
       - '443:443'
