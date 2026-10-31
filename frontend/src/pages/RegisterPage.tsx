@@ -3,6 +3,7 @@ import { Link, Navigate, useNavigate } from 'react-router';
 import { useAuth } from '../auth/session';
 import { AuthLayout } from '../components/AuthLayout';
 import { TERMS_VERSION } from '../legal/terms';
+import { trackEvent } from '../lib/analytics';
 import { ApiError } from '../lib/api';
 
 export function RegisterPage() {
@@ -35,6 +36,7 @@ export function RegisterPage() {
         // La case est obligatoire (required) : on envoie la version des CGU qu'elle désigne.
         termsVersion: TERMS_VERSION,
       });
+      trackEvent('signup');
       navigate('/', { replace: true });
     } catch (caught) {
       setError(errorMessage(caught));

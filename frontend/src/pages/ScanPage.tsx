@@ -1,6 +1,7 @@
 import { useMutation } from '@tanstack/react-query';
 import { useState, type FormEvent } from 'react';
 import { Link, useNavigate } from 'react-router';
+import { trackEvent } from '../lib/analytics';
 import { ApiError } from '../lib/api';
 import { BarcodeScanner } from '../products/BarcodeScanner';
 import { fetchProduct } from '../products/product-api';
@@ -16,6 +17,7 @@ export function ScanPage() {
     mutationFn: fetchProduct,
     // Produit trouvé : on passe au formulaire d'ajout, pré-rempli avec la fiche.
     onSuccess: (product) => {
+      trackEvent('product-scanned');
       const scanned: ScannedProduct = {
         id: product.id,
         name: product.name,

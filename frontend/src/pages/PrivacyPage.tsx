@@ -1,5 +1,6 @@
 import type { ReactNode } from 'react';
 import { ExternalLink, LegalLayout, LegalSection } from '../legal/LegalLayout';
+import { AnalyticsChoice } from '../legal/AnalyticsChoice';
 import { HOST, PUBLISHER } from '../legal/publisher';
 
 // Politique de confidentialité (RGPD, art. 13). Elle doit décrire ce que fait RÉELLEMENT
@@ -15,7 +16,8 @@ export function PrivacyPage() {
     <LegalLayout title="Politique de confidentialité">
       <p>
         Miam'Alert ne collecte que ce dont l'application a besoin pour fonctionner. Aucune donnée n'est vendue, aucune
-        publicité n'est affichée, aucun outil de mesure d'audience ni traceur n'est utilisé.
+        publicité n'est affichée, aucun traceur publicitaire n'est utilisé. Une mesure d'audience anonyme, sans cookie et
+        hébergée par l'éditeur, aide à améliorer l'application (voir plus bas).
       </p>
 
       <LegalSection title="Responsable du traitement">
@@ -82,6 +84,7 @@ export function PrivacyPage() {
             impossible à modifier ou à effacer, est conservée 6 mois chez le prestataire de sauvegarde, pour pouvoir
             enquêter sur un incident de sécurité, puis supprimée automatiquement.
           </li>
+          <li>Statistiques de fréquentation (anonymes) : 13 mois, puis supprimées automatiquement.</li>
           <li>
             Sauvegardes : 7 jours sur le serveur, 30 jours chez le prestataire de sauvegarde. Après la suppression d'un
             compte, ses données disparaissent donc des sauvegardes au plus tard 30 jours plus tard.
@@ -102,6 +105,31 @@ export function PrivacyPage() {
         </ul>
       </LegalSection>
 
+      <LegalSection title="Mesure d'audience">
+        <p>
+          Pour savoir comment l'application est utilisée (pages consultées, fonctionnalités utilisées : inscription, scan,
+          ajout d'un produit, recette consultée ou cuisinée), Miam'Alert utilise{' '}
+          <ExternalLink href="https://umami.is">Umami</ExternalLink>, installé sur son propre serveur : aucune donnée
+          n'est transmise à un tiers.
+        </p>
+        <ul className="list-disc space-y-1.5 pl-5">
+          <li>
+            Sont mesurés : la page, le site d'où vous venez, le type d'appareil, le système, le navigateur, la langue et
+            une localisation approximative (pays, région, ville).
+          </li>
+          <li>
+            Aucun cookie n'est déposé, votre adresse IP n'est pas conservée (elle sert seulement à déduire la localisation
+            approximative), et la mesure ne connaît ni votre compte, ni votre email, ni le contenu de votre inventaire.
+          </li>
+          <li>Le réglage « Ne pas me pister » (Do Not Track) de votre navigateur est respecté.</li>
+          <li>
+            Base légale : intérêt légitime à améliorer le service ; cette mesure est exemptée de consentement selon les
+            recommandations de la CNIL. Vous pouvez vous y opposer à tout moment :
+          </li>
+        </ul>
+        <AnalyticsChoice />
+      </LegalSection>
+
       <LegalSection title="Cookies et stockage sur votre appareil">
         <p>
           Miam'Alert utilise un seul cookie, <code className="rounded bg-mist px-1.5 py-0.5 text-sm">refresh_token</code>,
@@ -113,6 +141,11 @@ export function PrivacyPage() {
           L'application installée garde aussi ses propres fichiers (pages, styles, icônes) sur votre appareil pour
           s'ouvrir rapidement, même hors ligne. Ces fichiers ne contiennent aucune donnée personnelle : votre inventaire
           n'est jamais stocké sur l'appareil.
+        </p>
+        <p>
+          Si vous vous opposez à la mesure d'audience, ce choix est enregistré dans le stockage local de votre navigateur
+          (clé <code className="rounded bg-mist px-1.5 py-0.5 text-sm">umami.disabled</code>), sans aucune donnée
+          personnelle.
         </p>
       </LegalSection>
 

@@ -1,8 +1,9 @@
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
-import { useState, type FormEvent } from 'react';
+import { useEffect, useRef, useState, type FormEvent } from 'react';
 import { Link, useParams } from 'react-router';
 import { useHouseholdId } from '../auth/session';
 import { ArrowLeftIcon, CheckIcon, ClockIcon, LeafIcon } from '../components/icons';
+import { trackEvent } from '../lib/analytics';
 import { ApiError } from '../lib/api';
 import { updatePantryItemStatus } from '../pantry/pantry-api';
 import { formatDaysLeft, URGENCY_STYLES } from '../pantry/urgency';
@@ -15,6 +16,16 @@ export function RecipePage() {
   const [cookedCount, setCookedCount] = useState<number | null>(null);
 
   const recipe = useQuery({ queryKey: ['recipe', recipeId], queryFn: () => fetchRecipe(recipeId) });
+
+  // Une seule mesure par recette affichée (React exécute les effets deux fois en développement).
+  const viewed = useRef<string | null>(null);
+  const loadedId = recipe.data?.id;
+  useEffect(() => {
+    if (loadedId && viewed.current !== loadedId) {
+      viewed.current = loadedId;
+      trackEvent('recipe-viewed');
+    }
+  }, [loadedId]);
   // Les suggestions (déjà en cache depuis la page Recettes) disent ce que la recette utilise de l'inventaire.
   const suggestions = useQuery({
     queryKey: ['recipe-suggestions', householdId],
@@ -134,6 +145,7 @@ function CookedSection({
   const markConsumed = useMutation({
     mutationFn: (itemIds: string[]) => Promise.all(itemIds.map((id) => updatePantryItemStatus(id, 'CONSUMED'))),
     onSuccess: async (_result, itemIds) => {
+      trackEvent('recipe-cooked');
       onCooked(itemIds.length);
       // Le message de confirmation est en haut de la recette, le bouton tout en bas.
       window.scrollTo({ top: 0, behavior: 'smooth' });

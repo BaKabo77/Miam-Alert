@@ -4,9 +4,13 @@ import { BrowserRouter } from 'react-router';
 import App from './App.tsx';
 import { AuthProvider } from './auth/session.tsx';
 import './index.css';
+import { startAnalytics } from './lib/analytics';
 import { QueryClient, QueryClientProvider } from '@tanstack/react-query';
 
 const queryClient = new QueryClient();
+
+// Mesure d'audience sans cookie (inactive si non configurée à la construction).
+startAnalytics();
 
 createRoot(document.getElementById('root')!).render(
   <StrictMode>

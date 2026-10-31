@@ -2,6 +2,7 @@ import { useMutation, useQueryClient } from '@tanstack/react-query';
 import { useState, type FormEvent } from 'react';
 import { useLocation, useNavigate } from 'react-router';
 import { useHouseholdId } from '../auth/session';
+import { trackEvent } from '../lib/analytics';
 import { ApiError } from '../lib/api';
 import { createPantryItem, type NewPantryItem, type PantryItem } from '../pantry/pantry-api';
 import { todayPlusDays, todayPlusMonths } from '../pantry/dates';
@@ -45,6 +46,7 @@ export function AddItemPage() {
   const create = useMutation({
     mutationFn: (item: NewPantryItem) => createPantryItem(householdId, item),
     onSuccess: async () => {
+      trackEvent('item-added');
       await Promise.all([
         queryClient.invalidateQueries({ queryKey: ['pantry-items'] }),
         queryClient.invalidateQueries({ queryKey: ['recipe-suggestions'] }),
