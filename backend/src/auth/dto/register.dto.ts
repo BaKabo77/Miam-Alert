@@ -1,6 +1,7 @@
 import { Transform } from 'class-transformer';
-import { IsEmail, IsString, MaxLength, MinLength } from 'class-validator';
+import { Equals, IsEmail, IsString, MaxLength, MinLength } from 'class-validator';
 import { IsOptionalPersonName } from '../../users/person-name.js';
+import { TERMS_VERSION } from '../../users/terms.js';
 
 export class RegisterDto {
 
@@ -22,4 +23,9 @@ export class RegisterDto {
 
   @IsOptionalPersonName()
   lastName?: string;
+
+  // Pas de compte sans acceptation des CGU : le client envoie la version qu'il a affichée, qui doit
+  // être celle en vigueur. La date d'acceptation est fixée par le serveur.
+  @Equals(TERMS_VERSION, { message: 'termsVersion must be the current version of the terms' })
+  termsVersion: string;
 }

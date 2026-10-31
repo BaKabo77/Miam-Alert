@@ -15,6 +15,7 @@ import { ChangePasswordDto } from './dto/change-password.dto.js';
 import { LoginDto } from './dto/login.dto.js';
 import { EmailVerificationService } from './email-verification.service.js';
 import { RegisterDto } from './dto/register.dto.js';
+import { TERMS_VERSION } from '../users/terms.js';
 import { hashPassword, verifyPassword } from './password.js';
 import {
   generateRefreshToken,
@@ -53,6 +54,9 @@ export class AuthService {
           passwordHash,
           firstName: dto.firstName,
           lastName: dto.lastName,
+          // Preuve d'acceptation des CGU (version vérifiée par le DTO, date fixée par le serveur).
+          termsVersion: TERMS_VERSION,
+          termsAcceptedAt: new Date(),
           memberships: {
             create: { role: 'OWNER', household: { create: { name: DEFAULT_HOUSEHOLD_NAME } } },
           },

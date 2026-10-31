@@ -18,7 +18,8 @@ export type SecurityEvent =
   | 'household.access_denied'
   | 'account.deleted'
   | 'account.exported'
-  | 'account.delete.denied';
+  | 'account.delete.denied'
+  | 'account.terms_accepted';
 
 // Seuls champs autorisés dans un événement de sécurité. Le type rend impossible d'y glisser
 // un email, un mot de passe, un token ou un cookie : le code ne compilerait pas.

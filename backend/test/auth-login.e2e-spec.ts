@@ -7,6 +7,7 @@ import { App } from 'supertest/types.js';
 import { AppModule } from '../src/app.module.js';
 import { PrismaService } from '../src/prisma/prisma.service.js';
 import { resetDatabase } from './setup/reset-database.js';
+import { TERMS_VERSION } from '../src/users/terms.js';
 
 const EMAIL = 'marie@example.com';
 const PASSWORD = 'correct horse battery staple';
@@ -25,7 +26,7 @@ describe('POST /auth/login (e2e)', () => {
 
     const res = await request(app.getHttpServer())
       .post('/auth/register')
-      .send({ email: EMAIL, password: PASSWORD })
+      .send({ termsVersion: TERMS_VERSION, email: EMAIL, password: PASSWORD })
       .expect(201);
     userId = res.body.id;
   });

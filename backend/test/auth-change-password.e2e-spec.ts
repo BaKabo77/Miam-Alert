@@ -6,6 +6,7 @@ import { AppModule } from '../src/app.module.js';
 import { PrismaService } from '../src/prisma/prisma.service.js';
 import { resetDatabase } from './setup/reset-database.js';
 import { TEST_PASSWORD } from './setup/test-users.js';
+import { TERMS_VERSION } from '../src/users/terms.js';
 
 const EMAIL = 'marie@example.com';
 const NEW_PASSWORD = 'une toute nouvelle phrase de passe';
@@ -27,7 +28,7 @@ describe('POST /auth/change-password (e2e)', () => {
     prisma = app.get(PrismaService);
     await resetDatabase(prisma);
 
-    await request(app.getHttpServer()).post('/auth/register').send({ email: EMAIL, password: TEST_PASSWORD }).expect(201);
+    await request(app.getHttpServer()).post('/auth/register').send({ termsVersion: TERMS_VERSION, email: EMAIL, password: TEST_PASSWORD }).expect(201);
     const login = await login_(TEST_PASSWORD).expect(200);
     accessToken = login.body.accessToken;
     cookie = refreshCookie(login);

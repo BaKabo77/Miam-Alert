@@ -6,6 +6,7 @@ import { AppModule } from '../src/app.module.js';
 import { PrismaService } from '../src/prisma/prisma.service.js';
 import { resetDatabase } from './setup/reset-database.js';
 import { TEST_PASSWORD } from './setup/test-users.js';
+import { TERMS_VERSION } from '../src/users/terms.js';
 
 const OWNER = 'marie@example.com';
 const OTHER = 'paul@example.com';
@@ -29,7 +30,7 @@ describe('DELETE /me (e2e)', () => {
   // Compte avec un article, une alerte et une session (cookie de refresh).
   async function createAccount(email: string) {
     const server = app.getHttpServer();
-    await request(server).post('/auth/register').send({ email, password: TEST_PASSWORD }).expect(201);
+    await request(server).post('/auth/register').send({ termsVersion: TERMS_VERSION, email, password: TEST_PASSWORD }).expect(201);
     const login = await request(server).post('/auth/login').send({ email, password: TEST_PASSWORD }).expect(200);
     const accessToken: string = login.body.accessToken;
     const cookie = ([] as string[]).concat(login.headers['set-cookie'] ?? []).find((c) => c.startsWith('refresh_token='))!;

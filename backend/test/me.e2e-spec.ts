@@ -5,6 +5,7 @@ import { App } from 'supertest/types.js';
 import { AppModule } from '../src/app.module.js';
 import { PrismaService } from '../src/prisma/prisma.service.js';
 import { resetDatabase } from './setup/reset-database.js';
+import { TERMS_VERSION } from '../src/users/terms.js';
 
 const EMAIL = 'marie@example.com';
 const PASSWORD = 'correct horse battery staple';
@@ -25,7 +26,7 @@ describe('GET /me (e2e)', () => {
     const server = app.getHttpServer();
     const registered = await request(server)
       .post('/auth/register')
-      .send({ email: EMAIL, password: PASSWORD })
+      .send({ termsVersion: TERMS_VERSION, email: EMAIL, password: PASSWORD })
       .expect(201);
     userId = registered.body.id;
 
@@ -58,6 +59,7 @@ describe('GET /me (e2e)', () => {
       firstName: null,
       lastName: null,
       emailVerified: false,
+      termsAccepted: true,
       households: [{ id: expect.any(String), name: 'Mon foyer', role: 'OWNER' }],
     });
     expect(JSON.stringify(res.body)).not.toContain('passwordHash');
@@ -110,6 +112,38 @@ describe('GET /me (e2e)', () => {
       ['another field (mass assignment)', { email: 'pirate@example.com' }],
     ])('rejects %s', async (_label, body) => {
       await updateMe(body).expect(400);
+    });
+  });
+
+  describe('POST /me/terms-acceptance', () => {
+    const accept = (body: object, token: string | null = accessToken) => {
+      const req = request(app.getHttpServer()).post('/me/terms-acceptance');
+      return (token ? req.set('Authorization', `Bearer ${token}`) : req).send(body);
+    };
+
+    it('asks for the new terms when they changed, then records the acceptance', async () => {
+      // Compte qui avait accepté une version précédente des CGU.
+      await prisma.user.update({ where: { id: userId }, data: { termsVersion: '2020-01-01', termsAcceptedAt: new Date('2020-01-01') } });
+      expect((await getMe(accessToken).expect(200)).body.termsAccepted).toBe(false);
+
+      await accept({ version: TERMS_VERSION }).expect(204);
+
+      expect((await getMe(accessToken).expect(200)).body.termsAccepted).toBe(true);
+      const user = await prisma.user.findUniqueOrThrow({ where: { id: userId }, select: { termsVersion: true, termsAcceptedAt: true } });
+      expect(user.termsVersion).toBe(TERMS_VERSION);
+      expect(Date.now() - user.termsAcceptedAt!.getTime()).toBeLessThan(60_000);
+    });
+
+    it.each([
+      ['an outdated version (old cached app)', { version: '2020-01-01' }],
+      ['no version', {}],
+      ['another field (mass assignment)', { version: TERMS_VERSION, userId: 'someone-else' }],
+    ])('rejects %s with 400', async (_label, body) => {
+      await accept(body).expect(400);
+    });
+
+    it('requires an access token', async () => {
+      await accept({ version: TERMS_VERSION }, null).expect(401);
     });
   });
 });

@@ -5,6 +5,7 @@ import { App } from 'supertest/types.js';
 import { AppModule } from '../src/app.module.js';
 import { PrismaService } from '../src/prisma/prisma.service.js';
 import { resetDatabase } from './setup/reset-database.js';
+import { TERMS_VERSION } from '../src/users/terms.js';
 
 const VALID_PASSWORD = 'correct horse battery staple';
 
@@ -26,7 +27,7 @@ describe('POST /auth/register (e2e)', () => {
   });
 
   const register = (body: object) =>
-    request(app.getHttpServer()).post('/auth/register').send(body);
+    request(app.getHttpServer()).post('/auth/register').send({ termsVersion: TERMS_VERSION, ...body });
 
   it('creates the account and returns only id and email', async () => {
     const res = await register({ email: 'marie@example.com', password: VALID_PASSWORD }).expect(201);
@@ -64,6 +65,26 @@ describe('POST /auth/register (e2e)', () => {
   it('rejects an email that is already registered', async () => {
     await register({ email: 'marie@example.com', password: VALID_PASSWORD }).expect(201);
     await register({ email: 'MARIE@example.com', password: VALID_PASSWORD }).expect(409);
+  });
+
+  it('records the accepted version of the terms and when, with a date set by the server', async () => {
+    await register({ email: 'marie@example.com', password: VALID_PASSWORD }).expect(201);
+
+    const user = await prisma.user.findUniqueOrThrow({
+      where: { email: 'marie@example.com' },
+      select: { termsVersion: true, termsAcceptedAt: true },
+    });
+    expect(user.termsVersion).toBe(TERMS_VERSION);
+    expect(Date.now() - user.termsAcceptedAt!.getTime()).toBeLessThan(60_000);
+  });
+
+  it.each([
+    ['without accepting the terms', { termsVersion: undefined }],
+    ['with an outdated version of the terms', { termsVersion: '2020-01-01' }],
+    ['with an acceptance date chosen by the client', { termsAcceptedAt: '2000-01-01T00:00:00Z' }],
+  ])('refuses to create an account %s', async (_label, body) => {
+    await register({ email: 'marie@example.com', password: VALID_PASSWORD, ...body }).expect(400);
+    expect(await prisma.user.count()).toBe(0);
   });
 
   it('rejects a password shorter than 12 characters', () => {

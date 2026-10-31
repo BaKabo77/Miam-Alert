@@ -6,6 +6,7 @@ import { AppModule } from '../src/app.module.js';
 import { PrismaService } from '../src/prisma/prisma.service.js';
 import { resetDatabase } from './setup/reset-database.js';
 import { createTestUser, TEST_PASSWORD, type TestUser } from './setup/test-users.js';
+import { TERMS_VERSION } from '../src/users/terms.js';
 
 const OWNER = 'marie@example.com';
 const OTHER = 'paul@example.com';
@@ -59,7 +60,13 @@ describe('GET /me/export (e2e)', () => {
     expect(res.headers['content-disposition']).toMatch(/^attachment; filename="miam-alert-export-\d{4}-\d{2}-\d{2}\.json"$/);
     expect(res.headers['cache-control']).toBe('no-store');
 
-    expect(res.body.account).toMatchObject({ email: OWNER, firstName: null, lastName: null });
+    expect(res.body.account).toMatchObject({
+      email: OWNER,
+      firstName: null,
+      lastName: null,
+      termsVersion: TERMS_VERSION,
+      termsAcceptedAt: expect.any(String),
+    });
     expect(res.body.households).toHaveLength(1);
     expect(res.body.households[0]).toMatchObject({ name: 'Mon foyer', role: 'OWNER' });
     expect(res.body.households[0].pantryItems).toEqual([

@@ -11,6 +11,9 @@ export interface MeResponse {
   firstName: string | null;
   lastName: string | null;
   emailVerified: boolean;
+  // false : les CGU ont changé depuis la dernière acceptation (ou n'ont jamais été acceptées) ;
+  // le front demande alors de les accepter avant d'utiliser l'application.
+  termsAccepted: boolean;
   households: { id: string; name: string; role: HouseholdRole }[];
 }
 
@@ -25,6 +28,8 @@ export interface DataExport {
     firstName: string | null;
     lastName: string | null;
     emailVerifiedAt: string | null;
+    termsVersion: string | null;
+    termsAcceptedAt: string | null;
     createdAt: string;
     updatedAt: string;
   };

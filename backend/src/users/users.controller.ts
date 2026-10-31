@@ -1,10 +1,11 @@
-import { Body, Controller, Delete, Get, HttpCode, HttpStatus, Patch, Res } from '@nestjs/common';
+import { Body, Controller, Delete, Get, HttpCode, HttpStatus, Patch, Post, Res } from '@nestjs/common';
 import { Throttle } from '@nestjs/throttler';
 import type { Response } from 'express';
 import type { AuthenticatedUser } from '../auth/auth.types.js';
 import { CurrentUser } from '../auth/current-user.decorator.js';
 import { REFRESH_TOKEN_COOKIE, REFRESH_TOKEN_COOKIE_OPTIONS } from '../auth/refresh-token.js';
 import { AUTH_THROTTLE, EXPORT_THROTTLE } from '../common/throttling.js';
+import { AcceptTermsDto } from './dto/accept-terms.dto.js';
 import { DeleteMeDto } from './dto/delete-me.dto.js';
 import { UpdateMeDto } from './dto/update-me.dto.js';
 import { UsersService } from './users.service.js';
@@ -43,6 +44,14 @@ export class UsersController {
   @Patch()
   updateMe(@CurrentUser() user: AuthenticatedUser, @Body() dto: UpdateMeDto): Promise<MeResponse> {
     return this.users.updateMe(user.id, dto);
+  }
+
+  // Protégée : chacun n'accepte les CGU que pour SON compte (identité lue dans le token). Le corps
+  // contient la version affichée, qui doit être celle en vigueur (400 sinon).
+  @Post('terms-acceptance')
+  @HttpCode(HttpStatus.NO_CONTENT)
+  acceptTerms(@CurrentUser() user: AuthenticatedUser, @Body() _dto: AcceptTermsDto): Promise<void> {
+    return this.users.acceptTerms(user.id);
   }
 
   // Protégée : on ne peut supprimer que SON compte (identité lue dans le token), et seulement

@@ -7,6 +7,7 @@ import { Mailer, type MailMessage } from '../src/mail/mailer.js';
 import { PrismaService } from '../src/prisma/prisma.service.js';
 import { resetDatabase } from './setup/reset-database.js';
 import { TEST_PASSWORD } from './setup/test-users.js';
+import { TERMS_VERSION } from '../src/users/terms.js';
 
 const EMAIL = 'marie@example.com';
 
@@ -37,7 +38,7 @@ describe('Email verification (e2e)', () => {
     await resetDatabase(prisma);
 
     const server = app.getHttpServer();
-    await request(server).post('/auth/register').send({ email: EMAIL, password: TEST_PASSWORD }).expect(201);
+    await request(server).post('/auth/register').send({ termsVersion: TERMS_VERSION, email: EMAIL, password: TEST_PASSWORD }).expect(201);
     accessToken = (await request(server).post('/auth/login').send({ email: EMAIL, password: TEST_PASSWORD }).expect(200)).body
       .accessToken;
     await waitForEmails(1);

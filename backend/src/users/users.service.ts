@@ -4,6 +4,7 @@ import { SecurityLogger } from '../common/security-logger.js';
 import { Prisma } from '../generated/prisma/client.js';
 import { PrismaService } from '../prisma/prisma.service.js';
 import { UpdateMeDto } from './dto/update-me.dto.js';
+import { TERMS_VERSION } from './terms.js';
 import type { DataExport, MeResponse } from './users.types.js';
 
 // Champs choisis un par un : rien d'autre ne peut sortir, même si le modèle s'enrichit.
@@ -13,6 +14,7 @@ const ME_SELECT = {
   firstName: true,
   lastName: true,
   emailVerifiedAt: true,
+  termsVersion: true,
   memberships: {
     select: { role: true, household: { select: { id: true, name: true } } },
   },
@@ -27,6 +29,8 @@ const EXPORT_SELECT = {
   firstName: true,
   lastName: true,
   emailVerifiedAt: true,
+  termsVersion: true,
+  termsAcceptedAt: true,
   createdAt: true,
   updatedAt: true,
   memberships: {
@@ -115,6 +119,8 @@ export class UsersService {
         firstName: user.firstName,
         lastName: user.lastName,
         emailVerifiedAt: user.emailVerifiedAt?.toISOString() ?? null,
+        termsVersion: user.termsVersion,
+        termsAcceptedAt: user.termsAcceptedAt?.toISOString() ?? null,
         createdAt: user.createdAt.toISOString(),
         updatedAt: user.updatedAt.toISOString(),
       },
@@ -136,6 +142,25 @@ export class UsersService {
       })),
       sessions: toSessions(user.refreshTokens),
     };
+  }
+
+  // Acceptation de la version en vigueur des CGU (version vérifiée par le DTO). Enregistre la preuve :
+  // quelle version, et quand.
+  async acceptTerms(userId: string): Promise<void> {
+    try {
+      await this.prisma.user.update({
+        where: { id: userId },
+        data: { termsVersion: TERMS_VERSION, termsAcceptedAt: new Date() },
+        select: { id: true },
+      });
+    } catch (error) {
+      // P2025 : le compte n'existe plus (supprimé, token encore valide).
+      if (error instanceof Prisma.PrismaClientKnownRequestError && error.code === 'P2025') {
+        throw new UnauthorizedException();
+      }
+      throw error;
+    }
+    this.security.log('account.terms_accepted', { userId });
   }
 
   // Suppression réelle du compte (RGPD, droit à l'effacement) : compte, sessions, appartenances,
@@ -182,6 +207,7 @@ function toMeResponse(user: MeRow): MeResponse {
     firstName: user.firstName,
     lastName: user.lastName,
     emailVerified: user.emailVerifiedAt !== null,
+    termsAccepted: user.termsVersion === TERMS_VERSION,
     households: user.memberships.map(({ role, household }) => ({ ...household, role })),
   };
 }

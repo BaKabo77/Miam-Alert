@@ -53,6 +53,10 @@ model User {
   lastName        String?   @db.VarChar(100)
   // Rempli quand l'utilisateur a cliqué sur le lien reçu par email : l'adresse lui appartient.
   emailVerifiedAt DateTime?
+  // Preuve d'acceptation des CGU : quelle version, et quand. Une nouvelle version des CGU devra
+  // être acceptée de nouveau (voir src/users/terms.ts).
+  termsVersion    String?   @db.VarChar(20)
+  termsAcceptedAt DateTime?
   createdAt       DateTime  @default(now())
   updatedAt       DateTime  @updatedAt
 

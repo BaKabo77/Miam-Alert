@@ -5,6 +5,7 @@ import { App } from 'supertest/types.js';
 import { AppModule } from '../src/app.module.js';
 import { PrismaService } from '../src/prisma/prisma.service.js';
 import { resetDatabase } from './setup/reset-database.js';
+import { TERMS_VERSION } from '../src/users/terms.js';
 
 const EMAIL = 'marie@example.com';
 const PASSWORD = 'correct horse battery staple';
@@ -41,7 +42,7 @@ describe('Security event logs (e2e)', () => {
 
     await request(server)
       .post('/auth/register')
-      .send({ email: EMAIL, password: PASSWORD, firstName: 'Marie', lastName: 'Curie' });
+      .send({ termsVersion: TERMS_VERSION, email: EMAIL, password: PASSWORD, firstName: 'Marie', lastName: 'Curie' });
     await request(server).post('/auth/login').send({ email: EMAIL, password: 'wrong password!!' });
     const login = await request(server).post('/auth/login').send({ email: EMAIL, password: PASSWORD });
     const cookie = ([] as string[]).concat(login.headers['set-cookie'] ?? [])[0].split(';')[0];

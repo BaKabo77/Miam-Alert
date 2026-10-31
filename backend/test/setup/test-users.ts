@@ -1,6 +1,7 @@
 import { INestApplication } from '@nestjs/common';
 import request from 'supertest';
 import { App } from 'supertest/types.js';
+import { TERMS_VERSION } from '../../src/users/terms.js';
 
 export const TEST_PASSWORD = 'correct horse battery staple';
 
@@ -13,7 +14,7 @@ export interface TestUser {
 export async function createTestUser(app: INestApplication<App>, email: string): Promise<TestUser> {
   const server = app.getHttpServer();
 
-  await request(server).post('/auth/register').send({ email, password: TEST_PASSWORD }).expect(201);
+  await request(server).post('/auth/register').send({ termsVersion: TERMS_VERSION, email, password: TEST_PASSWORD }).expect(201);
   const login = await request(server)
     .post('/auth/login')
     .send({ email, password: TEST_PASSWORD })
