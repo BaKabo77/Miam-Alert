@@ -7,6 +7,7 @@ En production, Caddy est le **seul point d'entrée depuis Internet** (ports 80 e
 | `miam-alert.fr` | `web:8080` (Nginx, le front) |
 | `www.miam-alert.fr` | redirection permanente vers `miam-alert.fr` |
 | `api.miam-alert.fr` | `api:3000` (NestJS), corps de requête limité à 64 Ko |
+| `stats.miam-alert.fr` | `stats:3000` (Umami) : `/script.js` et `/api/send` publics ; tout le reste derrière un mot de passe vérifié par Caddy (`basic_auth`, variables `STATS_ADMIN_USER` et `STATS_ADMIN_HASH`). Voir [deploy/analytics/](../analytics/README.md) |
 
 ## Fichiers
 

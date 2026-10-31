@@ -28,7 +28,7 @@ Un nouveau push sur la même branche annule le pipeline devenu obsolète (`inter
 | secret-detection | `secret_detection` | toujours | GitLab Secret Detection : aucun secret dans le code |
 | security | `semgrep-sast` | toujours | GitLab SAST : analyse statique du code |
 | security | `audit` (×2) | toujours | `npm audit --audit-level=high` sur l'API et le front (seul le lockfile est lu, rien n'est installé) |
-| build | `build-images` | tags | Construit les 4 images (`api`, `migrate`, `web`, `proxy`) et les pousse dans le registre GitLab, avec le tag de la version |
+| build | `build-images` | tags | Construit les 5 images (`api`, `migrate`, `web`, `proxy`, `stats`) et les pousse dans le registre GitLab, avec le tag de la version ; le front inclut la mesure d'audience si `STATS_WEBSITE_ID` est défini |
 | scan | `scan-images` (×4) | tags | **Trivy** : échec si une faille haute ou critique **disposant d'un correctif** subsiste, dans le système comme dans les dépendances |
 | deploy | `deploy-production` | tags, **manuel** | Connexion SSH à l'utilisateur `deploy` du serveur, qui lance la version |
 
@@ -56,7 +56,7 @@ Quand le poste est éteint, les pipelines attendent. Détails, sécurité et ins
 4. Le pipeline du tag construit, analyse, puis attend.
 5. Bouton ▶ de `deploy-production`. Sur le serveur, le script `miam-deploy` :
    1. récupère le tag dans le dépôt ;
-   2. télécharge les 4 images de cette version ;
+   2. télécharge les 5 images de cette version ;
    3. applique les migrations (conteneur `migrate`), puis redémarre les services ;
    4. vérifie que l'API répond.
 
@@ -74,6 +74,7 @@ Quand le poste est éteint, les pipelines attendent. Détails, sécurité et ins
 | `DEPLOY_HOST` | Variable | IP du serveur |
 | `DEPLOY_SSH_KEY` | **File** | Clé privée du job, **complète** (lignes `-----BEGIN…` et `-----END…` comprises) |
 | `DEPLOY_KNOWN_HOSTS` | Variable | Ligne `known_hosts` du serveur (empreinte fixée : pas de confiance aveugle à la première connexion) |
+| `STATS_WEBSITE_ID` | Variable (visible, pas un secret) | Identifiant du site dans Umami ; absent, le front est construit sans mesure d'audience (voir [deploy/analytics/](../deploy/analytics/README.md)) |
 
 Les identifiants du registre (`CI_REGISTRY_USER`, `CI_REGISTRY_PASSWORD`) sont fournis par GitLab à chaque job et valables le temps du job.
 

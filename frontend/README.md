@@ -49,6 +49,15 @@ Les pages connectées sont enveloppées par `<RequireAuth>` (redirection vers `/
 - Quand les CGU changent, `/me` renvoie `termsAccepted: false` et `<RequireAuth>` affiche [`TermsGate`](src/auth/TermsGate.tsx) à la place de l'application : accepter, se déconnecter ou supprimer son compte (refuser ne doit pas obliger à accepter pour partir).
 - L'adresse de contact publique est `support@miam-alert.fr` (`legal/publisher.ts`) : lien « Contact » en bas des pages, section « Aide et contact » du profil, CGU et pages légales.
 
+### Mesure d'audience
+
+[`lib/analytics.ts`](src/lib/analytics.ts) charge le script d'Umami (auto-hébergé, sans cookie) **seulement** si `VITE_STATS_URL` et `VITE_STATS_WEBSITE_ID` sont fournis à la construction ; sinon, rien. Options : « Ne pas me pister » respecté, ni paramètres d'URL ni fragment envoyés.
+- Événements : `trackEvent('signup' | 'product-scanned' | 'item-added' | 'recipe-viewed' | 'recipe-cooked')`, une liste fermée **sans donnée associée** (aucune donnée personnelle possible). Ajouter un événement : l'ajouter au type `AnalyticsEvent`, puis à la politique de confidentialité.
+- Opposition par appareil : [`legal/AnalyticsChoice.tsx`](src/legal/AnalyticsChoice.tsx), dans la politique de confidentialité.
+- La CSP n'autorise que l'adresse d'Umami (`__STATS_URL__` dans `nginx/security-headers.conf.template`).
+
+Détails, choix et mise en service : [deploy/analytics/README.md](../deploy/analytics/README.md).
+
 ## Session et appels à l'API
 
 ### Le client HTTP ([`lib/api.ts`](src/lib/api.ts))

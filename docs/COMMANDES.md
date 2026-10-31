@@ -230,6 +230,15 @@ ssh -t miam-vps 'sudo aureport --summary'                                       
 
 Toutes les commandes : [deploy/hardening/README.md](../deploy/hardening/README.md#commandes).
 
+### Mesure d'audience
+
+```bash
+curl -s -o /dev/null -w '%{http_code}\n' https://stats.miam-alert.fr/     # 401 : tableau de bord protégé par Caddy
+ssh -t miam-vps 'systemctl list-timers miam-stats-purge.timer --no-pager'  # prochaine purge (13 mois)
+```
+
+Tableau de bord : https://stats.miam-alert.fr (deux mots de passe). Détails : [deploy/analytics/README.md](../deploy/analytics/README.md#commandes).
+
 ### Journaux hors du serveur
 
 ```bash

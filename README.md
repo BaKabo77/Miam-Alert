@@ -163,7 +163,7 @@ Chaque merge request déclenche un pipeline GitLab CI ; un tag de version `vX.Y.
 | Qualité | API : lint, compilation TypeScript, build, tests unitaires ; front : lint, compilation, build |
 | Tests | Tests e2e sur un PostgreSQL éphémère (et un faux serveur d'emails) |
 | Sécurité | `npm audit` de l'API et du front (échec si vulnérabilité haute), détection de secrets, analyse statique (SAST) |
-| Images (tags) | Construction des 4 images de production, envoi dans le registre du projet |
+| Images (tags) | Construction des 5 images de production, envoi dans le registre du projet |
 | Analyse (tags) | Trivy : aucune faille haute ou critique corrigible tolérée, dans le système comme dans les dépendances |
 | Déploiement (tags) | Bouton manuel : le serveur télécharge les images analysées et les lance, via un utilisateur dont la clé ne peut lancer que le script de déploiement (détails : `deploy/server/README.md`) |
 

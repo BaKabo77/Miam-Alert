@@ -33,6 +33,7 @@ Miam'Alert suit les produits alimentaires d'un foyer pour éviter le gaspillage 
                           │ db (Postgres)│──▶ sauvegarde chiffrée chaque nuit (Backblaze B2)
                           └──────────────┘
 
+   Mesure d'audience sans cookie : stats.miam-alert.fr ──▶ stats (Umami) ──▶ base « umami » séparée
    Journaux du serveur (système, audit, conteneurs) ──▶ archive chiffrée et non modifiable,
    toutes les 15 minutes (Backblaze B2, 6 mois)
 ```
@@ -64,6 +65,7 @@ Miam'Alert suit les produits alimentaires d'un foyer pour éviter le gaspillage 
 | `deploy/runner/` | Runner GitLab CI sur le poste de développement | [deploy/runner/README.md](../deploy/runner/README.md) |
 | `deploy/hardening/` | Durcissement du serveur : redémarrage automatique, noyau, journal d'audit, Lynis | [deploy/hardening/README.md](../deploy/hardening/README.md) |
 | `deploy/logship/` | Envoi des journaux hors du serveur (archive chiffrée et non modifiable) | [deploy/logship/README.md](../deploy/logship/README.md) |
+| `deploy/analytics/` | Mesure d'audience sans cookie (Umami auto-hébergé, image durcie) | [deploy/analytics/README.md](../deploy/analytics/README.md) |
 | `.gitlab-ci.yml` | Pipeline, publication d'une version | [docs/CI-CD.md](CI-CD.md) |
 | Toutes les parties | Aide-mémoire de toutes les commandes : installation, développement, tests, publication, production | [docs/COMMANDES.md](COMMANDES.md) |
 

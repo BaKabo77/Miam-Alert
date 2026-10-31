@@ -3,7 +3,7 @@
 Une version se publie en posant un tag `vX.Y.Z` sur `main`. Le pipeline GitLab de ce tag :
 
 1. rejoue la qualité, les tests et les analyses de sécurité ;
-2. **construit les 4 images** de production (API, migrations, front, proxy) et les envoie dans le registre du projet ;
+2. **construit les 5 images** de production (API, migrations, front, proxy, mesure d'audience) et les envoie dans le registre du projet ;
 3. **analyse les images avec Trivy** : une faille haute ou critique disposant d'un correctif bloque la suite ;
 4. propose le job **`deploy-production`**, à lancer à la main (bouton « play »).
 
