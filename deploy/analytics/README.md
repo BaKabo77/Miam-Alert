@@ -148,7 +148,7 @@ sudo journalctl -u miam-stats-purge.service -n 5 --no-pager           # dernièr
 ## À savoir
 
 - Si le navigateur redemande le mot de passe de Caddy sans fin, c'est que le tableau de bord est protégé par un `basic_auth` direct au lieu de la porte : le front d'Umami remplace l'en-tête `Authorization` (voir [deploy/caddy/](../caddy/README.md#choix-de-sécurité)).
-- Pour fermer toutes les sessions du tableau de bord (poste perdu, cookie copié) : changer `STATS_GATE_TOKEN` dans `.env.prod`, puis `prod up -d --no-build proxy`.
+- Pour fermer toutes les sessions du tableau de bord (poste perdu, cookie copié) : changer `STATS_GATE_TOKEN` dans `.env.prod`, puis redéployer la version en place : `sudo /usr/local/sbin/miam-deploy "$(git describe --tags)"` (le proxy est recréé avec la nouvelle valeur). Jamais `prod up` à la main : sans les variables du script, Docker utiliserait une image locale au lieu de celle du registre.
 - Le premier démarrage d'Umami crée le compte `admin` / `umami` : la porte de Caddy le protège, mais il faut quand même le changer dès la première connexion (étape 4).
 - Si Umami est arrêté ou en panne, l'application fonctionne normalement : le script ne se charge pas, et les appels de mesure ne font rien.
 - La conservation de 13 mois est annoncée dans la politique de confidentialité : la changer impose de modifier les deux.

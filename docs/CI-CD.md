@@ -24,7 +24,7 @@ Un nouveau push sur la même branche annule le pipeline devenu obsolète (`inter
 |---|---|---|---|
 | check | `quality` | toujours | API : lint (oxlint avec les types), compilation TypeScript, build, tests unitaires |
 | check | `frontend` | toujours | Front : lint, compilation, build de production |
-| test | `e2e` | toujours | Tests e2e de l'API sur un **PostgreSQL éphémère** et un **Mailpit** (faux serveur d'emails). `JWT_SECRET` est généré au hasard à chaque exécution |
+| test | `e2e` | toujours | Tests e2e de l'API sur un **PostgreSQL éphémère** et un **Mailpit** (faux serveur d'emails). `JWT_SECRET` est généré au hasard à chaque exécution. Mêmes rôles qu'en production ([deploy/database/](../deploy/database/README.md)) : migrations en `miam_owner`, API en `miam_app` (droits sur les lignes seulement) |
 | secret-detection | `secret_detection` | toujours | GitLab Secret Detection : aucun secret dans le code |
 | security | `semgrep-sast` | toujours | GitLab SAST : analyse statique du code |
 | security | `audit` (×2) | toujours | `npm audit --audit-level=high` sur l'API et le front (seul le lockfile est lu, rien n'est installé) |

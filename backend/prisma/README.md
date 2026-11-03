@@ -74,7 +74,7 @@ Règles d'usage :
 4. Mettre à jour le DTO, le `select`, le type de réponse, l'export RGPD (`EXPORT_SELECT` dans [users/](../src/users/README.md)) et `test/setup/reset-database.ts` si une table apparaît.
 5. Commiter le schéma **et** la migration ensemble.
 
-En production, les migrations sont appliquées par le conteneur `migrate` **avant** le démarrage de l'API (`prisma migrate deploy`) : si elles échouent, l'API ne démarre pas sur un schéma qui ne lui correspond pas.
+En production, les migrations sont appliquées par le conteneur `migrate` **avant** le démarrage de l'API (`prisma migrate deploy`) : si elles échouent, l'API ne démarre pas sur un schéma qui ne lui correspond pas. Elles tournent avec le rôle `miam_owner`, propriétaire des tables mais sans droit d'administration ; l'API, elle, n'a que les droits sur les lignes (`miam_app`). Une migration ne peut donc pas exiger un superutilisateur (`CREATE EXTENSION`, par exemple) : voir [deploy/database/](../../deploy/database/README.md).
 
 ## Commandes
 

@@ -40,7 +40,7 @@ Miam'Alert suit les produits alimentaires d'un foyer pour éviter le gaspillage 
 
 - Le **navigateur** charge le front (fichiers statiques servis par Nginx), puis appelle l'API directement sur son sous-domaine.
 - L'**API** est la seule à parler à la base. C'est elle qui applique toutes les règles de sécurité : le front n'est qu'une interface.
-- La **base** n'a aucun port ouvert, et son réseau Docker n'a pas d'accès à Internet.
+- La **base** n'a aucun port ouvert, et son réseau Docker n'a pas d'accès à Internet. L'API s'y connecte avec un rôle limité à la lecture et à l'écriture des lignes ([deploy/database/](../deploy/database/README.md)) ; seules les migrations modifient le schéma.
 
 ## Carte du dépôt et de la documentation
 
@@ -61,6 +61,7 @@ Miam'Alert suit les produits alimentaires d'un foyer pour éviter le gaspillage 
 | `frontend/` | Application React (PWA), image Nginx de production | [frontend/README.md](../frontend/README.md) |
 | `deploy/caddy/` | Reverse proxy de production | [deploy/caddy/README.md](../deploy/caddy/README.md) |
 | `deploy/server/` | Script de déploiement du serveur | [deploy/server/README.md](../deploy/server/README.md) |
+| `deploy/database/` | Rôles de la base : migrations et API sans superutilisateur, API limitée aux lignes | [deploy/database/README.md](../deploy/database/README.md) |
 | `deploy/backup/` | Sauvegardes chiffrées | [deploy/backup/README.md](../deploy/backup/README.md) |
 | `deploy/runner/` | Runner GitLab CI sur le poste de développement | [deploy/runner/README.md](../deploy/runner/README.md) |
 | `deploy/hardening/` | Durcissement du serveur : redémarrage automatique, noyau, journal d'audit, Lynis | [deploy/hardening/README.md](../deploy/hardening/README.md) |
@@ -104,7 +105,7 @@ Exemple : l'utilisateur marque un yaourt comme consommé.
 | | Développement | Production |
 |---|---|---|
 | Fichier | `docker-compose.yml` | `docker-compose.prod.yml` |
-| Services | `db`, `adminer`, `mailpit`, `backend` (rechargement à chaud), `frontend` (Vite) | `db`, `migrate` (s'arrête après les migrations), `api`, `web`, `proxy` |
+| Services | `db`, `adminer`, `mailpit`, `backend` (rechargement à chaud), `frontend` (Vite) | `db`, `db-init` (rôles de la base), `migrate` (s'arrête après les migrations), `api`, `web`, `stats-db-init` et `stats` (mesure d'audience), `proxy` |
 | Secrets | `.env` (modèle : `.env.example`) | `.env.prod` sur le serveur (modèle : `.env.prod.example`) |
 | Emails | Mailpit, http://localhost:8025 (rien ne part) | Brevo |
 | Accès | ports publiés sur `127.0.0.1` uniquement | seul Caddy est exposé (80/443) |

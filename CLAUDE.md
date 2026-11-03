@@ -82,6 +82,7 @@ miam-alert/             # nom technique (npm, Docker) ; nom affiché : Miam'Aler
 ├── frontend/           # React (Vite), PWA ; Dockerfile + nginx/ pour la production
 ├── deploy/caddy/       # reverse proxy de production (Caddyfile, image non-root)
 ├── deploy/server/      # script de déploiement restreint du serveur
+├── deploy/database/    # rôles de la base (miam_owner pour les migrations, miam_app limité aux lignes pour l'API)
 ├── deploy/backup/      # sauvegardes chiffrées
 ├── deploy/hardening/   # durcissement du serveur (redémarrage auto, sysctl, auditd, Lynis)
 ├── deploy/logship/     # envoi des journaux hors du serveur (archive B2 chiffrée, non modifiable)
@@ -305,7 +306,7 @@ En cours (branche `feat/terms-and-support`, `v1.0`) : CGU (`/terms`, version `20
 
 En attente côté serveur (fait par le développeur plus tard) : installer l'envoi des journaux (`deploy/logship/README.md`, bucket B2 + clé), puis publier `v0.6.2`.
 
-Point de sécurité signalé (2026-10-31) : l'API se connecte à PostgreSQL avec le compte administrateur créé par l'image (`POSTGRES_USER`, superutilisateur). À remplacer par un rôle limité à la base de l'application (propriétaire de ses tables, sans `SUPERUSER`), migrations comprises.
+Rôles de la base (branche `fix/db-least-privilege`, corrige le point signalé le 2026-10-31 : l'API utilisait le superutilisateur) : service `db-init` (`deploy/database/init-app-db.sh`, idempotent, avant `migrate`) ; `miam_owner` propriétaire de la base et des objets (migrations), `miam_app` limité aux lignes (API, sans accès à `_prisma_migrations`) ; connexion par défaut retirée à `PUBLIC` ; e2e de la CI en `miam_app` (`DATABASE_URL_TEST_APP`). Mise en service : `DB_OWNER_PASSWORD` et `DB_APP_PASSWORD` dans `.env.prod` avant le déploiement. Le dev garde le compte de `.env` (`migrate dev` crée une *shadow database*).
 
 Reporté après la `v1.0` : tests automatisés du front (prévu : Vitest 5 + jsdom + Testing Library pour le client HTTP et la session, Playwright 1.64 en CI sur le runner avec l'image `mcr.microsoft.com/playwright:v1.64.1-noble`, qui embarque Node 24), normalisation de la clé de déploiement (branche `fix/deploy-key-format`), Renovate, durcissement de `miam-backup.service`, DMARC en `p=quarantine`, règles d'audit immuables (`-e 2`), alertes sur les événements de sécurité.
 

@@ -192,7 +192,7 @@ cd ~/miam-alert
 prod() { sudo docker compose -f docker-compose.prod.yml --env-file .env.prod "$@"; }
 
 git describe --tags          # version des fichiers en place
-prod ps -a                   # état des 5 services (migrate : Exited (0), les autres : healthy)
+prod ps -a                   # état des services (db-init, stats-db-init, migrate : Exited (0) ; les autres : Up)
 prod logs -f --tail 100 api  # journaux de l'API (JSON) ; aussi web, proxy, db, migrate
 prod restart api             # redémarrer un service, sans le recréer
 ```

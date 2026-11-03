@@ -67,7 +67,8 @@ Toutes les variables sont validées au démarrage par [`src/config/env.validatio
 | `SMTP_USER`, `SMTP_PASSWORD` | non | Identifiants SMTP (inutiles avec Mailpit) |
 | `MAIL_FROM` | oui | Adresse d'expédition |
 | `ALERTS_HEALTHCHECK_URL` | non | Adresse prévenue après la tâche de 9 h (HTTPS uniquement) |
-| `DATABASE_URL_TEST` | tests e2e | Base des tests, dont le nom **doit** finir par `_test` |
+| `DATABASE_URL_TEST` | tests e2e | Base des tests, dont le nom **doit** finir par `_test` ; utilisée par les migrations, et par l'application sans la variable suivante |
+| `DATABASE_URL_TEST_APP` | tests e2e, facultative | Même base, avec le rôle limité de la production (`miam_app`, voir [deploy/database/](../deploy/database/README.md)) : fournie par la CI |
 
 Ajouter une variable : la déclarer dans `EnvironmentVariables`, avec ses règles, dans `.env.example` (valeur factice), dans `.env.prod.example` si elle sert en production, et dans le bloc `environment` du service `api` de `docker-compose.prod.yml`. Chaque conteneur ne reçoit que ses propres variables.
 

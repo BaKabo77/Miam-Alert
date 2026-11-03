@@ -6,7 +6,8 @@
 # Seul Caddy est joignable depuis Internet (ports 80 et 443). La base de données n'a aucun port
 # publié et vit sur un réseau interne sans accès à Internet. Pas d'Adminer en production.
 # Chaque conteneur ne reçoit que les variables dont il a besoin (le front et Caddy ne voient
-# jamais JWT_SECRET ni le mot de passe de la base).
+# jamais JWT_SECRET ni le mot de passe de la base ; l'API et les migrations n'ont jamais celui du
+# superutilisateur de PostgreSQL).
 
 name: miam-alert-prod
 
@@ -43,6 +44,35 @@ services:
       timeout: 5s
       retries: 10
 
+  # Rôles de la base de l'application (deploy/database) : propriétaire pour les migrations, rôle
+  # limité aux lignes pour l'API. Seul service, avec stats-db-init, à recevoir le mot de passe du
+  # superutilisateur. S'arrête une fois les droits appliqués, avant les migrations.
+  db-init:
+    <<: *hardened
+    restart: 'no'
+    image: postgres:16-alpine
+    user: '70:70'
+    command: ['sh', '/init/init-app-db.sh']
+    environment:
+      PGHOST: db
+      PGUSER: ${POSTGRES_USER}
+      PGPASSWORD: ${POSTGRES_PASSWORD}
+      PGDATABASE: ${POSTGRES_DB}
+      DB_OWNER_PASSWORD: ${DB_OWNER_PASSWORD:?DB_OWNER_PASSWORD manquant}
+      DB_APP_PASSWORD: ${DB_APP_PASSWORD:?DB_APP_PASSWORD manquant}
+    volumes:
+      - ./deploy/database/init-app-db.sh:/init/init-app-db.sh:ro
+    read_only: true
+    tmpfs:
+      - /tmp
+    cap_drop:
+      - ALL
+    depends_on:
+      db:
+        condition: service_healthy
+    networks:
+      - internal
+
   # Applique les migrations Prisma puis s'arrête. L'API ne démarre que si elles ont réussi :
   # le code ne tourne jamais sur un schéma de base qui ne lui correspond pas.
   migrate:
@@ -53,10 +83,12 @@ services:
       context: ./backend
       target: migrate
     environment:
-      DATABASE_URL: postgresql://${POSTGRES_USER}:${POSTGRES_PASSWORD}@db:5432/${POSTGRES_DB}?schema=public
+      # Propriétaire de la base, pas superutilisateur. Mots de passe en hexadécimal (voir
+      # .env.prod.example) : utilisables tels quels dans l'URL.
+      DATABASE_URL: postgresql://miam_owner:${DB_OWNER_PASSWORD}@db:5432/${POSTGRES_DB}?schema=public
     depends_on:
-      db:
-        condition: service_healthy
+      db-init:
+        condition: service_completed_successfully
     networks:
       - internal
 
@@ -69,7 +101,8 @@ services:
     environment:
       NODE_ENV: production
       PORT: 3000
-      DATABASE_URL: postgresql://${POSTGRES_USER}:${POSTGRES_PASSWORD}@db:5432/${POSTGRES_DB}?schema=public
+      # Rôle limité aux lignes (deploy/database) : ni modification du schéma, ni droit d'administration.
+      DATABASE_URL: postgresql://miam_app:${DB_APP_PASSWORD}@db:5432/${POSTGRES_DB}?schema=public
       JWT_SECRET: ${JWT_SECRET:?JWT_SECRET manquant}
       CORS_ORIGINS: https://${DOMAIN:?DOMAIN manquant}
       # Un seul proxy devant l'API : Caddy (voir src/common/trust-proxy.ts).

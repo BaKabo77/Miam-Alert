@@ -140,6 +140,7 @@ Correspondance avec l'OWASP Top 10 et procédure de signalement d'une faille : v
 - **Moindre privilège pour les secrets** : générés sur le serveur, chaque conteneur ne reçoit que les siens (le front et le proxy ne voient jamais le secret JWT ni le mot de passe de la base).
 - **Serveur durci** : connexion SSH par clé uniquement, root interdit, pare-feu, fail2ban, mises à jour de sécurité automatiques ; clé de déploiement GitLab en lecture seule.
 - Migrations de la base appliquées avant le démarrage de l'API : le code ne tourne jamais sur un schéma qui ne lui correspond pas.
+- **Moindre privilège dans la base** : l'API n'a que les droits sur les lignes (ni `DROP`, ni `ALTER`, ni droit d'administration) ; les migrations ont leur propre rôle propriétaire ; le superutilisateur de PostgreSQL ne sert qu'à l'administration et aux sauvegardes. Les tests e2e de la CI tournent avec ces mêmes droits.
 
 ### Chaîne de développement
 - Aucun secret dans le dépôt : configuration validée au démarrage, l'API refuse de démarrer si une variable manque ou si le secret JWT est trop court.

@@ -96,9 +96,18 @@ e2e:
     SMTP_HOST: mailpit
     SMTP_PORT: '1025'
     MAIL_FROM: no-reply@miam-alert.fr
+    # Mêmes rôles qu'en production (deploy/database) : migrations en miam_owner, application en
+    # miam_app. Une modification qui aurait besoin de plus de droits échoue ici, pas en production.
+    DATABASE_URL_TEST: postgresql://miam_owner:ci-only-owner@db:5432/miam_alert_test?schema=public
+    DATABASE_URL_TEST_APP: postgresql://miam_app:ci-only-app@db:5432/miam_alert_test?schema=public
   script:
     # Secret JWT généré à chaque exécution : aucune valeur, même factice, n'est écrite dans le dépôt.
     - export JWT_SECRET="$(head -c 48 /dev/urandom | base64 | tr -d '\n')"
+    - apk add --no-cache postgresql16-client >/dev/null
+    - until pg_isready -h db -q; do sleep 1; done
+    # Le script de production lui-même, avec le superutilisateur de la base du job.
+    - PGHOST=db PGUSER="$POSTGRES_USER" PGPASSWORD="$POSTGRES_PASSWORD" PGDATABASE="$POSTGRES_DB"
+      DB_OWNER_PASSWORD=ci-only-owner DB_APP_PASSWORD=ci-only-app sh ../deploy/database/init-app-db.sh
     - npm run test:e2e
 
 audit:

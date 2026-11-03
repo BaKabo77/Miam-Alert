@@ -140,8 +140,10 @@ cd ~/miam-alert
 sudo docker compose -f docker-compose.prod.yml --env-file .env.prod stop api   # plus aucune écriture
 sudo docker compose -f docker-compose.prod.yml --env-file .env.prod exec -T db \
   sh -c 'pg_restore -U "$POSTGRES_USER" -d "$POSTGRES_DB" --clean --if-exists --no-owner' < /tmp/miam-alert.dump
-sudo docker compose -f docker-compose.prod.yml --env-file .env.prod start api
 shred -u /tmp/miam-alert.dump
+# Redéployer la version en place : db-init rend les tables restaurées (créées par le superutilisateur)
+# à miam_owner et redonne ses droits à l'API (deploy/database), puis l'API redémarre.
+sudo /usr/local/sbin/miam-deploy "$(git describe --tags)"
 ```
 Puis vérifier `https://api.miam-alert.fr/health` et la connexion d'un compte. Les sessions restent valides si le secret JWT n'a pas changé ; sinon, chacun se reconnecte.
 
