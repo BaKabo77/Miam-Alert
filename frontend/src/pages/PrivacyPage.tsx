@@ -30,7 +30,7 @@ export function PrivacyPage() {
         <Table
           head={['Donnée', 'Pourquoi']}
           rows={[
-            ['Adresse email (obligatoire)', 'Vous identifier à la connexion et vous envoyer les emails liés à votre compte (confirmation de l’adresse).'],
+            ['Adresse email (obligatoire)', 'Vous identifier à la connexion et vous envoyer les emails liés à votre compte (confirmation de l’adresse, mot de passe oublié).'],
             [
               'Mot de passe (obligatoire)',
               "Protéger votre compte. Il n'est jamais enregistré tel quel : seule une empreinte (argon2id) est conservée, illisible même par l'éditeur.",
@@ -200,7 +200,7 @@ const PROVIDERS = [
   {
     name: 'Brevo (France)',
     role: "Envoi des emails liés à votre compte, depuis l'Union européenne.",
-    data: "Votre adresse email et le contenu de l'email (un lien de confirmation). Aucun email publicitaire.",
+    data: "Votre adresse email et le contenu de l'email (un lien de confirmation de l'adresse ou de changement de mot de passe). Aucun email publicitaire.",
   },
   {
     name: 'Backblaze, Inc. (États-Unis)',
