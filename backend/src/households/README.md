@@ -24,7 +24,7 @@ Marie (OWNER)                                   Paul
 - **Règles qui gardent un état cohérent** :
   - le propriétaire transfère la propriété avant de partir ;
   - le dernier membre ne peut pas partir (le foyer resterait orphelin, avec son inventaire) ;
-  - chacun garde au moins un foyer (l'application en a besoin pour fonctionner).
+  - chacun garde au moins un foyer (l'application en a besoin pour fonctionner) : qui quitte son dernier foyer, ou en est retiré, en reçoit un nouveau, vide, comme à l'inscription. Sinon, transmettre son foyer pour déménager serait une impasse.
 - **Suppression du compte du propriétaire** : la propriété passe au membre le plus ancien (voir [users/](../users/README.md#suppression-du-compte-delete-me)).
 
 ## Routes
@@ -87,6 +87,7 @@ Le **prénom et le nom** s'ils sont renseignés, sinon l'**adresse email** ([`me
 | `households.service.ts` | Logique : membres, invitations, départ, transfert ; limites `MAX_MEMBERS` et `MAX_ACTIVE_INVITATIONS` |
 | `invitation-token.ts` | Génération et empreinte des jetons, durée de vie |
 | `member-name.ts` | Nom affiché d'un membre (prénom, sinon email) |
+| `default-household.ts` | Nom du foyer créé pour un compte (inscription, perte de son dernier foyer) |
 | `households.types.ts` | Réponses, champ par champ |
 | `dto/` | Nom du foyer (caractères autorisés, 100 max), jeton, membre visé par un transfert |
 | `households.module.ts` | Exporte `HouseholdAccessService`, importé par l'inventaire, les alertes et les recettes |

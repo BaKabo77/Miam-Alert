@@ -4,6 +4,7 @@ import { SecurityLogger } from '../common/security-logger.js';
 import { EnvironmentVariables } from '../config/env.validation.js';
 import type { Prisma } from '../generated/prisma/client.js';
 import { PrismaService } from '../prisma/prisma.service.js';
+import { DEFAULT_HOUSEHOLD_NAME } from './default-household.js';
 import { HouseholdAccessService } from './household-access.service.js';
 import type {
   AcceptedInvitationResponse,
@@ -179,7 +180,8 @@ export class HouseholdsService {
   // Règles qui gardent un état cohérent :
   // - un foyer a toujours exactement un propriétaire : il transfère la propriété avant de partir ;
   // - le dernier membre ne part pas (le foyer resterait orphelin, avec son inventaire) ;
-  // - chacun garde au moins un foyer (l'application en a besoin pour fonctionner).
+  // - chacun garde au moins un foyer (l'application en a besoin pour fonctionner) : qui perd son
+  //   dernier foyer en reçoit un nouveau, vide, comme à l'inscription.
   async removeMember(actorId: string, householdId: string, targetUserId: string): Promise<void> {
     const leaving = actorId === targetUserId;
 
@@ -202,9 +204,6 @@ export class HouseholdsService {
         if (actor.role === 'OWNER') {
           throw new ConflictException('Transfer ownership before leaving the household');
         }
-        if ((await tx.householdMember.count({ where: { userId: actorId } })) === 1) {
-          throw new ConflictException('You cannot leave your only household');
-        }
       } else {
         if (actor.role !== 'OWNER') {
           this.security.warn('household.role_denied', { userId: actorId });
@@ -217,6 +216,12 @@ export class HouseholdsService {
       }
 
       await tx.householdMember.delete({ where: { userId_householdId: { userId: targetUserId, householdId } } });
+      if ((await tx.householdMember.count({ where: { userId: targetUserId } })) === 0) {
+        await tx.household.create({
+          data: { name: DEFAULT_HOUSEHOLD_NAME, members: { create: { userId: targetUserId, role: 'OWNER' } } },
+          select: { id: true },
+        });
+      }
     });
 
     this.security.log(leaving ? 'household.member.left' : 'household.member.removed', { userId: actorId });

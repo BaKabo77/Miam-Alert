@@ -60,7 +60,7 @@ describe('GET /me (e2e)', () => {
       lastName: null,
       emailVerified: false,
       termsAccepted: true,
-      households: [{ id: expect.any(String), name: 'Mon foyer', role: 'OWNER' }],
+      households: [{ id: expect.any(String), name: 'Mon foyer', role: 'OWNER', ownerName: expect.any(String) }],
     });
     expect(JSON.stringify(res.body)).not.toContain('passwordHash');
   });

@@ -2,6 +2,7 @@ import { ForbiddenException, Injectable, UnauthorizedException } from '@nestjs/c
 import { verifyPassword } from '../auth/password.js';
 import { SecurityLogger } from '../common/security-logger.js';
 import { Prisma } from '../generated/prisma/client.js';
+import { memberDisplayName } from '../households/member-name.js';
 import { PrismaService } from '../prisma/prisma.service.js';
 import { UpdateMeDto } from './dto/update-me.dto.js';
 import { TERMS_VERSION } from './terms.js';
@@ -17,7 +18,19 @@ const ME_SELECT = {
   termsVersion: true,
   // Ordre d'arrivée : le foyer créé à l'inscription d'abord, puis ceux rejoints.
   memberships: {
-    select: { role: true, household: { select: { id: true, name: true } } },
+    select: {
+      role: true,
+      household: {
+        select: {
+          id: true,
+          name: true,
+          members: {
+            where: { role: 'OWNER' },
+            select: { user: { select: { firstName: true, lastName: true, email: true } } },
+          },
+        },
+      },
+    },
     orderBy: { joinedAt: 'asc' },
   },
 } satisfies Prisma.UserSelect;
@@ -239,7 +252,10 @@ function toMeResponse(user: MeRow): MeResponse {
     lastName: user.lastName,
     emailVerified: user.emailVerifiedAt !== null,
     termsAccepted: user.termsVersion === TERMS_VERSION,
-    households: user.memberships.map(({ role, household }) => ({ ...household, role })),
+    households: user.memberships.map(({ role, household }) => {
+      const owner = household.members[0]?.user;
+      return { id: household.id, name: household.name, role, ownerName: owner ? memberDisplayName(owner) : null };
+    }),
   };
 }
 

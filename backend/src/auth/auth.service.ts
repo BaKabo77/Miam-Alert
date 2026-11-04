@@ -9,6 +9,7 @@ import { JwtService } from '@nestjs/jwt';
 import { randomUUID } from 'node:crypto';
 import { SecurityLogger } from '../common/security-logger.js';
 import { Prisma } from '../generated/prisma/client.js';
+import { DEFAULT_HOUSEHOLD_NAME } from '../households/default-household.js';
 import { PrismaService } from '../prisma/prisma.service.js';
 import type { AccessTokenPayload, AuthTokens, UserResponse } from './auth.types.js';
 import { ChangePasswordDto } from './dto/change-password.dto.js';
@@ -23,8 +24,6 @@ import {
   REFRESH_TOKEN_TTL_MS,
   REFRESH_TOKEN_PATTERN
 } from './refresh-token.js';
-
-const DEFAULT_HOUSEHOLD_NAME = 'Mon foyer';
 
 @Injectable()
 export class AuthService {

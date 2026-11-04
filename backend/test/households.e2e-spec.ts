@@ -80,6 +80,8 @@ describe('Shared household (e2e)', () => {
       // Paul garde son propre foyer, en premier ; celui de Marie s'ajoute.
       const me = await as(paul).get('/me').expect(200);
       expect(me.body.households.map((h: { id: string }) => h.id)).toEqual([paul.householdId, marie.householdId]);
+      // Deux foyers « Mon foyer » : le propriétaire permet de les distinguer.
+      expect(me.body.households[1]).toMatchObject({ name: 'Mon foyer', role: 'MEMBER', ownerName: 'marie@example.com' });
     });
 
     it('shows the inviter first name only, and members by name rather than email', async () => {
@@ -160,7 +162,7 @@ describe('Shared household (e2e)', () => {
         as(paul).post('/household-invitations/accept', { token }),
         as(lucie).post('/household-invitations/accept', { token }),
       ]);
-      expect(results.map((res) => res.status).sort()).toEqual([200, 400]);
+      expect(results.map((res) => res.status).sort((a, b) => a - b)).toEqual([200, 400]);
       expect(await prisma.householdMember.count({ where: { householdId: marie.householdId } })).toBe(2);
     });
 
@@ -262,13 +264,44 @@ describe('Shared household (e2e)', () => {
       await as(marie).delete(`/households/${marie.householdId}/members/${marieId}`).expect(409);
     });
 
-    it("refuses leaving one's only household", async () => {
+    it("gives a new empty household to a member who leaves their only household", async () => {
       await join(paul, await invite());
-      // Paul n'appartient plus qu'au foyer de Marie.
+      // Paul n'appartient plus qu'au foyer de Marie (il a transmis le sien, puis l'a quitté...).
       await prisma.household.delete({ where: { id: paul.householdId } });
 
-      const res = await as(paul).delete(`/households/${marie.householdId}/members/${paulId}`).expect(409);
-      expect(res.body.message).toBe('You cannot leave your only household');
+      await as(paul).delete(`/households/${marie.householdId}/members/${paulId}`).expect(204);
+
+      const me = await as(paul).get('/me').expect(200);
+      expect(me.body.households).toHaveLength(1);
+      expect(me.body.households[0]).toMatchObject({ name: 'Mon foyer', role: 'OWNER' });
+      expect(me.body.households[0].id).not.toBe(marie.householdId);
+      const items = await as(paul).get(`/households/${me.body.households[0].id}/pantry-items`).expect(200);
+      expect(items.body.items).toEqual([]);
+    });
+
+    it('gives a new empty household to a member removed from their only household', async () => {
+      await join(paul, await invite());
+      await prisma.household.delete({ where: { id: paul.householdId } });
+
+      await as(marie).delete(`/households/${marie.householdId}/members/${paulId}`).expect(204);
+
+      const me = await as(paul).get('/me').expect(200);
+      expect(me.body.households).toHaveLength(1);
+      expect(me.body.households[0].role).toBe('OWNER');
+    });
+
+    it('lets a former owner leave after transferring their only household', async () => {
+      await join(paul, await invite());
+      await as(marie).post(`/households/${marie.householdId}/ownership`, { userId: paulId }).expect(200);
+
+      await as(marie).delete(`/households/${marie.householdId}/members/${marieId}`).expect(204);
+
+      const me = await as(marie).get('/me').expect(200);
+      expect(me.body.households).toHaveLength(1);
+      expect(me.body.households[0].id).not.toBe(marie.householdId);
+      const household = await as(paul).get(`/households/${marie.householdId}`).expect(200);
+      expect(household.body.role).toBe('OWNER');
+      expect(household.body.members).toHaveLength(1);
     });
   });
 

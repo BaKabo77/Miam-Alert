@@ -29,6 +29,10 @@ La version en vigueur est une constante, [`terms.ts`](terms.ts) : la date de la 
 - **Nouvelle version** : `GET /me` renvoie `termsAccepted: false` ; le front affiche alors un écran d'acceptation avant toute autre page (voir [frontend/README.md](../../../frontend/README.md)). `POST /me/terms-acceptance` enregistre la nouvelle acceptation, et refuse une version périmée : une ancienne version de l'application, restée en cache, ne peut pas faire accepter un texte que l'utilisateur n'a pas vu.
 - La version et la date d'acceptation figurent dans l'export ; l'événement `account.terms_accepted` est journalisé.
 
+## Foyers dans `/me`
+
+Par ordre d'arrivée : le foyer créé à l'inscription d'abord, puis ceux rejoints. Chaque foyer indique le rôle de l'utilisateur et le nom de son propriétaire (`ownerName` : prénom et nom, sinon email), pour distinguer deux foyers portant le même nom. Le propriétaire est un membre du même foyer : cette règle est la même que pour la liste des membres ([households/](../households/README.md)).
+
 ## Export des données (`GET /me/export`)
 
 Droit d'accès et de portabilité (RGPD). Le fichier contient le compte, les foyers avec leur inventaire et leurs alertes (pour un foyer partagé : tout son inventaire, quel que soit le membre qui a ajouté l'article), les invitations créées (dates seulement, jamais le lien) et les sessions (une entrée par connexion, pas par jeton). Les données des autres membres (nom, email) n'y figurent pas.

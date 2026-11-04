@@ -14,7 +14,9 @@ export interface MeResponse {
   // false : les CGU ont changé depuis la dernière acceptation (ou n'ont jamais été acceptées) ;
   // le front demande alors de les accepter avant d'utiliser l'application.
   termsAccepted: boolean;
-  households: { id: string; name: string; role: HouseholdRole }[];
+  // ownerName : pour reconnaître un foyer rejoint (plusieurs foyers peuvent s'appeler « Mon foyer »).
+  // Même règle que la liste des membres : prénom et nom, sinon email.
+  households: { id: string; name: string; role: HouseholdRole; ownerName: string | null }[];
 }
 
 // Export des données personnelles (RGPD, droit d'accès et portabilité) : tout ce que l'application
