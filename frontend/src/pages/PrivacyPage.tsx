@@ -41,6 +41,10 @@ export function PrivacyPage() {
               'La version acceptée et la date, pour prouver votre accord et vous présenter une nouvelle version le moment venu.',
             ],
             ['Inventaire', 'Les produits ajoutés (nom, quantité, date et type de date, statut) et les alertes du jour.'],
+            [
+              'Foyer partagé',
+              "Le nom du foyer, ses membres et leur rôle, la date d'arrivée de chacun. Pour un lien d'invitation : une empreinte du lien, qui l'a créé, qui l'a utilisé, et les dates.",
+            ],
             ['Sessions', 'Une empreinte du jeton de connexion et sa date d’expiration, pour vous garder connecté.'],
             [
               'Adresse IP',
@@ -57,8 +61,8 @@ export function PrivacyPage() {
       <LegalSection title="Finalités et bases légales">
         <ul className="list-disc space-y-1.5 pl-5">
           <li>
-            <strong>Fournir le service</strong> (compte, inventaire, alertes, recettes, preuve d'acceptation des
-            conditions d'utilisation) : exécution du service que vous demandez en créant un compte (RGPD, art. 6.1.b).
+            <strong>Fournir le service</strong> (compte, inventaire, foyer partagé, alertes, recettes, preuve d'acceptation
+            des conditions d'utilisation) : exécution du service que vous demandez en créant un compte (RGPD, art. 6.1.b).
           </li>
           <li>
             <strong>Sécuriser l'application</strong> (journal de sécurité, limitation des tentatives) : intérêt légitime
@@ -80,6 +84,10 @@ export function PrivacyPage() {
             minutes, puis supprimés 30 jours après avoir servi ou expiré.
           </li>
           <li>
+            Liens d'invitation dans un foyer : valables 7 jours, puis supprimés 30 jours après avoir servi ou expiré
+            (immédiatement si le propriétaire les retire).
+          </li>
+          <li>
             Journaux techniques et de sécurité (adresses IP comprises) : 30 jours sur le serveur. Une copie chiffrée,
             impossible à modifier ou à effacer, est conservée 6 mois chez le prestataire de sauvegarde, pour pouvoir
             enquêter sur un incident de sécurité, puis supprimée automatiquement.
@@ -93,6 +101,12 @@ export function PrivacyPage() {
       </LegalSection>
 
       <LegalSection title="Qui a accès à vos données">
+        <p>
+          <strong>Les membres de votre foyer</strong>, si vous le partagez : ils voient son inventaire, ses alertes et ses
+          recettes, ainsi que votre prénom et votre nom, ou votre adresse email si vous ne les avez pas renseignés. Une
+          personne qui ouvre un lien d'invitation voit le nom du foyer et le prénom de la personne qui l'invite, s'il est
+          renseigné.
+        </p>
         <p>Seul l'éditeur administre l'application. Les prestataires suivants interviennent :</p>
         <ul className="space-y-3">
           {PROVIDERS.map((provider) => (
@@ -143,6 +157,11 @@ export function PrivacyPage() {
           n'est jamais stocké sur l'appareil.
         </p>
         <p>
+          Si vous appartenez à plusieurs foyers, l'application retient celui que vous avez choisi d'afficher (clé{' '}
+          <code className="rounded bg-mist px-1.5 py-0.5 text-sm">miam.household</code> du stockage local : un simple
+          identifiant, effacé à la déconnexion).
+        </p>
+        <p>
           Si vous vous opposez à la mesure d'audience, ce choix est enregistré dans le stockage local de votre navigateur
           (clé <code className="rounded bg-mist px-1.5 py-0.5 text-sm">umami.disabled</code>), sans aucune donnée
           personnelle.
@@ -166,7 +185,8 @@ export function PrivacyPage() {
           <li>Prénom et nom : modifiables et effaçables directement depuis votre profil.</li>
           <li>
             Suppression du compte : depuis votre profil, après confirmation par votre mot de passe. Votre compte, votre
-            inventaire et vos alertes sont effacés immédiatement (et des sauvegardes sous 30 jours).
+            inventaire et vos alertes sont effacés immédiatement (et des sauvegardes sous 30 jours). Un foyer partagé reste
+            à ses autres membres, avec son inventaire ; vous n'y figurez plus.
           </li>
           <li>
             Accès et portabilité : depuis votre profil, « Télécharger mes données » fournit toutes vos données dans un

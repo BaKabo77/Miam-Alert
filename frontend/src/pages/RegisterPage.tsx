@@ -1,6 +1,6 @@
 import { useState, type FormEvent } from 'react';
-import { Link, Navigate, useNavigate } from 'react-router';
-import { useAuth } from '../auth/session';
+import { Link, Navigate, useLocation, useNavigate } from 'react-router';
+import { returnPath, useAuth } from '../auth/session';
 import { AuthLayout } from '../components/AuthLayout';
 import { TERMS_VERSION } from '../legal/terms';
 import { trackEvent } from '../lib/analytics';
@@ -9,11 +9,14 @@ import { ApiError } from '../lib/api';
 export function RegisterPage() {
   const { session, register } = useAuth();
   const navigate = useNavigate();
+  // Page demandée avant la connexion (un lien d'invitation, par exemple), sinon l'accueil.
+  const location = useLocation();
+  const next = returnPath(location.state);
   const [error, setError] = useState<string | null>(null);
   const [submitting, setSubmitting] = useState(false);
 
   if (session.status === 'authenticated') {
-    return <Navigate to="/" replace />;
+    return <Navigate to={next} replace />;
   }
 
   async function handleSubmit(event: FormEvent<HTMLFormElement>) {
@@ -37,7 +40,7 @@ export function RegisterPage() {
         termsVersion: TERMS_VERSION,
       });
       trackEvent('signup');
-      navigate('/', { replace: true });
+      navigate(next, { replace: true });
     } catch (caught) {
       setError(errorMessage(caught));
     } finally {
@@ -52,7 +55,7 @@ export function RegisterPage() {
       footer={
         <>
           Déjà un compte ?{' '}
-          <Link to="/login" className="font-bold text-ink-900 underline underline-offset-4 hover:text-peach-800">
+          <Link to="/login" state={location.state} className="font-bold text-ink-900 underline underline-offset-4 hover:text-peach-800">
             Se connecter
           </Link>
         </>

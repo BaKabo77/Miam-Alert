@@ -1,5 +1,5 @@
 import { NavLink, Outlet } from 'react-router';
-import { useAuth } from '../auth/session';
+import { useAuth, useCurrentHousehold } from '../auth/session';
 import { initials } from './initials';
 import { ListIcon, PotIcon, ScanIcon, UserIcon } from './icons';
 import { Logo } from './Logo';
@@ -16,6 +16,7 @@ export function AppLayout() {
       <header className="sticky top-0 z-10 border-b border-line bg-white/95 backdrop-blur">
         <div className="mx-auto flex max-w-md items-center justify-between px-5 py-3">
           <Logo />
+          <HouseholdSwitcher />
           {/* Avatar : initiales si un prénom ou un nom est renseigné, sinon une icône. */}
           <NavLink
             to="/profile"
@@ -58,6 +59,32 @@ export function AppLayout() {
         </div>
       </nav>
     </div>
+  );
+}
+
+// Sélecteur du foyer affiché, seulement pour qui appartient à plusieurs foyers. Changer de foyer
+// change toutes les données affichées (les requêtes sont rangées par foyer dans le cache).
+function HouseholdSwitcher() {
+  const { session, selectHousehold } = useAuth();
+  const current = useCurrentHousehold();
+  const households = session.status === 'authenticated' ? session.user.households : [];
+  if (households.length < 2) {
+    return null;
+  }
+  return (
+    <select
+      aria-label="Foyer affiché"
+      value={current.id}
+      onChange={(event) => selectHousehold(event.target.value)}
+      className="mx-3 h-10 min-w-0 flex-1 truncate rounded-full border border-line bg-white px-3 text-sm font-bold text-ink-900 focus:border-ink-900 focus:outline-none"
+    >
+      {households.map((household) => (
+        <option key={household.id} value={household.id}>
+          {/* Plusieurs foyers peuvent s'appeler « Mon foyer » : on précise à qui est un foyer rejoint. */}
+          {household.role === 'MEMBER' && household.ownerName ? `${household.name} (${household.ownerName})` : household.name}
+        </option>
+      ))}
+    </select>
   );
 }
 

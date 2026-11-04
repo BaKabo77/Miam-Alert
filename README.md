@@ -22,6 +22,7 @@ Projet personnel conçu **security by design** : chaque fonctionnalité est pens
 
 - **Compte et session** : inscription, connexion, session renouvelée en arrière-plan, déconnexion réelle côté serveur ; profil avec prénom et nom facultatifs.
 - **Inventaire du foyer** : ajout, modification, suppression d'articles ; statut consommé / jeté / congelé.
+- **Foyer partagé** : invitation par un lien à usage unique, inventaire commun, rôles propriétaire et membre, appartenance à plusieurs foyers avec un sélecteur.
 - **Tri par urgence** : chaque article reçoit un niveau d'urgence calculé (périmé, à consommer sous 2 jours, cette semaine…), en distinguant la **DLC** (date limite, stricte) de la **DDM** (date de durabilité minimale, indicative).
 - **Scan du code-barres** avec la caméra (ou saisie du code) : fiche produit (nom, marque, photo, Nutri-Score) récupérée sur [Open Food Facts](https://world.openfoodfacts.org) puis mise en cache ; la date est pré-remplie selon la catégorie du produit (yaourt, conserve, viande…) et reste modifiable, avec des raccourcis (+3 j, +1 sem, +1 mois).
 - **Alerte du jour** : chaque matin à 9 h, une alerte unique par foyer résume les produits périmés et à consommer d'urgence (pas une notification par produit), affichée en bandeau sur l'inventaire.

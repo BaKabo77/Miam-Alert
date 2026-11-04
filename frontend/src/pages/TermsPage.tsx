@@ -26,9 +26,9 @@ export function TermsPage() {
 
       <LegalSection title="1. Le service">
         <p>
-          Miam'Alert aide à suivre les dates de péremption des produits alimentaires d'un foyer : inventaire, scan des
-          codes-barres, alerte quotidienne et idées de recettes pour finir en priorité les produits qui périment le plus
-          vite. Le service est édité par {PUBLISHER.name} (voir les{' '}
+          Miam'Alert aide à suivre les dates de péremption des produits alimentaires d'un foyer : inventaire, que l'on peut
+          partager avec les personnes qui vivent avec soi, scan des codes-barres, alerte quotidienne et idées de recettes
+          pour finir en priorité les produits qui périment le plus vite. Le service est édité par {PUBLISHER.name} (voir les{' '}
           <Link to="/legal" className="font-semibold underline underline-offset-4">
             mentions légales
           </Link>
@@ -43,11 +43,31 @@ export function TermsPage() {
             Vous gardez votre mot de passe secret. Si vous pensez qu'il est connu d'un tiers, changez-le depuis votre
             profil : toutes vos autres sessions sont alors fermées.
           </li>
-          <li>Vous pouvez supprimer votre compte et toutes vos données à tout moment, depuis votre profil.</li>
+          <li>
+            Vous pouvez supprimer votre compte à tout moment, depuis votre profil. Vos données sont alors effacées, à
+            l'exception de l'inventaire d'un foyer partagé, qui reste à ses autres membres.
+          </li>
         </ul>
       </LegalSection>
 
-      <LegalSection title="3. Les informations fournies par l'application">
+      <LegalSection title="3. Foyer partagé">
+        <ul className="list-disc space-y-1.5 pl-5">
+          <li>
+            Le propriétaire d'un foyer peut y inviter d'autres personnes par un lien, valable 7 jours pour une seule
+            personne. Ne le transmettez qu'à la personne concernée : celui qui le détient peut rejoindre le foyer.
+          </li>
+          <li>
+            Tous les membres d'un foyer voient et modifient son inventaire. N'invitez que des personnes de confiance, et
+            n'y inscrivez rien que vous ne voudriez pas partager avec elles.
+          </li>
+          <li>
+            Le propriétaire peut retirer un membre ou transmettre la propriété du foyer. Un membre peut le quitter à tout
+            moment. Si le propriétaire supprime son compte, la propriété passe au membre le plus ancien.
+          </li>
+        </ul>
+      </LegalSection>
+
+      <LegalSection title="4. Les informations fournies par l'application">
         <p>
           Les dates suggérées, les niveaux d'urgence, les alertes et les recettes sont une <strong>aide</strong>. Ils ne
           remplacent ni la date imprimée sur l'emballage, ni votre propre jugement :
@@ -73,7 +93,7 @@ export function TermsPage() {
         </p>
       </LegalSection>
 
-      <LegalSection title="4. Utilisation acceptable">
+      <LegalSection title="5. Utilisation acceptable">
         <p>Il est interdit :</p>
         <ul className="list-disc space-y-1.5 pl-5">
           <li>de tenter d'accéder aux données d'un autre utilisateur ou de contourner les mesures de sécurité ;</li>
@@ -89,7 +109,7 @@ export function TermsPage() {
         </p>
       </LegalSection>
 
-      <LegalSection title="5. Disponibilité">
+      <LegalSection title="6. Disponibilité">
         <p>
           Le service est fourni gratuitement, sans garantie de disponibilité permanente. Il peut être interrompu pour
           maintenance, notamment pour appliquer des correctifs de sécurité, ou évoluer. Les données sont sauvegardées
@@ -97,14 +117,14 @@ export function TermsPage() {
         </p>
       </LegalSection>
 
-      <LegalSection title="6. Données personnelles">
+      <LegalSection title="7. Données personnelles">
         <p>
           Les données collectées, leur durée de conservation et vos droits (accès, export, rectification, suppression)
           sont décrits dans la {privacy}.
         </p>
       </LegalSection>
 
-      <LegalSection title="7. Propriété intellectuelle">
+      <LegalSection title="8. Propriété intellectuelle">
         <p>
           L'application, son code, son apparence et les recettes rédigées pour Miam'Alert appartiennent à l'éditeur. Les
           données des produits sont publiées par Open Food Facts sous licence{' '}
@@ -114,7 +134,7 @@ export function TermsPage() {
         </p>
       </LegalSection>
 
-      <LegalSection title="8. Modification des conditions">
+      <LegalSection title="9. Modification des conditions">
         <p>
           Ces conditions peuvent évoluer, notamment avec l'arrivée de nouvelles fonctionnalités. La nouvelle version vous
           sera présentée à votre prochaine connexion et devra être acceptée pour continuer à utiliser le service ; à
@@ -122,7 +142,7 @@ export function TermsPage() {
         </p>
       </LegalSection>
 
-      <LegalSection title="9. Droit applicable et contact">
+      <LegalSection title="10. Droit applicable et contact">
         <p>
           Ces conditions sont soumises au droit français. Pour toute question ou réclamation : {contact}. En cas de
           litige, une solution amiable sera recherchée avant toute action ; à défaut, les tribunaux compétents sont ceux

@@ -4,7 +4,9 @@ import { RequireAuth } from './auth/session';
 import { AppLayout } from './components/AppLayout';
 import { AddItemPage } from './pages/AddItemPage';
 import { ForgotPasswordPage } from './pages/ForgotPasswordPage';
+import { HouseholdPage } from './pages/HouseholdPage';
 import { InventoryPage } from './pages/InventoryPage';
+import { JoinPage } from './pages/JoinPage';
 import { LegalNoticePage } from './pages/LegalNoticePage';
 import { LoginPage } from './pages/LoginPage';
 import { PrivacyPage } from './pages/PrivacyPage';
@@ -40,6 +42,9 @@ export default function App() {
           <Route path="/" element={<InventoryPage />} />
           <Route path="/add" element={<AddItemPage />} />
           <Route path="/profile" element={<ProfilePage />} />
+          <Route path="/household" element={<HouseholdPage />} />
+          {/* Lien d'invitation (#token=…) : sans session, la connexion ramène ici. */}
+          <Route path="/join" element={<JoinPage />} />
           <Route path="/recipes" element={<RecipesPage />} />
           <Route path="/recipes/:recipeId" element={<RecipePage />} />
           <Route

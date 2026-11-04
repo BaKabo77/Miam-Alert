@@ -1,6 +1,7 @@
 import { useState, type FormEvent } from 'react';
+import { Link } from 'react-router';
 import { useAuth } from '../auth/session';
-import { LogoutIcon, UserIcon } from '../components/icons';
+import { HomeIcon, LogoutIcon, UserIcon } from '../components/icons';
 import { initials } from '../components/initials';
 import { LegalLinks } from '../legal/LegalLayout';
 import { PUBLISHER } from '../legal/publisher';
@@ -120,6 +121,16 @@ export function ProfilePage() {
         <button type="button" onClick={() => void logout()} className="btn-secondary w-full">
           <LogoutIcon className="h-4 w-4" /> Se déconnecter
         </button>
+      </div>
+
+      <div className="mt-8 border-t border-line pt-6">
+        <h2 className="text-lg font-extrabold">Foyer</h2>
+        <p className="mt-1 mb-4 text-sm text-ink-600">
+          Invitez les personnes qui vivent avec vous à partager l'inventaire, les alertes et les recettes.
+        </p>
+        <Link to="/household" className="btn-secondary w-full">
+          <HomeIcon className="h-4 w-4" /> Gérer mon foyer
+        </Link>
       </div>
 
       <div className="mt-8 border-t border-line pt-6">

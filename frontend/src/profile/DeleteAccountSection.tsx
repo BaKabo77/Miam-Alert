@@ -38,7 +38,7 @@ export function DeleteAccountSection() {
         <h2 className="text-lg font-extrabold text-tomato-700">Supprimer mon compte</h2>
         <p className="mt-1 text-sm">
           Votre compte, votre inventaire et vos alertes seront effacés définitivement. Cette action est
-          irréversible.
+          irréversible. Un foyer partagé reste à ses autres membres, avec son inventaire.
         </p>
       </div>
 

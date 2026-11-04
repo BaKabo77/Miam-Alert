@@ -4,7 +4,7 @@
 
 import { useQueryClient } from '@tanstack/react-query';
 import { createContext, useContext, useEffect, useState, type ReactNode } from 'react';
-import { Navigate, Outlet } from 'react-router';
+import { Navigate, Outlet, useLocation } from 'react-router';
 import { apiRequest, refreshSession, setAccessToken, setSessionExpiredHandler } from '../lib/api';
 import { TermsGate } from './TermsGate';
 
@@ -16,7 +16,7 @@ export interface User {
   emailVerified: boolean;
   // false : les CGU ont changé depuis la dernière acceptation (décidé par l'API) ; voir TermsGate.
   termsAccepted: boolean;
-  households: { id: string; name: string; role: 'OWNER' | 'MEMBER' }[];
+  households: { id: string; name: string; role: 'OWNER' | 'MEMBER'; ownerName: string | null }[];
 }
 
 // Les 3 états possibles de la session.
@@ -35,6 +35,33 @@ interface AuthContextValue {
   deleteAccount: (password: string) => Promise<void>;
   changePassword: (currentPassword: string, newPassword: string) => Promise<void>;
   reloadUser: () => Promise<void>;
+  // Foyer affiché (un utilisateur peut appartenir à plusieurs foyers).
+  selectedHouseholdId: string | null;
+  selectHousehold: (householdId: string) => void;
+}
+
+// Foyer choisi, retenu sur cet appareil : un simple identifiant, sans donnée personnelle. Le stockage
+// peut être indisponible (navigation privée) : l'application revient alors au premier foyer.
+const SELECTED_HOUSEHOLD_KEY = 'miam.household';
+
+function readSelectedHousehold(): string | null {
+  try {
+    return localStorage.getItem(SELECTED_HOUSEHOLD_KEY);
+  } catch {
+    return null;
+  }
+}
+
+function storeSelectedHousehold(householdId: string | null): void {
+  try {
+    if (householdId === null) {
+      localStorage.removeItem(SELECTED_HOUSEHOLD_KEY);
+    } else {
+      localStorage.setItem(SELECTED_HOUSEHOLD_KEY, householdId);
+    }
+  } catch {
+    // Choix non retenu : sans conséquence.
+  }
 }
 
 // Prénom et nom facultatifs : un champ vide est ignoré par l'API.
@@ -59,7 +86,13 @@ const AuthContext = createContext<AuthContextValue | null>(null);
 // et la met à disposition de toutes les pages.
 export function AuthProvider({ children }: { children: ReactNode }) {
   const [session, setSession] = useState<Session>({ status: 'loading' });
+  const [selectedHouseholdId, setSelectedHouseholdId] = useState<string | null>(readSelectedHousehold);
   const queryClient = useQueryClient();
+
+  function selectHousehold(householdId: string) {
+    setSelectedHouseholdId(householdId);
+    storeSelectedHousehold(householdId);
+  }
 
   // Au chargement de la page : l'access token n'existe plus (il était en mémoire),
   // on tente de restaurer la session grâce au cookie du refresh token.
@@ -113,6 +146,9 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   function endSession(accountDeleted = false) {
     setAccessToken(null);
     queryClient.clear();
+    // Le foyer choisi ne doit pas s'imposer au compte qui se connecte ensuite sur cet appareil.
+    setSelectedHouseholdId(null);
+    storeSelectedHousehold(null);
     setSession({ status: 'anonymous', accountDeleted });
   }
 
@@ -152,7 +188,20 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   }
 
   return (
-    <AuthContext.Provider value={{ session, login, register, logout, updateProfile, deleteAccount, changePassword, reloadUser }}>
+    <AuthContext.Provider
+      value={{
+        session,
+        login,
+        register,
+        logout,
+        updateProfile,
+        deleteAccount,
+        changePassword,
+        reloadUser,
+        selectedHouseholdId,
+        selectHousehold,
+      }}
+    >
       {children}
     </AuthContext.Provider>
   );
@@ -175,6 +224,7 @@ export function useAuth(): AuthContextValue {
 // qui refuse toute requête sans access token valide.
 export function RequireAuth() {
   const { session } = useAuth();
+  const location = useLocation();
 
   if (session.status === 'loading') {
     return (
@@ -184,7 +234,9 @@ export function RequireAuth() {
     );
   }
   if (session.status === 'anonymous') {
-    return <Navigate to="/login" replace />;
+    // La page demandée est gardée (état de l'historique, pas l'URL) pour y revenir après la connexion :
+    // un lien d'invitation ouvert sans être connecté n'est pas perdu.
+    return <Navigate to="/login" replace state={{ from: location }} />;
   }
   // CGU modifiées depuis la dernière acceptation : on les fait accepter avant tout le reste.
   if (!session.user.termsAccepted) {
@@ -193,15 +245,33 @@ export function RequireAuth() {
   return <Outlet />;
 }
 
-// Le foyer de l'utilisateur connecté (la V1 n'en a qu'un). À n'utiliser que dans les pages
+// Le foyer affiché : celui choisi s'il fait toujours partie des foyers du compte (on a pu le quitter
+// ou en être retiré), sinon le premier (celui créé à l'inscription). À n'utiliser que dans les pages
 // placées sous <RequireAuth>, où l'utilisateur est forcément connecté.
 // oxlint-disable-next-line react/only-export-components
-export function useHouseholdId(): string {
-  const { session } = useAuth();
-  const householdId = session.status === 'authenticated' ? session.user.households[0]?.id : undefined;
-  if (!householdId) {
-    throw new Error('useHouseholdId must be used on a page that requires authentication');
+export function useCurrentHousehold(): User['households'][number] {
+  const { session, selectedHouseholdId } = useAuth();
+  const households = session.status === 'authenticated' ? session.user.households : [];
+  const household = households.find(({ id }) => id === selectedHouseholdId) ?? households[0];
+  if (!household) {
+    throw new Error('useCurrentHousehold must be used on a page that requires authentication');
   }
-  return householdId;
+  return household;
+}
+
+// oxlint-disable-next-line react/only-export-components
+export function useHouseholdId(): string {
+  return useCurrentHousehold().id;
+}
+
+// Où aller après la connexion : la page demandée avant (voir RequireAuth), sinon l'accueil.
+// Seul un chemin interne est accepté ; « //site.example » serait une adresse externe.
+// oxlint-disable-next-line react/only-export-components
+export function returnPath(state: unknown): string {
+  const from = (state as { from?: { pathname?: unknown; hash?: unknown } } | null)?.from;
+  if (typeof from?.pathname !== 'string' || !from.pathname.startsWith('/') || from.pathname.startsWith('//')) {
+    return '/';
+  }
+  return from.pathname + (typeof from.hash === 'string' ? from.hash : '');
 }
 

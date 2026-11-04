@@ -43,14 +43,15 @@ Dans l'ordre, maintenant que de vrais utilisateurs peuvent créer un compte :
 | Filtres régime (végétarien, sans gluten…) | Utilité réelle | M | 🟢 | Donnée de préférence : minimisation, effaçable. |
 | Planning des repas de la semaine | Prolonge les recettes | L | 🟢 | |
 
-### Foyer partagé (V2)
+### Foyer partagé
 
 | Idée | Intérêt | Effort | Priorité | Notes de sécurité |
 |---|---|---|---|---|
-| Invitation d'un membre par lien | Le foyer existe déjà dans le modèle | M | 🟢 | Jeton d'invitation aléatoire, haché en base, à usage unique, expirant (48 h). |
-| Rôles `OWNER` / `MEMBER` | Seul le propriétaire invite, exclut, supprime le foyer | M | 🟢 | Guard dédié + tests d'escalade de privilèges (un membre tente une action de propriétaire). |
-| Quitter un foyer, transférer la propriété | Cycle de vie complet | S | 🟢 | Un foyer ne doit jamais rester sans propriétaire. |
+| ✅ Invitation d'un membre par lien | Le foyer existe déjà dans le modèle | M | 🟢 | Jeton d'invitation aléatoire, haché en base, à usage unique, expirant (48 h). |
+| ✅ Rôles `OWNER` / `MEMBER` | Seul le propriétaire invite, exclut, supprime le foyer | M | 🟢 | Guard dédié + tests d'escalade de privilèges (un membre tente une action de propriétaire). |
+| ✅ Quitter un foyer, transférer la propriété | Cycle de vie complet | S | 🟢 | Un foyer ne doit jamais rester sans propriétaire. |
 | Liste de courses partagée | Usage quotidien d'un foyer | M | 🟢 | Mêmes contrôles d'appartenance. |
+| Qui a ajouté quel produit | Savoir qui a acheté quoi dans un foyer partagé | S | 🟢 | Identifiant de l'auteur sur l'article, effacé à la suppression du compte (`SetNull`). |
 
 ### Alertes et notifications
 

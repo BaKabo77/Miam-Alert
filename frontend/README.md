@@ -18,6 +18,7 @@ src/
 ├── pantry/             # inventaire : appels API, carte d'un article, dates, styles d'urgence partagés
 ├── products/           # scanner de code-barres, appel API produit
 ├── alerts/             # bandeau de l'alerte du jour
+├── households/         # foyer partagé : appels API
 ├── recipes/            # idées de recettes : appels API, carte de suggestion, idée sur l'inventaire
 ├── profile/            # sections de la page profil
 └── legal/              # cadre et informations des pages légales
@@ -39,7 +40,9 @@ Chaque domaine a un fichier `*-api.ts` qui fait les appels et déclare les types
 | `/recipes/:recipeId` | Fiche recette : ingrédients (✓ = dans l'inventaire), étapes, « J'ai cuisiné ça » (les produits cochés passent en « consommé ») | Connecté |
 | `/scan` | Scanner, ou saisie du code-barres au clavier | Connecté ; chargée à la demande (la bibliothèque de lecture est lourde) |
 | `/add` | Formulaire d'ajout, pré-rempli après un scan | Connecté |
-| `/profile` | Prénom et nom, déconnexion, mot de passe, export, suppression du compte | Connecté |
+| `/profile` | Prénom et nom, lien vers le foyer, déconnexion, mot de passe, export, suppression du compte | Connecté |
+| `/household` | Mon foyer : nom, membres et leur rôle, liens d'invitation, retrait d'un membre, transfert de la propriété, départ | Connecté ; actions selon le rôle, vérifiées par l'API |
+| `/join#token=…` | Lien d'invitation : aperçu du foyer, puis confirmation | Connecté (sans session, la connexion ou l'inscription ramène ici) |
 
 Les pages connectées sont enveloppées par `<RequireAuth>` (redirection vers `/login`) et partagent `<AppLayout>` : barre du haut avec l'avatar, barre d'onglets en bas (**Inventaire, Scanner au centre, Recettes**). La saisie manuelle (`/add`) s'ouvre depuis l'inventaire et la page de scan. Toute URL inconnue renvoie vers `/`.
 
@@ -79,7 +82,14 @@ Règles de sécurité :
 - Au chargement de la page, il tente un renouvellement : si le cookie est encore valide, l'utilisateur est reconnecté sans rien saisir.
 - Il expose `login`, `register` (qui connecte ensuite), `logout`, `updateProfile`, `changePassword`, `deleteAccount` et `reloadUser`, via `useAuth()`.
 - **Fin de session** : le token est oublié **et le cache de TanStack Query est vidé**. Sinon, l'inventaire du compte précédent resterait en mémoire pour la personne qui se connecte ensuite.
-- `useHouseholdId()` donne le foyer de l'utilisateur (le premier : la V1 n'en a qu'un).
+- **Plusieurs foyers** : `useCurrentHousehold()` et `useHouseholdId()` donnent le foyer affiché, choisi dans le sélecteur de l'en-tête (`selectHousehold`, visible à partir de deux foyers). S'il ne fait plus partie des foyers du compte (quitté, ou retiré par le propriétaire), c'est le premier. Le choix est retenu dans le stockage local (`miam.household`, un simple identifiant, effacé à la déconnexion). Les requêtes étant rangées par foyer dans le cache, changer de foyer change toutes les données affichées.
+- **Retour après la connexion** : `<RequireAuth>` garde la page demandée dans l'état de l'historique (`state.from`), et `returnPath()` y ramène après la connexion ou l'inscription. Seul un chemin interne est accepté. C'est ce qui permet à un invité sans session de ne pas perdre son lien.
+
+### Foyer partagé
+
+- Le **jeton d'invitation** est lu une fois dans le fragment de l'URL ([`JoinPage`](src/pages/JoinPage.tsx)), puis retiré de la barre d'adresse et de l'historique : il ne reste qu'en mémoire, et part dans le corps d'un POST.
+- Le **lien créé** n'existe qu'en mémoire dans [`HouseholdPage`](src/pages/HouseholdPage.tsx) : l'API ne le renvoie qu'une fois.
+- L'interface masque les actions réservées au propriétaire et explique pourquoi on ne peut pas quitter un foyer, mais **c'est l'API qui décide** (voir [households/](../backend/src/households/README.md)).
 
 ### Les données (TanStack Query)
 
