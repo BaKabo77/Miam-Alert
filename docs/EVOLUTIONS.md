@@ -123,6 +123,23 @@ Dans l'ordre, maintenant que de vrais utilisateurs peuvent créer un compte :
 | Fuzzing des DTO | Entrées inattendues (Unicode, tailles, types) | M | 🟢 | |
 | Test d'intrusion avec OWASP ZAP | Analyse dynamique de l'application en marche | M | 🟠 | Job CI sur un environnement de test, jamais sur la production. |
 
+### Revue de sécurité des routes (2026-11-04)
+
+Revue des 22 routes de l'API avant la `v1.0` : aucune faille critique, contrôle d'accès et IDOR conformes. Les points ci-dessous sont **reportés après la `v1.0`** (décision du développeur) ; chacun a été vérifié dans le code ou sur l'API de dev.
+
+| Constat | Risque | Correction prévue | Effort | Priorité |
+|---|---|---|---|---|
+| L'inscription répond `409 Email already registered` | Énumération des comptes, alors que la connexion et « mot de passe oublié » la cachent | Même réponse dans tous les cas ; email au titulaire existant (« quelqu'un a tenté de créer un compte avec votre adresse »). Change l'écran d'après inscription du front | M | 🟠 |
+| Connexion limitée par IP seulement (10/min) | *Credential stuffing* réparti sur de nombreuses IP contre un même compte | Limite par compte (ex. 5 échecs / 15 min), même erreur générique, jamais de blocage définitif (sinon blocage du compte d'autrui), dépassements journalisés. Voir « Verrouillage progressif par compte » ci-dessus | M | 🟠 |
+| Corps de 16 à 64 Ko : réponse 500 et trace d'erreur journalisée, **avant** la limite de débit | Inondation des journaux (30 requêtes = 30 traces, vérifié) ; mauvais code HTTP | Erreurs du lecteur de corps (`PayloadTooLargeError`…) renvoyées avec leur code (413, 400), sans trace | S | 🟠 |
+| `page` sans maximum (`?page=1e20` → 500) | Erreur interne provoquée à volonté | `@Max(10_000)` dans `PaginationQuery` | S | 🟢 |
+| Aucun plafond d'articles par foyer | Consommation de ressources (OWASP API4) : ~144 000 articles/jour possibles, tous chargés par les suggestions de recettes | Plafond (ex. 1 000 articles actifs par foyer), erreur explicite au-delà | S | 🟢 |
+| Réponse d'Open Food Facts lue sans limite de taille | Source externe non fiable : mémoire de l'API | Refus au-delà de 1 Mo (`Content-Length` et lecture bornée) | S | 🟢 |
+| Erreurs inattendues journalisées avec leur message complet | Une erreur de validation Prisma (bug) peut contenir les valeurs de la requête (email) | Ne journaliser que le type et le code de l'erreur, plus la pile | S | 🟢 |
+| Acceptation d'une nouvelle version des CGU exigée par le front seulement | Un client qui contourne le front utilise l'API sans l'accepter | 403 sur les routes métier tant que `termsAccepted` est faux | S | 🟢 |
+
+Risque **accepté** : après un changement de mot de passe ou une suppression de compte, un access token déjà émis reste valable 15 minutes au plus (le vérifier en base coûterait une requête de plus partout).
+
 ---
 
 ## 4. Infrastructure et exploitation
