@@ -31,7 +31,7 @@ La version en vigueur est une constante, [`terms.ts`](terms.ts) : la date de la 
 
 ## Export des données (`GET /me/export`)
 
-Droit d'accès et de portabilité (RGPD). Le fichier contient le compte, les foyers avec leur inventaire et leurs alertes, et les sessions (une entrée par connexion, pas par jeton).
+Droit d'accès et de portabilité (RGPD). Le fichier contient le compte, les foyers avec leur inventaire et leurs alertes (pour un foyer partagé : tout son inventaire, quel que soit le membre qui a ajouté l'article), les invitations créées (dates seulement, jamais le lien) et les sessions (une entrée par connexion, pas par jeton). Les données des autres membres (nom, email) n'y figurent pas.
 
 - **Champs choisis un par un** (`EXPORT_SELECT`) : un champ ajouté plus tard au modèle n'apparaîtra dans l'export que si on l'ajoute ici, en connaissance de cause.
 - **Absents volontairement** : le hash du mot de passe, les empreintes des jetons et les identifiants internes. Ils n'ont aucune utilité pour l'utilisateur et serviraient seulement un attaquant.
@@ -41,7 +41,7 @@ Droit d'accès et de portabilité (RGPD). Le fichier contient le compte, les foy
 
 Suppression **réelle** (droit à l'effacement), dans une transaction :
 1. le mot de passe est vérifié (403 sinon : la session est valide, c'est la confirmation qui est refusée) ;
-2. les foyers dont l'utilisateur est le **seul membre** sont supprimés, avec leur inventaire et leurs alertes (cascade). Un foyer partagé (V2) sera conservé pour ses autres membres ;
+2. les foyers dont l'utilisateur est le **seul membre** sont supprimés, avec leur inventaire, leurs alertes et leurs invitations (cascade). Un foyer partagé est conservé pour ses autres membres ; si l'utilisateur en était propriétaire, la propriété passe au **membre le plus ancien** (un foyer a toujours un propriétaire, voir [households/](../households/README.md)) ;
 3. le compte est supprimé, avec ses sessions, ses appartenances et ses liens d'email (cascade).
 
 Les données disparaissent ensuite des sauvegardes au bout de 30 jours au plus (durée de conservation des sauvegardes, annoncée dans la politique de confidentialité).

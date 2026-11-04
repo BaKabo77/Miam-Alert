@@ -15,8 +15,10 @@ const ME_SELECT = {
   lastName: true,
   emailVerifiedAt: true,
   termsVersion: true,
+  // Ordre d'arrivée : le foyer créé à l'inscription d'abord, puis ceux rejoints.
   memberships: {
     select: { role: true, household: { select: { id: true, name: true } } },
+    orderBy: { joinedAt: 'asc' },
   },
 } satisfies Prisma.UserSelect;
 
@@ -61,6 +63,10 @@ const EXPORT_SELECT = {
         },
       },
     },
+  },
+  invitationsSent: {
+    select: { createdAt: true, expiresAt: true, usedAt: true },
+    orderBy: { createdAt: 'asc' },
   },
   refreshTokens: {
     select: { familyId: true, createdAt: true, expiresAt: true, revokedAt: true },
@@ -140,6 +146,11 @@ export class UsersService {
           readAt: alert.readAt?.toISOString() ?? null,
         })),
       })),
+      invitationsSent: user.invitationsSent.map((invitation) => ({
+        createdAt: invitation.createdAt.toISOString(),
+        expiresAt: invitation.expiresAt.toISOString(),
+        usedAt: invitation.usedAt?.toISOString() ?? null,
+      })),
       sessions: toSessions(user.refreshTokens),
     };
   }
@@ -190,8 +201,28 @@ export class UsersService {
         where: { members: { some: { userId }, every: { userId } } },
         select: { id: true },
       });
-      // Cascade : articles et alertes de ces foyers.
+      // Cascade : articles, alertes et invitations de ces foyers.
       await tx.household.deleteMany({ where: { id: { in: soleHouseholds.map(({ id }) => id) } } });
+
+      // Foyers partagés dont il est propriétaire : la propriété passe au membre le plus ancien, pour
+      // qu'un foyer ait toujours un propriétaire (sinon plus personne ne pourrait inviter ni gérer).
+      const ownedShared = await tx.householdMember.findMany({
+        where: { userId, role: 'OWNER' },
+        select: { householdId: true },
+      });
+      for (const { householdId } of ownedShared) {
+        const successor = await tx.householdMember.findFirst({
+          where: { householdId, userId: { not: userId } },
+          orderBy: { joinedAt: 'asc' },
+          select: { userId: true },
+        });
+        if (successor) {
+          await tx.householdMember.update({
+            where: { userId_householdId: { userId: successor.userId, householdId } },
+            data: { role: 'OWNER' },
+          });
+        }
+      }
       // Cascade : sessions (refresh tokens) et appartenances restantes.
       await tx.user.delete({ where: { id: userId } });
     });

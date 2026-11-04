@@ -63,6 +63,9 @@ model User {
   memberships   HouseholdMember[]
   refreshTokens RefreshToken[]
   emailTokens   EmailToken[]
+  // Invitations créées par l'utilisateur, et celles qu'il a acceptées.
+  invitationsSent     HouseholdInvitation[] @relation("InvitationCreatedBy")
+  invitationsAccepted HouseholdInvitation[] @relation("InvitationUsedBy")
 }
 
 model Household {
@@ -74,6 +77,30 @@ model Household {
   members     HouseholdMember[]
   pantryItems PantryItem[]
   alerts      Alert[]
+  invitations HouseholdInvitation[]
+}
+
+// Lien d'invitation dans un foyer partagé, créé par son propriétaire (OWNER). Mêmes garanties que
+// les liens envoyés par email : 32 octets aléatoires, seule l'empreinte SHA-256 en base, durée de
+// vie courte, usage unique (une invitation = une personne). Retirer une invitation la supprime.
+model HouseholdInvitation {
+  id          String    @id @default(uuid()) @db.Uuid
+  householdId String    @db.Uuid
+  tokenHash   String    @unique @db.Char(64)
+  // Qui a invité (affiché à l'invité) et qui a accepté. SetNull : la suppression d'un compte
+  // n'efface pas l'historique du foyer, mais ne laisse aucun lien vers la personne.
+  createdById String?   @db.Uuid
+  usedById    String?   @db.Uuid
+  createdAt   DateTime  @default(now())
+  expiresAt   DateTime
+  // Rempli à l'acceptation : le lien ne sert plus.
+  usedAt      DateTime?
+
+  household Household @relation(fields: [householdId], references: [id], onDelete: Cascade)
+  createdBy User?     @relation("InvitationCreatedBy", fields: [createdById], references: [id], onDelete: SetNull)
+  usedBy    User?     @relation("InvitationUsedBy", fields: [usedById], references: [id], onDelete: SetNull)
+
+  @@index([householdId])
 }
 
 // Table de liaison User <-> Household : un utilisateur peut appartenir à plusieurs foyers

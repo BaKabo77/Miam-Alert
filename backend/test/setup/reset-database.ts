@@ -10,6 +10,7 @@ export async function resetDatabase(prisma: PrismaService): Promise<void> {
     prisma.refreshToken.deleteMany(),
     prisma.emailToken.deleteMany(),
     prisma.alert.deleteMany(),
+    prisma.householdInvitation.deleteMany(),
     prisma.pantryItem.deleteMany(),
     prisma.householdMember.deleteMany(),
     prisma.household.deleteMany(),

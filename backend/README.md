@@ -12,7 +12,7 @@ Un module NestJS par domaine, chacun avec son README :
 |---|---|
 | [`src/auth/`](src/auth/README.md) | Inscription, connexion, sessions, emails de vérification et de réinitialisation, guard JWT |
 | [`src/users/`](src/users/README.md) | `/me` : profil, export des données, suppression du compte |
-| [`src/households/`](src/households/README.md) | Contrôle d'appartenance à un foyer (anti-IDOR) |
+| [`src/households/`](src/households/README.md) | Foyers partagés (membres, invitations, rôles) et contrôle d'appartenance (anti-IDOR) |
 | [`src/pantry/`](src/pantry/README.md) | Inventaire, urgence, dates |
 | [`src/products/`](src/products/README.md) | Code-barres, Open Food Facts, date suggérée |
 | [`src/alerts/`](src/alerts/README.md) | Alerte quotidienne de 9 h |

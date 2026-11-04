@@ -9,8 +9,9 @@ User ──< HouseholdMember >── Household ──< PantryItem >── Produc
                                               │
                                               └──▶ Ingredient ──< RecipeIngredient >── Recipe
  │                               │
- ├──< RefreshToken (sessions)    └──< Alert (une par foyer et par jour)
- └──< EmailToken (liens envoyés par email)
+ ├──< RefreshToken (sessions)    ├──< Alert (une par foyer et par jour)
+ └──< EmailToken (liens envoyés  └──< HouseholdInvitation (liens d'invitation)
+       par email)
 ```
 
 | Table | Contenu | Points importants |
@@ -22,6 +23,7 @@ User ──< HouseholdMember >── Household ──< PantryItem >── Produc
 | `PantryItem` | Article de l'inventaire : nom, quantité et unité, date et type (DLC/DDM), statut, ingrédient reconnu | `householdId` obligatoire ; `productId` facultatif (saisie manuelle) ; `ingredientKey` calculé par le serveur ; index `(householdId, status, expiryDate)` taillé pour l'inventaire trié |
 | `RefreshToken` | Une ligne par refresh token émis : empreinte SHA-256, famille (= connexion), expiration, révocation | Jamais le jeton lui-même |
 | `EmailToken` | Lien de vérification ou de réinitialisation : empreinte SHA-256, usage, expiration, date d'utilisation | Usage unique |
+| `HouseholdInvitation` | Lien d'invitation dans un foyer : empreinte SHA-256, auteur, expiration, date d'utilisation et qui l'a utilisé | Usage unique ; auteur et utilisateur en `SetNull` (la suppression d'un compte ne garde aucun lien vers lui) |
 | `Alert` | Alerte du jour d'un foyer : deux compteurs, date de lecture | `@@unique([householdId, date])` : impossible d'en créer deux le même jour |
 | `Ingredient` | Ingrédient du catalogue (clé stable « egg », nom, basique ou non) | Catalogue public défini dans le code, recopié au démarrage (voir [recipes/](../src/recipes/README.md)) |
 | `Recipe`, `RecipeIngredient` | Recettes locales et leurs ingrédients (quantité, facultatif, ordre) | Idem ; `slug` stable, identifiant UUID |
@@ -41,11 +43,11 @@ Elles sont pensées pour le droit à l'effacement (RGPD) :
 
 | On supprime… | …ce qui part avec |
 |---|---|
-| un `User` | ses appartenances, sessions et liens d'email |
-| un `Household` | ses appartenances, articles et alertes |
+| un `User` | ses appartenances, sessions et liens d'email ; ses invitations restent, sans lien vers lui (`SetNull`) |
+| un `Household` | ses appartenances, articles, alertes et invitations |
 | un `Product` | rien : les articles liés gardent leur nom (`SetNull`) |
 
-Supprimer un compte ne supprime **pas** ses foyers par cascade : `UsersService.deleteMe` supprime d'abord ceux dont il est le seul membre (voir [users/](../src/users/README.md)).
+Supprimer un compte ne supprime **pas** ses foyers par cascade : `UsersService.deleteMe` supprime d'abord ceux dont il est le seul membre, et transmet la propriété des foyers partagés (voir [users/](../src/users/README.md)).
 
 ## PrismaService
 

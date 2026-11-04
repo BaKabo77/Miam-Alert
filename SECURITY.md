@@ -22,7 +22,7 @@ Seule la dernière version publiée (tag `vX.Y.Z` sur `main`), déployée sur [m
 
 | Risque OWASP | Mesures |
 |---|---|
-| **A01 Contrôle d'accès** / API1 BOLA | Refus par défaut (guard JWT global, routes publiques explicites) ; appartenance au foyer vérifiée sur chaque ressource ou intégrée à la requête SQL ; `404` pour la ressource d'un autre foyer ; identifiants UUID ; tests e2e d'accès croisé (IDOR) systématiques. |
+| **A01 Contrôle d'accès** / API1 BOLA | Refus par défaut (guard JWT global, routes publiques explicites) ; appartenance au foyer vérifiée sur chaque ressource ou intégrée à la requête SQL ; `404` pour la ressource d'un autre foyer ; rôles du foyer partagé (propriétaire, membre) vérifiés par un guard dédié (`403` pour un membre) ; invitations par lien aléatoire, haché en base, à usage unique et expirant (7 jours) ; identifiants UUID ; tests e2e d'accès croisé (IDOR) et de rôle systématiques. |
 | **A02 Défaillances cryptographiques** | Mots de passe en argon2id ; refresh token aléatoire de 256 bits stocké haché (SHA-256) ; HTTPS obligatoire (TLS 1.2+, HSTS) ; secrets de production générés sur le serveur. |
 | **A03 Injection** | Requêtes Prisma paramétrées uniquement (requêtes brutes non sécurisées interdites) ; affichage échappé par React ; CSP stricte sans script en ligne. |
 | **A04 Conception non sécurisée** | Modèle de menaces pris en compte dès la conception (foyer propriétaire des données, détection de vol de refresh token, alerte idempotente) ; limites connues documentées dans le README. |

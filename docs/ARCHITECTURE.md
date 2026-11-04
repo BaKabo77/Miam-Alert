@@ -50,7 +50,7 @@ Miam'Alert suit les produits alimentaires d'un foyer pour éviter le gaspillage 
 | `backend/prisma/` | Modèle de données et migrations | [backend/prisma/README.md](../backend/prisma/README.md) |
 | `backend/src/auth/` | Comptes, connexion, sessions, emails de vérification et de réinitialisation | [auth/README.md](../backend/src/auth/README.md) |
 | `backend/src/users/` | Profil (`/me`), export RGPD, suppression du compte | [users/README.md](../backend/src/users/README.md) |
-| `backend/src/households/` | Foyers et contrôle d'appartenance (anti-IDOR) | [households/README.md](../backend/src/households/README.md) |
+| `backend/src/households/` | Foyers partagés (membres, invitations, rôles) et contrôle d'appartenance (anti-IDOR) | [households/README.md](../backend/src/households/README.md) |
 | `backend/src/pantry/` | Inventaire et calcul de l'urgence | [pantry/README.md](../backend/src/pantry/README.md) |
 | `backend/src/products/` | Recherche par code-barres, Open Food Facts, date suggérée | [products/README.md](../backend/src/products/README.md) |
 | `backend/src/alerts/` | Alerte quotidienne de 9 h | [alerts/README.md](../backend/src/alerts/README.md) |
@@ -92,7 +92,7 @@ Exemple : l'utilisateur marque un yaourt comme consommé.
 
 | Terme | Sens |
 |---|---|
-| **Foyer** (`Household`) | Propriétaire de l'inventaire. Chaque compte en a un à l'inscription. Le partage entre plusieurs membres est prévu en V2. |
+| **Foyer** (`Household`) | Propriétaire de l'inventaire. Chaque compte en a un à l'inscription, dont il est propriétaire (`OWNER`). On y invite d'autres personnes par un lien à usage unique ; elles deviennent membres (`MEMBER`). Un compte peut appartenir à plusieurs foyers. |
 | **DLC / DDM** | Date limite de consommation (stricte) / date de durabilité minimale (indicative). Une DLC dépassée donne « périmé », une DDM dépassée donne « date dépassée ». |
 | **Urgence** | `EXPIRED`, `PAST_BEST_BEFORE`, `URGENT` (≤ 2 jours), `SOON` (≤ 7 jours), `OK`. Calculée par l'API, jamais par le front. |
 | **Access token** | JWT de 15 minutes, gardé en mémoire par le front. |

@@ -95,6 +95,26 @@ describe('Nightly data purge (e2e)', () => {
     expect(remaining.sort()).toEqual([kept.id, today.id].sort());
   });
 
+  it('deletes household invitations only 30 days after they were used or expired', async () => {
+    const invitation = (expiresAt: Date, usedAt: Date | null) =>
+      prisma.householdInvitation.create({
+        data: { householdId, createdById: userId, tokenHash: hash(), expiresAt, usedAt },
+        select: { id: true },
+      });
+    const usedLongAgo = await invitation(daysAgo(30), daysAgo(31));
+    const usedRecently = await invitation(daysAgo(-5), daysAgo(2));
+    const expiredLongAgo = await invitation(daysAgo(31), null);
+    const stillValid = await invitation(daysAgo(-6), null);
+
+    const result = await app.get(PurgeService).purgeExpiredData(NOW);
+
+    expect(result.householdInvitations).toBe(2);
+    const remaining = (await prisma.householdInvitation.findMany({ select: { id: true } })).map(({ id }) => id);
+    expect(remaining.sort()).toEqual([usedRecently.id, stillValid.id].sort());
+    expect(remaining).not.toContain(usedLongAgo.id);
+    expect(remaining).not.toContain(expiredLongAgo.id);
+  });
+
   it('never touches accounts, households or pantry items', async () => {
     await prisma.pantryItem.create({
       data: { householdId, name: 'Riz', expiryDate: daysAgo(400), expiryType: 'DDM' },

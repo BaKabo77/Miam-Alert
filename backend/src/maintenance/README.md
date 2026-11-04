@@ -11,6 +11,7 @@ Délais définis dans `RETENTION` ([`purge.service.ts`](purge.service.ts)) :
 | Sessions (refresh tokens) | **30 jours après leur expiration** | Garder une trace pour enquêter sur un incident (quand une session a été ouverte) |
 | Liens envoyés par email | **30 jours après avoir servi ou expiré** | Idem (quand un lien a servi) |
 | Alertes du jour | **90 jours après leur date** | Plus aucune utilité après |
+| Liens d'invitation dans un foyer | **30 jours après avoir servi ou expiré** (un lien retiré par le propriétaire est supprimé tout de suite) | Comme les liens envoyés par email |
 
 Ne sont **jamais** touchés : les comptes, les foyers, les articles de l'inventaire (même anciens) et les fiches produits.
 
@@ -27,8 +28,8 @@ La sauvegarde de la base a lieu à 3 h (voir [deploy/backup/](../../../deploy/ba
 
 ## Fonctionnement
 
-- Les trois suppressions se font dans **une seule transaction**.
-- Le journal ne contient que des nombres (« Purge: 3 session(s), 1 email link(s), 0 alert(s) »).
+- Les suppressions se font dans **une seule transaction**.
+- Le journal ne contient que des nombres (« Purge: 3 session(s), 1 email link(s), 0 alert(s), 0 household invitation(s) »).
 - Une erreur est journalisée sans arrêter l'application ; la purge du lendemain rattrape.
 
 ## Fichiers

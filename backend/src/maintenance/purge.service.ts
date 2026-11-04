@@ -14,12 +14,16 @@ export const RETENTION = {
   emailTokensDays: 30,
   // Alertes du jour : 90 jours après le jour concerné.
   alertsDays: 90,
+  // Liens d'invitation dans un foyer : 30 jours après avoir servi ou expiré (un lien retiré est
+  // supprimé tout de suite).
+  householdInvitationsDays: 30,
 };
 
 export interface PurgeResult {
   sessions: number;
   emailTokens: number;
   alerts: number;
+  householdInvitations: number;
 }
 
 @Injectable()
@@ -31,19 +35,31 @@ export class PurgeService {
   async purgeExpiredData(now = new Date()): Promise<PurgeResult> {
     const before = (days: number) => new Date(now.getTime() - days * DAY_MS);
     const emailTokensLimit = before(RETENTION.emailTokensDays);
+    const invitationsLimit = before(RETENTION.householdInvitationsDays);
 
-    const [sessions, emailTokens, alerts] = await this.prisma.$transaction([
+    const [sessions, emailTokens, alerts, householdInvitations] = await this.prisma.$transaction([
       // Une session expirée ne peut plus servir (le refresh est refusé après expiresAt).
       this.prisma.refreshToken.deleteMany({ where: { expiresAt: { lt: before(RETENTION.expiredSessionsDays) } } }),
       this.prisma.emailToken.deleteMany({
         where: { OR: [{ usedAt: { lt: emailTokensLimit } }, { expiresAt: { lt: emailTokensLimit } }] },
       }),
       this.prisma.alert.deleteMany({ where: { date: { lt: before(RETENTION.alertsDays) } } }),
+      this.prisma.householdInvitation.deleteMany({
+        where: { OR: [{ usedAt: { lt: invitationsLimit } }, { expiresAt: { lt: invitationsLimit } }] },
+      }),
     ]);
 
-    const result = { sessions: sessions.count, emailTokens: emailTokens.count, alerts: alerts.count };
+    const result = {
+      sessions: sessions.count,
+      emailTokens: emailTokens.count,
+      alerts: alerts.count,
+      householdInvitations: householdInvitations.count,
+    };
     // Des nombres seulement : aucune donnée personnelle dans les logs.
-    this.logger.log(`Purge: ${result.sessions} session(s), ${result.emailTokens} email link(s), ${result.alerts} alert(s)`);
+    this.logger.log(
+      `Purge: ${result.sessions} session(s), ${result.emailTokens} email link(s), ${result.alerts} alert(s), ` +
+        `${result.householdInvitations} household invitation(s)`,
+    );
     return result;
   }
 }

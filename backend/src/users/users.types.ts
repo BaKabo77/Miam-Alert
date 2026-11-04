@@ -50,6 +50,8 @@ export interface DataExport {
     }[];
     alerts: { date: string; expiredCount: number; urgentCount: number; readAt: string | null }[];
   }[];
+  // Liens d'invitation créés par l'utilisateur (foyer partagé), sans le lien lui-même (non conservé).
+  invitationsSent: { createdAt: string; expiresAt: string; usedAt: string | null }[];
   // Une entrée par connexion (et non par jeton : chaque renouvellement en crée un nouveau).
   sessions: { startedAt: string; lastRenewedAt: string; expiresAt: string; active: boolean }[];
 }

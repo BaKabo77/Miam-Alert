@@ -12,6 +12,7 @@ import { throttlerOptions } from './common/throttling.js';
 import { createValidationPipe } from './common/validation.js';
 import { validateEnv } from './config/env.validation.js';
 import { HealthController } from './health/health.controller.js';
+import { HouseholdsModule } from './households/households.module.js';
 import { MailModule } from './mail/mail.module.js';
 import { PrismaModule } from './prisma/prisma.module.js';
 import { LoggingThrottlerGuard } from './common/logging-throttler.guard.js';
@@ -39,6 +40,7 @@ import { RecipesModule } from './recipes/recipes.module.js';
     ProductsModule,
     AlertsModule,
     MaintenanceModule,
+    HouseholdsModule,
     PantryModule,
     RecipesModule,
   ],

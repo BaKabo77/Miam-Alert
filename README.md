@@ -62,6 +62,13 @@ Projet personnel conçu **security by design** : chaque fonctionnalité est pens
 | `PATCH /me` | Connecté | Modifier ou effacer son prénom et son nom |
 | `GET /me/export` | Connecté, 5 req/min | Télécharger toutes ses données (JSON) |
 | `DELETE /me` | Connecté + mot de passe, 10 req/min | Supprimer son compte et toutes ses données |
+| `GET /households/:householdId` | Membre du foyer | Le foyer, ses membres (prénom, sinon email) et son rôle |
+| `PATCH /households/:householdId` | Propriétaire du foyer | Renommer le foyer |
+| `POST` / `GET /households/:householdId/invitations` | Propriétaire du foyer | Créer un lien d'invitation (usage unique, 7 jours, affiché une seule fois) ; lister ceux en cours |
+| `DELETE /households/:householdId/invitations/:invitationId` | Propriétaire du foyer | Retirer une invitation |
+| `DELETE /households/:householdId/members/:userId` | Membre (soi-même : quitter) ; propriétaire (retirer un membre) | Quitter le foyer ou en retirer un membre |
+| `POST /households/:householdId/ownership` | Propriétaire du foyer | Transmettre la propriété à un autre membre |
+| `POST /household-invitations/preview` / `accept` | Connecté + lien d'invitation, 10 req/min | Voir puis accepter une invitation |
 | `POST /households/:householdId/pantry-items` | Membre du foyer | Ajouter un article |
 | `GET /households/:householdId/pantry-items` | Membre du foyer | Lister l'inventaire, trié par urgence, paginé |
 | `GET` / `PATCH` / `DELETE /pantry-items/:itemId` | Membre du foyer de l'article | Lire, modifier, supprimer un article |
