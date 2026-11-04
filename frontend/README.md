@@ -40,11 +40,11 @@ Chaque domaine a un fichier `*-api.ts` qui fait les appels et déclare les types
 | `/recipes/:recipeId` | Fiche recette : ingrédients (✓ = dans l'inventaire), étapes, « J'ai cuisiné ça » (les produits cochés passent en « consommé ») | Connecté |
 | `/scan` | Scanner, ou saisie du code-barres au clavier | Connecté ; chargée à la demande (la bibliothèque de lecture est lourde) |
 | `/add` | Formulaire d'ajout, pré-rempli après un scan | Connecté |
-| `/profile` | Prénom et nom, lien vers le foyer, déconnexion, mot de passe, export, suppression du compte | Connecté |
-| `/household` | Mon foyer : nom, membres et leur rôle, liens d'invitation, retrait d'un membre, transfert de la propriété, départ | Connecté ; actions selon le rôle, vérifiées par l'API |
+| `/profile` | Prénom et nom, déconnexion, mot de passe, export, suppression du compte | Connecté |
+| `/household` | Onglet Foyer : nom, membres et leur rôle, liens d'invitation, retrait d'un membre, transfert de la propriété, départ | Connecté ; actions selon le rôle, vérifiées par l'API |
 | `/join#token=…` | Lien d'invitation : aperçu du foyer, puis confirmation | Connecté (sans session, la connexion ou l'inscription ramène ici) |
 
-Les pages connectées sont enveloppées par `<RequireAuth>` (redirection vers `/login`) et partagent `<AppLayout>` : barre du haut avec l'avatar, barre d'onglets en bas (**Inventaire, Scanner au centre, Recettes**). La saisie manuelle (`/add`) s'ouvre depuis l'inventaire et la page de scan. Toute URL inconnue renvoie vers `/`.
+Les pages connectées sont enveloppées par `<RequireAuth>` (redirection vers `/login`) et partagent `<AppLayout>` : barre du haut avec l'avatar, barre d'onglets en bas (**Inventaire, Scanner mis en avant, Recettes, Foyer**). La saisie manuelle (`/add`) s'ouvre depuis l'inventaire et la page de scan. Toute URL inconnue renvoie vers `/`.
 
 ### CGU et contact
 

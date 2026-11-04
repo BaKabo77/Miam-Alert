@@ -1,7 +1,7 @@
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
 import { useState, type FormEvent } from 'react';
 import { useAuth, useHouseholdId } from '../auth/session';
-import { CopyIcon, ShareIcon, TrashIcon } from '../components/icons';
+import { CopyIcon, ShareIcon, TrashIcon, UserIcon } from '../components/icons';
 import { initials } from '../components/initials';
 import {
   createInvitation,
@@ -203,7 +203,7 @@ function MemberRow({
           aria-hidden="true"
           className="grid h-10 w-10 shrink-0 place-items-center rounded-full bg-peach-100 text-sm font-bold text-peach-800"
         >
-          {avatar || '?'}
+          {avatar || <UserIcon />}
         </span>
         <div className="min-w-0 flex-1">
           <p className="truncate font-bold">

@@ -1,7 +1,7 @@
 import { NavLink, Outlet } from 'react-router';
 import { useAuth, useCurrentHousehold } from '../auth/session';
 import { initials } from './initials';
-import { ListIcon, PotIcon, ScanIcon, UserIcon } from './icons';
+import { HomeIcon, ListIcon, PotIcon, ScanIcon, UserIcon } from './icons';
 import { Logo } from './Logo';
 
 // Cadre commun à toutes les pages de l'application connectée : barre du haut, la page demandée
@@ -42,7 +42,7 @@ export function AppLayout() {
         // safe-area-inset-bottom : laisse la place à la barre de geste des téléphones récents.
         className="fixed inset-x-0 bottom-0 z-10 border-t border-line bg-white/95 pb-[env(safe-area-inset-bottom)] backdrop-blur"
       >
-        <div className="mx-auto grid max-w-md grid-cols-3 items-end px-5">
+        <div className="mx-auto grid max-w-md grid-cols-4 items-end px-2">
           <TabLink to="/" label="Inventaire" icon={<ListIcon />} />
           {/* Le scan est l'action principale de l'application : bouton central mis en avant. */}
           <NavLink
@@ -56,6 +56,7 @@ export function AppLayout() {
           </NavLink>
           {/* « Ajouter à la main » est sur l'inventaire et sur la page de scan. */}
           <TabLink to="/recipes" label="Recettes" icon={<PotIcon />} />
+          <TabLink to="/household" label="Foyer" icon={<HomeIcon />} />
         </div>
       </nav>
     </div>
