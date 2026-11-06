@@ -139,6 +139,14 @@ Revue des 22 routes de l'API avant la `v1.0` : aucune faille critique, contrôle
 | Erreurs inattendues journalisées avec leur message complet | Une erreur de validation Prisma (bug) peut contenir les valeurs de la requête (email) | Ne journaliser que le type et le code de l'erreur, plus la pile | S | 🟢 |
 | Acceptation d'une nouvelle version des CGU exigée par le front seulement | Un client qui contourne le front utilise l'API sans l'accepter | 403 sur les routes métier tant que `termsAccepted` est faux | S | 🟢 |
 
+### Suivi des liens par Brevo (2026-11-06)
+
+Les emails passent par un domaine de Brevo (`*.sendibt2.com`), qui enregistre les clics et conserve le lien, jeton compris. D'après le forum de Brevo, la désactivation n'existe que sur demande pour les clients Enterprise ; seule une anonymisation des journaux est proposée.
+
+| Évolution | Intérêt | Effort | Priorité | Notes |
+|---|---|---|---|---|
+| Changer de prestataire d'emails | Plus de liens réécrits ni conservés avec leur jeton, plus de domaine inconnu dans les emails | S | 🟠 | Candidat : Scaleway Transactional Email. Absence de suivi à vérifier sur un vrai email (seule source trouvée : la documentation d'Anymail). Changer les variables SMTP, DKIM, SPF et DMARC, le prestataire dans la politique de confidentialité, et retirer sa mention du suivi. |
+
 Risque **accepté** : après un changement de mot de passe ou une suppression de compte, un access token déjà émis reste valable 15 minutes au plus (le vérifier en base coûterait une requête de plus partout).
 
 ---

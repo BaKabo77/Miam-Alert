@@ -66,3 +66,4 @@ dig +short CNAME brevo1._domainkey.miam-alert.fr
 
 - Éviter de créer en production des comptes de test avec des adresses inexistantes : les emails rejetés (*bounces*) nuisent à la réputation d'un domaine récent.
 - Brevo est déclaré comme sous-traitant dans la politique de confidentialité.
+- **Brevo réécrit les liens des emails** : le bouton pointe vers un domaine de Brevo (`*.sendibt2.com`, constaté le 2026-11-06), qui enregistre le clic puis redirige. Le jeton figure donc dans un lien conservé chez Brevo, même s'il est dans le fragment (`#`) de l'adresse d'origine. Aucune option d'envoi documentée ne le désactive sur un compte standard. Risque limité (usage unique, 30 min ou 24 h), accepté pour le lancement et annoncé dans la politique de confidentialité ; changement de prestataire prévu après la `v1.0` (voir [docs/EVOLUTIONS.md](../../../docs/EVOLUTIONS.md)).

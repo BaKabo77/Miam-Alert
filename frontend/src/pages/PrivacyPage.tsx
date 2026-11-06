@@ -220,7 +220,7 @@ const PROVIDERS = [
   {
     name: 'Brevo (France)',
     role: "Envoi des emails liés à votre compte, depuis l'Union européenne.",
-    data: "Votre adresse email et le contenu de l'email (un lien de confirmation de l'adresse ou de changement de mot de passe). Aucun email publicitaire.",
+    data: "Votre adresse email et le contenu de l'email (un lien de confirmation de l'adresse ou de changement de mot de passe). Les liens de ces emails passent par un domaine de Brevo, qui enregistre les clics et peut aussi enregistrer l'ouverture de l'email. Miam'Alert n'exploite pas ces informations. Aucun email publicitaire.",
   },
   {
     name: 'Backblaze, Inc. (États-Unis)',
