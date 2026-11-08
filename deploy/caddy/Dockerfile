@@ -9,7 +9,7 @@ FROM golang:1.27.3-alpine AS build
 ENV CGO_ENABLED=0
 RUN go install github.com/caddyserver/xcaddy/cmd/xcaddy@v0.4.7
 RUN xcaddy build v2.11.7 --output /caddy \
-  --replace golang.org/x/net=golang.org/x/net@v0.60.0 \
+  --replace golang.org/x/net=golang.org/x/net@v0.62.0 \
   --replace github.com/go-jose/go-jose/v4=github.com/go-jose/go-jose/v4@v4.1.6
 
 # ---------- 2. Image finale ----------
