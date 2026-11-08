@@ -1,5 +1,7 @@
 # Journaux hors du serveur
 
+> **Pas encore en service** (décision du 2026-11-09, lancement de la `v1.0` sans lui). Les journaux restent 30 jours sur le serveur (`journald-miam.conf`, déjà installé). La politique de confidentialité, `SECURITY.md`, le README racine et `docs/ARCHITECTURE.md` ne promettent donc plus cette copie. **À l'installation**, rétablir dans la politique de confidentialité (`frontend/src/pages/PrivacyPage.tsx`) la copie de 6 mois et Backblaze comme destinataire des journaux (avec `LEGAL_LAST_UPDATED`), puis retirer la mention « pas encore en service » de ces documents.
+
 Toutes les 15 minutes, les journaux du serveur partent, **chiffrés**, vers une archive **impossible à modifier ou à effacer** chez Backblaze B2. Ils y restent 6 mois. Si un intrus devenait root sur le serveur, il pourrait effacer les journaux locaux, mais pas ce qui est déjà parti : les traces de son intrusion restent disponibles pour l'enquête.
 
 ```

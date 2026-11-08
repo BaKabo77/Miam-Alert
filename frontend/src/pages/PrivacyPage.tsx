@@ -88,9 +88,8 @@ export function PrivacyPage() {
             (immédiatement si le propriétaire les retire).
           </li>
           <li>
-            Journaux techniques et de sécurité (adresses IP comprises) : 30 jours sur le serveur. Une copie chiffrée,
-            impossible à modifier ou à effacer, est conservée 6 mois chez le prestataire de sauvegarde, pour pouvoir
-            enquêter sur un incident de sécurité, puis supprimée automatiquement.
+            Journaux techniques et de sécurité (adresses IP comprises) : 30 jours sur le serveur, puis supprimés
+            automatiquement.
           </li>
           <li>Statistiques de fréquentation (anonymes) : 13 mois, puis supprimées automatiquement.</li>
           <li>
@@ -224,8 +223,8 @@ const PROVIDERS = [
   },
   {
     name: 'Backblaze, Inc. (États-Unis)',
-    role: "Stockage des sauvegardes et de l'archive des journaux, dans l'Union européenne (région EU Central).",
-    data: "Sauvegardes et journaux (dont des adresses IP), chiffrés sur le serveur avant leur envoi : Backblaze ne peut pas les lire, la clé n'est détenue que par l'éditeur.",
+    role: "Stockage des sauvegardes, dans l'Union européenne (région EU Central).",
+    data: "Sauvegardes de la base de données, chiffrées sur le serveur avant leur envoi : Backblaze ne peut pas les lire, la clé n'est détenue que par l'éditeur.",
   },
   {
     name: 'Open Food Facts (association, France)',

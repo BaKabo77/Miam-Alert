@@ -34,8 +34,8 @@ Miam'Alert suit les produits alimentaires d'un foyer pour éviter le gaspillage 
                           └──────────────┘
 
    Mesure d'audience sans cookie : stats.miam-alert.fr ──▶ stats (Umami) ──▶ base « umami » séparée
-   Journaux du serveur (système, audit, conteneurs) ──▶ archive chiffrée et non modifiable,
-   toutes les 15 minutes (Backblaze B2, 6 mois)
+   Journaux du serveur (système, audit, conteneurs) : 30 jours sur le serveur. Archive chiffrée et
+   non modifiable toutes les 15 minutes (Backblaze B2, 6 mois) : prête, pas encore en service
 ```
 
 - Le **navigateur** charge le front (fichiers statiques servis par Nginx), puis appelle l'API directement sur son sous-domaine.

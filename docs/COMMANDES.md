@@ -241,6 +241,8 @@ Tableau de bord : https://stats.miam-alert.fr (deux mots de passe : celui de Cad
 
 ### Journaux hors du serveur
 
+Une fois [deploy/logship/](../deploy/logship/README.md) installé (pas encore en service) :
+
 ```bash
 ssh -t miam-vps 'sudo journalctl -u miam-logship.service --since today --no-pager | tail -3'   # derniers envois
 ssh -t miam-vps 'sudo journalctl -t miam-alert-prod-api-1 --since -1h'                         # journaux d'un conteneur
