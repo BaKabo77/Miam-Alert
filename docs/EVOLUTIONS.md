@@ -9,14 +9,15 @@ Catalogue de tout ce qui pourrait être ajouté à Miam'Alert à terme : fonctio
 
 ## Priorités recommandées
 
-Dans l'ordre, maintenant que de vrais utilisateurs peuvent créer un compte :
+Après le lancement de la `v1.0.0`, dans l'ordre :
 
-1. ✅ ~~Sauvegardes de la base de données~~ : quotidiennes, chiffrées, restauration testée, copie immuable hors du serveur (v0.4.0).
-2. ✅ ~~Mentions légales et politique de confidentialité~~ (v0.3.2).
-3. 🔴 **Mot de passe oublié** : un utilisateur qui oublie son mot de passe perd son compte. ✅ Suppression du compte et export des données faits (v0.4.0).
-4. 🟠 **Déploiement continu** avec analyse des images (Trivy).
-5. 🟠 **Supervision** : être prévenu quand le site tombe, avant les utilisateurs.
-6. 🟠 **Recettes V1**, la fonctionnalité qui donne tout son sens à l'application.
+1. 🟠 **Changer de prestataire d'emails** : les liens de Brevo passent par son suivi des clics (voir « Suivi des liens par Brevo »).
+2. 🟠 **Corrections de la revue de sécurité des routes** : énumération par l'inscription, limite par compte à la connexion, corps trop gros, plafonds (voir « Revue de sécurité des routes »).
+3. 🟠 **Mettre en service l'envoi des journaux** hors du serveur (`deploy/logship/`, prêt), puis rétablir sa mention dans la politique de confidentialité.
+4. 🟠 **Tests automatisés du front** (client HTTP, session, parcours Playwright en CI).
+5. 🟢 **Offre Premium** : statut juridique et CGV, Stripe, recettes par IA avec quotas.
+
+Déjà faits, parmi les priorités précédentes : sauvegardes, pages légales, mot de passe oublié, suppression et export du compte, déploiement continu, supervision, recettes, foyer partagé.
 
 ---
 

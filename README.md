@@ -1,10 +1,10 @@
 # Miam'Alert
 
-**Garde-manger anti-gaspi.** On scanne ses courses, l'application suit les dates de péremption de tout le foyer, signale ce qu'il faut consommer en priorité et, à terme, suggère des recettes avec les produits les plus urgents.
+**Garde-manger anti-gaspi.** On scanne ses courses, l'application suit les dates de péremption de tout le foyer, signale ce qu'il faut consommer en priorité et suggère des recettes qui utilisent d'abord les produits les plus urgents. L'inventaire se partage entre les personnes qui vivent ensemble.
 
 Projet personnel conçu **security by design** : chaque fonctionnalité est pensée, codée et testée avec la sécurité en tête, en s'appuyant sur l'OWASP Top 10 et l'OWASP API Security Top 10.
 
-> **Statut : en ligne sur [miam-alert.fr](https://miam-alert.fr) (v0.6.1)** : API sécurisée, application web installable (PWA) avec scan du code-barres et date suggérée, alerte quotidienne, vérification de l'email et mot de passe oublié, suppression du compte et export des données (RGPD), purge automatique, sauvegardes chiffrées, déploiement continu. Prochaines étapes : durcissement du serveur, puis recettes.
+> **Statut : v1.0.0, lancement public gratuit, en ligne sur [miam-alert.fr](https://miam-alert.fr)** : application web installable (PWA) avec scan du code-barres et date suggérée, foyer partagé, alerte quotidienne, suggestions de recettes, comptes complets (vérification de l'email, mot de passe oublié, export et suppression des données), CGU et contact de support, mesure d'audience sans cookie. Côté exploitation : déploiement continu avec analyse des images, serveur durci, sauvegardes chiffrées et immuables. Prochaine étape : l'offre Premium (voir la [feuille de route](#feuille-de-route)).
 >
 > Le développement se fait sur GitLab (CI/CD, merge requests) ; ce dépôt GitHub en est un miroir en lecture seule.
 >
@@ -26,7 +26,9 @@ Projet personnel conçu **security by design** : chaque fonctionnalité est pens
 - **Tri par urgence** : chaque article reçoit un niveau d'urgence calculé (périmé, à consommer sous 2 jours, cette semaine…), en distinguant la **DLC** (date limite, stricte) de la **DDM** (date de durabilité minimale, indicative).
 - **Scan du code-barres** avec la caméra (ou saisie du code) : fiche produit (nom, marque, photo, Nutri-Score) récupérée sur [Open Food Facts](https://world.openfoodfacts.org) puis mise en cache ; la date est pré-remplie selon la catégorie du produit (yaourt, conserve, viande…) et reste modifiable, avec des raccourcis (+3 j, +1 sem, +1 mois).
 - **Alerte du jour** : chaque matin à 9 h, une alerte unique par foyer résume les produits périmés et à consommer d'urgence (pas une notification par produit), affichée en bandeau sur l'inventaire.
-- **Suggestions de recettes** : une quarantaine de recettes du quotidien, classées pour sauver d'abord les produits les plus urgents ; un produit à DLC dépassée n'est jamais proposé.
+- **Suggestions de recettes** : des recettes du quotidien rédigées pour le projet, classées pour sauver d'abord les produits les plus urgents ; un produit à DLC dépassée n'est jamais proposé. « J'ai cuisiné ça » marque les produits utilisés comme consommés.
+- **CGU et support** : conditions d'utilisation acceptées à l'inscription (version et date enregistrées, nouvelle acceptation à chaque changement), contact `support@miam-alert.fr`.
+- **Mesure d'audience sans cookie** (Umami auto-hébergé) : statistiques anonymes, sans bandeau de consentement, avec opposition possible depuis la politique de confidentialité.
 - **Application installable** sur téléphone et ordinateur (PWA), pensée d'abord pour le mobile.
 
 ## Stack
@@ -159,7 +161,7 @@ Correspondance avec l'OWASP Top 10 et procédure de signalement d'une faille : v
 ## Tests
 
 - **Unitaires** : calcul de l'urgence, contenu de l'alerte du jour, clé de contrôle EAN, nettoyage des données Open Food Facts, client HTTP (réseau simulé).
-- **End-to-end** sur une vraie base PostgreSQL dédiée : authentification (token expiré, falsifié, `alg: none`, refresh réutilisé), validation, **tentatives d'accès aux données d'un autre foyer**, génération idempotente des alertes, rate limiting derrière un proxy (IP usurpée), absence de données sensibles dans les logs.
+- **End-to-end** sur une vraie base PostgreSQL dédiée : authentification (token expiré, falsifié, `alg: none`, refresh réutilisé), validation, **tentatives d'accès aux données d'un autre foyer**, rôles du foyer partagé (actions du propriétaire refusées à un membre), invitations à usage unique (y compris acceptées en même temps), génération idempotente des alertes, rate limiting derrière un proxy (IP usurpée), absence de données sensibles dans les logs.
 - Aucun test ne dépend d'un service extérieur.
 - Le parcours de l'application (connexion, inventaire, ajout, scan d'un code-barres filmé) a été vérifié dans Chrome avec une caméra simulée, puis avec les images de production derrière le reverse proxy en HTTPS.
 
@@ -217,8 +219,14 @@ Caddy obtient les certificats HTTPS au premier démarrage ; les migrations sont 
 - [x] Sauvegardes quotidiennes chiffrées et immuables, mentions légales, suppression du compte et export des données
 - [x] Changement de mot de passe, vérification de l'email, mot de passe oublié
 - [x] Déploiement continu : images construites et analysées (Trivy) par la CI, puis déployées
-- [ ] Recettes suggérées selon les produits les plus urgents
-- [ ] Foyer partagé, statistiques de gaspillage
+- [x] Serveur durci (redémarrage automatique, noyau, journal d'audit), base de données à privilèges minimaux
+- [x] Recettes suggérées selon les produits les plus urgents
+- [x] CGU, contact de support, mesure d'audience sans cookie
+- [x] Foyer partagé : invitations, rôles, plusieurs foyers
+- [x] **v1.0.0 : lancement public gratuit**
+- [ ] Offre Premium : recettes par IA (Mistral), paiement par Stripe
+- [ ] Statistiques de gaspillage, notifications push, liste de courses
+- [ ] Application mobile
 
 Toutes les évolutions envisagées, classées par priorité : [docs/EVOLUTIONS.md](docs/EVOLUTIONS.md).
 
@@ -226,11 +234,13 @@ Toutes les évolutions envisagées, classées par priorité : [docs/EVOLUTIONS.m
 
 Choix assumés, documentés plutôt que masqués :
 
-- L'inscription répond `409` pour un email déjà utilisé, ce qui révèle l'existence d'un compte ; le risque est limité par le rate limiting, la parade complète (confirmation par email) est prévue.
+- L'inscription répond `409` pour un email déjà utilisé, ce qui révèle l'existence d'un compte ; le risque est limité par le rate limiting. La parade (même réponse dans tous les cas, email au titulaire) est prévue avec les autres constats de la revue de sécurité ([docs/EVOLUTIONS.md](docs/EVOLUTIONS.md#revue-de-sécurité-des-routes-2026-11-04)).
 - Un access token reste valable jusqu'à 15 minutes après une déconnexion (principe du JWT, d'où sa durée courte).
-- Deux onglets qui renouvellent la session au même instant la font révoquer (détection stricte du vol de token) ; le front évitera les renouvellements simultanés.
+- Deux **onglets** qui renouvellent la session au même instant la font révoquer (détection stricte du vol de token). Dans un même onglet, les renouvellements simultanés sont déjà évités.
 - « Aujourd'hui » est calculé en UTC : entre minuit et 2 h en France, l'urgence peut être décalée d'un jour.
 - Hors ligne, l'application s'ouvre mais demande de se connecter : les données de l'API ne sont volontairement pas mises en cache (voir « Côté navigateur »).
-- Déploiement encore manuel (construction des images sur le serveur) : l'automatisation par la CI est la prochaine étape.
+- Les liens des emails passent par le suivi des clics de Brevo, qui conserve le lien avec son jeton (usage unique, 30 min ou 24 h) ; changement de prestataire prévu.
+- Les journaux restent 30 jours sur le serveur : leur copie hors du serveur est prête mais pas encore en service.
+- Le front n'a pas encore de tests automatisés : ses parcours sont vérifiés à la main dans Chromium (Playwright).
 - Les secrets de production sont passés aux conteneurs en variables d'environnement : lisibles par un administrateur du serveur (`docker inspect`). Les secrets Docker (fichiers) seraient un cran au-dessus.
 - L'alerte du jour s'affiche dans l'application ; les notifications push viendront plus tard.

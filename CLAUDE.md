@@ -248,7 +248,7 @@ Avant de considérer une fonctionnalité terminée :
 ## Feuille de route
 
 ### Fait
-Environnement Docker, socle de sécurité, schéma Prisma, authentification, inventaire (IDOR testés), produits Open Food Facts, CI de sécurité, front PWA avec scan, alertes quotidiennes, mise en production durcie, sauvegardes chiffrées et immuables, pages légales, suppression du compte, export des données. Versions `v0.1.0` à `v0.4.0`.
+Environnement Docker, socle de sécurité, schéma Prisma, authentification, inventaire (IDOR testés), produits Open Food Facts, CI de sécurité, front PWA avec scan, alertes quotidiennes, mise en production durcie, sauvegardes chiffrées et immuables, pages légales, suppression du compte, export des données (`v0.1.0` à `v0.4.0`) ; changement et oubli du mot de passe, vérification de l'email, purge, supervision (`v0.5`) ; déploiement continu, runner local, durcissement du serveur (`v0.6`) ; recettes locales (`v0.7`) ; CGU, support, mesure d'audience, rôles de la base (`v0.8`) ; foyer partagé (`v0.9`) ; lancement public gratuit (`v1.0.0`).
 
 ### À venir
 | Version | Contenu |
@@ -317,5 +317,7 @@ Foyer partagé (branche `feat/shared-household`, inclus dans la `v1.0`, décisio
 Suivi des liens par Brevo (constaté le 2026-11-06) : les liens des emails passent par `*.sendibt2.com`, qui enregistre les clics et conserve le lien avec son jeton. Risque accepté pour le lancement à la demande du développeur (usage unique, 30 min ou 24 h), annoncé dans la politique de confidentialité ; suivi anonymisé activé dans Brevo le 2026-11-08 (ouvertures et clics non rattachés au destinataire dans les journaux, liens toujours réécrits).
 
 Reporté après la `v1.0` : changement de prestataire d'emails (Scaleway envisagé, voir `docs/EVOLUTIONS.md`), corrections de la revue de sécurité des routes (voir ci-dessus), tests automatisés du front (prévu : Vitest 5 + jsdom + Testing Library pour le client HTTP et la session, Playwright 1.64 en CI sur le runner avec l'image `mcr.microsoft.com/playwright:v1.64.1-noble`, qui embarque Node 24), normalisation de la clé de déploiement (branche `fix/deploy-key-format`), Renovate, durcissement de `miam-backup.service`, DMARC en `p=quarantine`, règles d'audit immuables (`-e 2`), alertes sur les événements de sécurité.
+
+Publication `v1.0.0` préparée le 2026-11-09 (branche `release/v1.0.0`) : README (statut, fonctionnalités, feuille de route, limites connues), priorités d'après lancement dans `docs/EVOLUTIONS.md`, versions des `package.json` à 1.0.0. Restauration d'essai depuis Backblaze conseillée, à faire par le développeur.
 
 Mettre à jour cette section au fil de l'avancement.
