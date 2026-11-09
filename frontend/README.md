@@ -21,6 +21,7 @@ src/
 ├── households/         # foyer partagé : appels API
 ├── recipes/            # idées de recettes : appels API, carte de suggestion, idée sur l'inventaire
 ├── profile/            # sections de la page profil
+├── assets/landing/     # captures de la page de présentation (WebP)
 └── legal/              # cadre et informations des pages légales
 ```
 
@@ -35,7 +36,7 @@ Chaque domaine a un fichier `*-api.ts` qui fait les appels et déclare les types
 | `/reset-password#token=…` | Choix du nouveau mot de passe (lien de l'email) | Publique |
 | `/verify-email#token=…` | Confirmation de l'adresse (lien de l'email) | Publique : le lien peut être ouvert sur un autre appareil |
 | `/legal`, `/privacy`, `/terms` | Mentions légales, politique de confidentialité, conditions générales d'utilisation | Publiques (obligation légale ; les CGU se lisent avant l'inscription) |
-| `/` | Inventaire : compteurs, bandeaux (email à confirmer, alerte du jour, idée de recette si un produit est urgent), liste par urgence, bouton « Ajouter » | Connecté |
+| `/` | Connecté : inventaire (compteurs, bandeaux de l'email à confirmer, de l'alerte du jour et d'une idée de recette si un produit est urgent, liste par urgence, bouton « Ajouter »). Sans session : **page de présentation** ([`LandingPage`](src/pages/LandingPage.tsx)) | Publique pour la présentation, connecté pour l'inventaire |
 | `/recipes` | Idées recettes : les 8 meilleures, puis les autres sur demande ; produits utilisés aux couleurs de l'urgence, ingrédients à acheter | Connecté |
 | `/recipes/:recipeId` | Fiche recette : ingrédients (✓ = dans l'inventaire), étapes, « J'ai cuisiné ça » (les produits cochés passent en « consommé ») | Connecté |
 | `/scan` | Scanner, ou saisie du code-barres au clavier | Connecté ; chargée à la demande (la bibliothèque de lecture est lourde) |
@@ -84,6 +85,12 @@ Règles de sécurité :
 - **Fin de session** : le token est oublié **et le cache de TanStack Query est vidé**. Sinon, l'inventaire du compte précédent resterait en mémoire pour la personne qui se connecte ensuite.
 - **Plusieurs foyers** : `useCurrentHousehold()` et `useHouseholdId()` donnent le foyer affiché, choisi dans le sélecteur de l'en-tête (`selectHousehold`, visible à partir de deux foyers). S'il ne fait plus partie des foyers du compte (quitté, ou retiré par le propriétaire), c'est le premier. Le choix est retenu dans le stockage local (`miam.household`, un simple identifiant, effacé à la déconnexion). Les requêtes étant rangées par foyer dans le cache, changer de foyer change toutes les données affichées.
 - **Retour après la connexion** : `<RequireAuth>` garde la page demandée dans l'état de l'historique (`state.from`), et `returnPath()` y ramène après la connexion ou l'inscription. Seul un chemin interne est accepté. C'est ce qui permet à un invité sans session de ne pas perdre son lien.
+
+### Page de présentation
+
+- Affichée par `<RequireAuth>` à un visiteur sans session sur `/`, à la place du renvoi vers `/login` (les autres pages protégées y renvoient toujours). Statique : aucun appel à l'API, aucune donnée personnelle.
+- **Chaque phrase doit rester vraie** : elle décrit l'application telle qu'elle est (fonctionnalités, confidentialité). Une fonctionnalité ou une règle de confidentialité qui change impose de relire cette page, comme la politique de confidentialité.
+- Les captures (`src/assets/landing/`) viennent d'un compte de démonstration créé en dev (prénoms et produits fictifs, supprimé ensuite), photographié dans Chromium à 390 px de large et en triple résolution, puis converties en WebP de 780 px de large (`cwebp -resize 780 0 -q 80`). La date du premier produit de l'inventaire y est figée : refaire les captures quand l'interface change.
 
 ### Foyer partagé
 

@@ -6,6 +6,7 @@ import { useQueryClient } from '@tanstack/react-query';
 import { createContext, useContext, useEffect, useState, type ReactNode } from 'react';
 import { Navigate, Outlet, useLocation } from 'react-router';
 import { apiRequest, refreshSession, setAccessToken, setSessionExpiredHandler } from '../lib/api';
+import { LandingPage } from '../pages/LandingPage';
 import { TermsGate } from './TermsGate';
 
 export interface User {
@@ -232,6 +233,11 @@ export function RequireAuth() {
         <span className="h-8 w-8 animate-spin rounded-full border-4 border-mist border-t-brand" />
       </div>
     );
+  }
+  // Visiteur sans session sur l'accueil : la page de présentation, plutôt qu'un renvoi vers la
+  // connexion. Elle est statique (aucun appel à l'API).
+  if (session.status === 'anonymous' && location.pathname === '/') {
+    return <LandingPage />;
   }
   if (session.status === 'anonymous') {
     // La page demandée est gardée (état de l'historique, pas l'URL) pour y revenir après la connexion :
