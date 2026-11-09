@@ -1,5 +1,6 @@
 import { NavLink, Outlet } from 'react-router';
 import { useAuth, useCurrentHousehold } from '../auth/session';
+import { PageTransition } from './PageTransition';
 import { initials } from './initials';
 import { HomeIcon, ListIcon, PotIcon, ScanIcon, UserIcon } from './icons';
 import { Logo } from './Logo';
@@ -12,7 +13,9 @@ export function AppLayout() {
   const userInitials = user ? initials(user.firstName, user.lastName) : '';
 
   return (
-    <div className="min-h-dvh pb-28">
+    // overflow-x-clip : la page qui glisse pendant une transition ne crée pas de défilement horizontal
+    // (clip, et non hidden, qui casserait la barre du haut collante).
+    <div className="min-h-dvh overflow-x-clip pb-28">
       <header className="sticky top-0 z-10 border-b border-line bg-white/95 backdrop-blur">
         <div className="mx-auto flex max-w-md items-center justify-between px-5 py-3">
           <Logo />
@@ -34,7 +37,9 @@ export function AppLayout() {
       </header>
 
       <main className="mx-auto max-w-md px-5 pt-6">
-        <Outlet />
+        <PageTransition>
+          <Outlet />
+        </PageTransition>
       </main>
 
       <nav

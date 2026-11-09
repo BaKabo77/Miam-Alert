@@ -100,3 +100,31 @@
 @utility alert-success {
   @apply rounded-2xl bg-mint-100 px-4 py-3 text-sm font-medium text-mint-800;
 }
+
+/* Transitions entre les pages de l'application (voir components/PageTransition.tsx) : la page arrive
+   du côté de l'onglet choisi, comme dans une application mobile. Courtes (220 ms) pour ne jamais
+   ralentir la navigation ; désactivées si l'appareil demande moins d'animations (motion-safe). */
+@theme {
+  --animate-page-from-right: page-from-right 220ms cubic-bezier(0.2, 0.8, 0.2, 1);
+  --animate-page-from-left: page-from-left 220ms cubic-bezier(0.2, 0.8, 0.2, 1);
+  --animate-page-fade: page-fade 180ms ease-out;
+
+  @keyframes page-from-right {
+    from {
+      opacity: 0;
+      transform: translateX(24px);
+    }
+  }
+  @keyframes page-from-left {
+    from {
+      opacity: 0;
+      transform: translateX(-24px);
+    }
+  }
+  @keyframes page-fade {
+    from {
+      opacity: 0;
+      transform: translateY(8px);
+    }
+  }
+}

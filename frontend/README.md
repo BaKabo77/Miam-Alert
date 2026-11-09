@@ -44,7 +44,7 @@ Chaque domaine a un fichier `*-api.ts` qui fait les appels et déclare les types
 | `/household` | Onglet Foyer : nom, membres et leur rôle, liens d'invitation, retrait d'un membre, transfert de la propriété, départ | Connecté ; actions selon le rôle, vérifiées par l'API |
 | `/join#token=…` | Lien d'invitation : aperçu du foyer, puis confirmation | Connecté (sans session, la connexion ou l'inscription ramène ici) |
 
-Les pages connectées sont enveloppées par `<RequireAuth>` (redirection vers `/login`) et partagent `<AppLayout>` : barre du haut avec l'avatar, barre d'onglets en bas (**Inventaire, Scanner mis en avant, Recettes, Foyer**). La saisie manuelle (`/add`) s'ouvre depuis l'inventaire et la page de scan. Toute URL inconnue renvoie vers `/`.
+Les pages connectées sont enveloppées par `<RequireAuth>` (redirection vers `/login`) et partagent `<AppLayout>` : barre du haut avec l'avatar, barre d'onglets en bas (**Inventaire, Scanner mis en avant, Recettes, Foyer**). La saisie manuelle (`/add`) s'ouvre depuis l'inventaire et la page de scan. Changer de page joue une courte animation ([`PageTransition`](src/components/PageTransition.tsx), 220 ms) : la page arrive du côté de l'onglet choisi, dans l'ordre des onglets du bas (une page de détail se place juste après son onglet). Elle est désactivée quand l'appareil demande moins d'animations (`motion-safe`) ; les animations sont déclarées dans `index.css`. Toute URL inconnue renvoie vers `/`.
 
 ### CGU et contact
 
